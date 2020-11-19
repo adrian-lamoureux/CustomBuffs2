@@ -1,0 +1,14 @@
+## Interface: 90001
+## Author: Hypocrit
+## Title: CustomBuffs
+## DefaultState: enabled
+## SavedVariables: CustomBuffsData
+
+Libs\embeds.xml
+
+CustomBuffs.lua
+ConfigDefaults.lua
+
+UITweaks.lua
+
+ConfigMain.lua
