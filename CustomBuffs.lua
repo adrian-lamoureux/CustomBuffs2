@@ -219,6 +219,52 @@ CustomBuffs.INTERRUPTS = {
     ["Quake"] = { duration = 5 } --240448
 };
 
+CustomBuffs.NONAURAS = {
+    --SHAMAN
+    [108280] = { duration = 10, tbPrio = 1 }, --Healing Tide
+    [198067] = { duration = 30, tbPrio = 1 }, --Fire Elemental
+    [192249] = { duration = 30, tbPrio = 1 }, --Storm Elemental
+    [51533] =  { duration = 15, tbPrio = 1 }, --Feral Spirit
+
+    --LOCK
+    [205180] = { duration = 20, tbPrio = 1 }, --Summon Darkglare
+    [111898] = { duration = 17, tbPrio = 1 }, --Grimoire: Felguard
+    [265187] = { duration = 15, tbPrio = 1 }, --Summon Demonic Tyrant
+    [1122] = { duration = 30, tbPrio = 1 }, --Summon Infernal
+
+    --DRUID
+    --[157982] = { duration = 1.5, tbPrio = 1 }, --Tranquility
+
+    --MAGE
+    [198149] = { duration = 10, tbPrio = 1 }, --Frozen Orb PvP Talent
+    [84714] = { duration = 10, tbPrio = 1 }, --Frozen Orb
+
+    --PRIEST
+
+    --HUNTER
+    [131894] = { duration = 15, tbPrio = 1 }, --Murder of Crows
+    [201430] = { duration = 12, tbPrio = 1 }, --Stampede
+
+    --DK
+    [63560] = { duration = 15, tbPrio = 1 }, --Dark Transformation
+    [42650] = { duration = 30, tbPrio = 1 }, --Army of the Dead
+
+    --MONK
+    [325197] = { duration = 25, tbPrio = 1 }, --Invoke Chi-ji
+    [322118] = { duration = 25, tbPrio = 1 }, --Yu'lon
+    [123904] = { duration = 24, tbPrio = 1 }, --Xuen
+    [132578] = { duration = 25, tbPrio = 1 }, --Niuzao
+
+    --DH
+
+    --PALADIN
+
+    --WARRIOR
+
+    --ROGUE
+
+};
+
 
 --CDs show self-applied class-specific buffs in the standard buff location
     --Display Location:     standard buff
@@ -344,6 +390,7 @@ CustomBuffs.EXTERNALS = {
     ["Misdirection"] =              EStandard,
     ["Tricks of the Trade"] =       EStandard,
     ["Rallying Cry"] =              EStandard,
+    ["Anti-Magic Zone"] =           EStandard,
 
     --Minor Externals worth tracking
     ["Enveloping Mist"] =           ELow,
@@ -370,6 +417,7 @@ CustomBuffs.EXTRA_RAID_BUFFS = {
     [290754] =                  ERBStandard, --Lifebloom from early spring honor talent
     ["Glimmer of Light"] =      ERBStandard,
     ["Ancestral Vigor"] =       ERBStandard,
+    ["Anti-Magic Zone"] =       ERBStandard,
 
     --BFA procs
     ["Luminous Jellyweed"] =    ERBStandard,
@@ -414,12 +462,14 @@ CustomBuffs.THROUGHPUT_CDS = {
         ["Aspect of the Wild"] =                TCDStandard,
         ["Aspect of the Eagle"] =               TCDStandard,
         ["Bestial Wrath"] =                     TCDStandard,
-        ["Trueshot"] =                          TCDStandard
+        ["Trueshot"] =                          TCDStandard,
+        ["Volley"] =                            TCDStandard
     } ,
     [ 8 ] = { --mage
         ["Icy Veins"] =                         TCDStandard,
         ["Combustion"] =                        TCDStandard,
-        ["Arcane Power"] =                      TCDStandard
+        ["Arcane Power"] =                      TCDStandard,
+        ["Rune of Power"] =                     TCDStandard
 
     } ,
     [ 10 ] = { --monk
@@ -455,7 +505,8 @@ CustomBuffs.THROUGHPUT_CDS = {
         ["Shadow Dance"] =                      TCDStandard,
         ["Shadowy Duel"] =                      TCDStandard,
         ["Adrenaline Rush"] =                   TCDStandard,
-        ["Plunder Armor"] =                     TCDStandard
+        ["Blade Flurry"] =                      TCDStandard,
+        ["Killing Spree"] =                     TCDStandard
     } ,
     [ 7 ] = { --shaman
         ["Ascendance"] =                        TCDStandard,
@@ -466,7 +517,8 @@ CustomBuffs.THROUGHPUT_CDS = {
     [ 9 ] = { --lock
         ["Soul Harvest"] =                      TCDStandard,
         ["Dark Soul: Instability"] =            TCDStandard,
-        ["Dark Soul: Misery"] =                 TCDStandard
+        ["Dark Soul: Misery"] =                 TCDStandard,
+        ["Nether Portal"] =                     TCDStandard
     } ,
     [ 1 ] = { --warrior
         ["Battle Cry"] =                        TCDStandard,
@@ -490,6 +542,7 @@ CustomBuffs.THROUGHPUT_CDS = {
 local ETCDStandard = {["sbPrio"] = 3, ["sdPrio"] = nil, ["bdPrio"] = nil, ["tbPrio"] = 3};
 CustomBuffs.EXTERNAL_THROUGHPUT_CDS = {
     ["Dark Archangel"] =    ETCDStandard,
+    ["Power Infusion"] =    ETCDStandard,
     ["Blood Fury"] =        ETCDStandard,
     ["Berserking"] =        ETCDStandard,
 
@@ -690,37 +743,73 @@ end
 --Check combat log events for interrupts
 local function handleCLEU()
 
-    local _, event, _,_,_,_,_, destGUID, _,_,_, spellID, spellName = CombatLogGetCurrentEventInfo()
+    local _, event, _,casterGUID,_,_,_, destGUID, _,_,_, spellID, spellName = CombatLogGetCurrentEventInfo();
 
     -- SPELL_INTERRUPT doesn't fire for some channeled spells; if the spell isn't a known interrupt we're done
-    if (event ~= "SPELL_INTERRUPT" and event ~= "SPELL_CAST_SUCCESS") or (not CustomBuffs.INTERRUPTS[spellID] and not CustomBuffs.INTERRUPTS[spellName]) then return end
-    --Maybe needed if combat log events are returning spellIDs of 0
-    --if spellID == 0 then spellID = lookupIDByName[spellName] end
+    if (event == "SPELL_INTERRUPT" or event == "SPELL_CAST_SUCCESS") and
+        (CustomBuffs.INTERRUPTS[spellName] or CustomBuffs.INTERRUPTS[spellID]) then
+        --Maybe needed if combat log events are returning spellIDs of 0
+        --if spellID == 0 then spellID = lookupIDByName[spellName] end
 
-    --Find
-    for i=1, #CompactRaidFrameContainer.units do
-		local unit = CompactRaidFrameContainer.units[i];
-        if destGUID == UnitGUID(unit) and (event ~= "SPELL_CAST_SUCCESS" or
-            (UnitChannelInfo and select(7, UnitChannelInfo(unit)) == false))
-        then
-            local duration = (CustomBuffs.INTERRUPTS[spellID] or CustomBuffs.INTERRUPTS[spellName]).duration;
-            --local _, class = UnitClass(unit)
+        --Find
+        for i=1, #CompactRaidFrameContainer.units do
+    		local unit = CompactRaidFrameContainer.units[i];
+            if destGUID == UnitGUID(unit) and (event ~= "SPELL_CAST_SUCCESS" or
+                (UnitChannelInfo and select(7, UnitChannelInfo(unit)) == false))
+            then
+                local duration = (CustomBuffs.INTERRUPTS[spellID] or CustomBuffs.INTERRUPTS[spellName]).duration;
+                --local _, class = UnitClass(unit)
 
-            CustomBuffs.units[destGUID] = CustomBuffs.units[destGUID] or {};
-            CustomBuffs.units[destGUID].expires = GetTime() + duration;
-            CustomBuffs.units[destGUID].spellID = spellID;
-            CustomBuffs.units[destGUID].duration = duration;
-            CustomBuffs.units[destGUID].spellName = spellName;
-            --self.units[destGUID].spellID = spell.parent and spell.parent or spellId
+                CustomBuffs.units[destGUID] = CustomBuffs.units[destGUID] or {};
+                CustomBuffs.units[destGUID].int = CustomBuffs.units[destGUID].int or {};
+                CustomBuffs.units[destGUID].int.expires = GetTime() + duration;
+                CustomBuffs.units[destGUID].int.spellID = spellID;
+                CustomBuffs.units[destGUID].int.duration = duration;
+                CustomBuffs.units[destGUID].int.spellName = spellName;
+                --self.units[destGUID].spellID = spell.parent and spell.parent or spellId
 
-            -- Make sure we clear it after the duration
-            C_Timer.After(duration, function()
-                --CompactUnitFrame_UpdateAuras();
-                CustomBuffs.units[destGUID] = nil;
-            end);
+                CompactUnitFrame_UpdateAuras(_G["CompactRaidFrame"..i]);
 
-            return
+                -- Make sure we clear it after the duration
+                C_Timer.After(duration + 0.01, function()
+                    CustomBuffs.units[destGUID].int = nil;
+                    CompactUnitFrame_UpdateAuras(_G["CompactRaidFrame"..i]);
+                end);
 
+                break;
+
+            end
+        end
+    end
+    if (event == "SPELL_CAST_SUCCESS") and
+        (CustomBuffs.NONAURAS[spellID] or CustomBuffs.NONAURAS[spellName])
+    then
+        for i=1, #CompactRaidFrameContainer.units do
+    		local unit = CompactRaidFrameContainer.units[i];
+            if casterGUID == UnitGUID(unit) then
+                local duration = (CustomBuffs.NONAURAS[spellID] or CustomBuffs.NONAURAS[spellName]).duration;
+                --local _, class = UnitClass(unit)
+
+                CustomBuffs.units[casterGUID] = CustomBuffs.units[casterGUID] or {};
+                CustomBuffs.units[casterGUID].nauras = CustomBuffs.units[casterGUID].nauras or {};
+                CustomBuffs.units[casterGUID].nauras[spellID] = CustomBuffs.units[casterGUID].nauras[spellID] or {};
+                CustomBuffs.units[casterGUID].nauras[spellID].expires = GetTime() + duration;
+                CustomBuffs.units[casterGUID].nauras[spellID].spellID = spellID;
+                CustomBuffs.units[casterGUID].nauras[spellID].duration = duration;
+                CustomBuffs.units[casterGUID].nauras[spellID].spellName = spellName;
+                --self.units[destGUID].spellID = spell.parent and spell.parent or spellId
+
+                CompactUnitFrame_UpdateAuras(_G["CompactRaidFrame"..i]);
+
+                -- Make sure we clear it after the duration
+                C_Timer.After(duration + 0.01, function()
+                    CustomBuffs.units[casterGUID].nauras[spellID] = nil;
+                    CompactUnitFrame_UpdateAuras(_G["CompactRaidFrame"..i]);
+                end);
+
+                break;
+
+            end
         end
     end
 end
@@ -1012,12 +1101,12 @@ local function updateAura(auraFrame, index, auraData)
     if index > 0 then
         --Standard Blizzard aura
         auraFrame:SetID(index);
-        if auraFrame.int then
-            auraFrame.int = nil;
+        if auraFrame.ID then
+            auraFrame.ID = nil;
         end
 
     elseif index == -1 then
-        auraFrame.int = spellID;
+        auraFrame.ID = spellID;
         --if CUSTOM_BUFFS_TEST_ENABLED then
             --Aura is a lockout tracker for an interrupt; use tooltip for the
             --interrupt responsible for the lockout
@@ -1026,9 +1115,9 @@ local function updateAura(auraFrame, index, auraData)
                 auraFrame.custTooltip = true;
                 --Set an OnEnter handler to show the custom tooltip
                 auraFrame:SetScript("OnEnter", function(self)
-                    if self.int then
+                    if self.ID then
                         GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
-                        GameTooltip:SetSpellByID(self.int);
+                        GameTooltip:SetSpellByID(self.ID);
                     else
                         GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
                         local id = self:GetID();
@@ -1049,8 +1138,8 @@ local function updateAura(auraFrame, index, auraData)
 
                 auraFrame:SetScript("OnUpdate", function(self)
                     if ( GameTooltip:IsOwned(self) ) then
-                        if self.int then
-                            GameTooltip:SetSpellByID(self.int);
+                        if self.ID then
+                            GameTooltip:SetSpellByID(self.ID);
                         else
                             local id = self:GetID();
                             if id then
@@ -1172,20 +1261,36 @@ function CustomBuffs:UpdateAuras(frame)
 
     --Check for interrupts
     local guid = UnitGUID(frame.displayedUnit);
-    if guid and CustomBuffs.units[guid] and CustomBuffs.units[guid].expires and CustomBuffs.units[guid].expires > GetTime() then
-        --index of -1 for interrupts
-        tinsert(bossDebuffs, { ["index"] = -1, ["bdPrio"] = 1, ["auraData"] = {
-            --{icon, count, expirationTime, duration}
-            GetSpellTexture(CustomBuffs.units[guid].spellID),
-            1,
-            CustomBuffs.units[guid].expires,
-            CustomBuffs.units[guid].duration,
-            nil,                                --Interrupts do not have a dispel type
-            CustomBuffs.units[guid].spellID     --Interrupts need a special field containing the spellID of the interrupt used
-                                                --in order to construct a mouseover tooltip for their aura frames
-        }});
-
+    if guid and CustomBuffs.units[guid] then
+        local unit = CustomBuffs.units[guid];
+        if unit.int and unit.int.expires and unit.int.expires > GetTime() then
+            --index of -1 for interrupts
+            tinsert(bossDebuffs, { ["index"] = -1, ["bdPrio"] = 1, ["auraData"] = {
+                --{icon, count, expirationTime, duration}
+                GetSpellTexture(unit.int.spellID),
+                1,
+                unit.int.expires,
+                unit.int.duration,
+                nil,                                --Interrupts do not have a dispel type
+                unit.int.spellID                    --Interrupts need a special field containing the spellID of the interrupt used
+                                                    --in order to construct a mouseover tooltip for their aura frames
+            }});
+        end
+        if unit.nauras then
+            for id, data in pairs(unit.nauras) do
+                tinsert(throughputBuffs, { ["index"] = -1, ["tbPrio"] = data.tbPrio or 1, ["sbPrio"] = data.sbPrio or 1, ["auraData"] = {
+                    --{icon, count, expirationTime, duration}
+                    GetSpellTexture(id),
+                    1,
+                    data.expires,
+                    data.duration,
+                    nil,                                --no dispel type
+                    data.spellID                    --Need a special field containing the spellID
+                }});
+            end
+        end
     end
+
 
     --Handle Debuffs
     for index = 1, 40 do
