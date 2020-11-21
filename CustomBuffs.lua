@@ -740,6 +740,80 @@ function CustomBuffs:updatePlayerSpec()
     precalcCanDispel();
 end
 
+local function handleRosterUpdate()
+    --Update debuff display mode; allow 9 extra overflow debuff frames that grow out
+    --of the left side of the unit frame when the player's group is less than 6 people.
+    --Frames are disabled when the player's group grows past 5 players because most UI
+    --configurations wrap to a new column after 5 players.
+    if (CustomBuffs.db.profile.extraDebuffs or CustomBuffs.db.profile.extraBuffs) then
+        if GetNumGroupMembers() <= 5 then
+            if CustomBuffs.inRaidGroup then
+                if CustomBuffs.db.profile.extraDebuffs then
+                    CustomBuffs.MAX_DEBUFFS = 15;
+                    for index, frame in ipairs(_G.CompactRaidFrameContainer.flowFrames) do
+                        --index 1 is a string for some reason so we skip it
+                        if index ~= 1 and frame and frame.debuffFrames then
+                            frame.debuffNeedUpdate = true;
+                        end
+                    end
+                else
+                    CustomBuffs.MAX_BUFFS = 15;
+                    for index, frame in ipairs(_G.CompactRaidFrameContainer.flowFrames) do
+                        --index 1 is a string for some reason so we skip it
+                        if index ~= 1 and frame and frame.debuffFrames then
+                            frame.buffNeedUpdate = true;
+                        end
+                    end
+                end
+                CustomBuffs.inRaidGroup = false;
+            end
+        else
+            if not CustomBuffs.inRaidGroup then
+                if CustomBuffs.db.profile.extraDebuffs then
+                    CustomBuffs.MAX_DEBUFFS = 6;
+                    for index, frame in ipairs(_G.CompactRaidFrameContainer.flowFrames) do
+                        --index 1 is a string for some reason so we skip it
+                        if index ~= 1 and frame and frame.debuffFrames then
+                            frame.debuffNeedUpdate = true;
+                        end
+                    end
+                else
+                    CustomBuffs.MAX_BUFFS = 6;
+                    for index, frame in ipairs(_G.CompactRaidFrameContainer.flowFrames) do
+                        --index 1 is a string for some reason so we skip it
+                        if index ~= 1 and frame and frame.debuffFrames then
+                            frame.buffNeedUpdate = true;
+                        end
+                    end
+                end
+                CustomBuffs.inRaidGroup = true;
+            end
+        end
+    end
+
+    --Update table of group members
+    CustomBuffs.units = CustomBuffs.units or {};
+    for _, table in pairs(CustomBuffs.units) do
+        table.invalid = true;
+    end
+    for i=1, #CompactRaidFrameContainer.units do
+        local unit = CompactRaidFrameContainer.units[i];
+        local guid = UnitGUID(unit);
+        if guid then
+            CustomBuffs.units[guid] = CustomBuffs.units[guid] or {};
+            CustomBuffs.units[guid].invalid = nil;
+            CustomBuffs.units[guid].frameNum = i;
+            CustomBuffs.units[guid].unit = unit;
+        end
+    end
+    for i, table in pairs(CustomBuffs.units) do
+        if table.invalid then
+            twipe(CustomBuffs.units[i]);
+            CustomBuffs.units[i] = nil;
+        end
+    end
+end
+
 --Check combat log events for interrupts
 local function handleCLEU()
 
@@ -751,16 +825,13 @@ local function handleCLEU()
         --Maybe needed if combat log events are returning spellIDs of 0
         --if spellID == 0 then spellID = lookupIDByName[spellName] end
 
-        --Find
-        for i=1, #CompactRaidFrameContainer.units do
-    		local unit = CompactRaidFrameContainer.units[i];
-            if destGUID == UnitGUID(unit) and (event ~= "SPELL_CAST_SUCCESS" or
-                (UnitChannelInfo and select(7, UnitChannelInfo(unit)) == false))
+
+            if CustomBuffs.units[destGUID] and (event ~= "SPELL_CAST_SUCCESS" or
+                (UnitChannelInfo and select(7, UnitChannelInfo(CustomBuffs.units[destGUID].unit)) == false))
             then
                 local duration = (CustomBuffs.INTERRUPTS[spellID] or CustomBuffs.INTERRUPTS[spellName]).duration;
                 --local _, class = UnitClass(unit)
 
-                CustomBuffs.units[destGUID] = CustomBuffs.units[destGUID] or {};
                 CustomBuffs.units[destGUID].int = CustomBuffs.units[destGUID].int or {};
                 CustomBuffs.units[destGUID].int.expires = GetTime() + duration;
                 CustomBuffs.units[destGUID].int.spellID = spellID;
@@ -768,29 +839,24 @@ local function handleCLEU()
                 CustomBuffs.units[destGUID].int.spellName = spellName;
                 --self.units[destGUID].spellID = spell.parent and spell.parent or spellId
 
-                CompactUnitFrame_UpdateAuras(_G["CompactRaidFrame"..i]);
+                CompactUnitFrame_UpdateAuras(_G["CompactRaidFrame"..CustomBuffs.units[destGUID].frameNum]);
 
                 -- Make sure we clear it after the duration
                 C_Timer.After(duration + 0.01, function()
                     CustomBuffs.units[destGUID].int = nil;
-                    CompactUnitFrame_UpdateAuras(_G["CompactRaidFrame"..i]);
+                    CompactUnitFrame_UpdateAuras(_G["CompactRaidFrame"..CustomBuffs.units[destGUID].frameNum]);
                 end);
 
-                break;
 
             end
-        end
     end
     if (event == "SPELL_CAST_SUCCESS") and
         (CustomBuffs.NONAURAS[spellID] or CustomBuffs.NONAURAS[spellName])
     then
-        for i=1, #CompactRaidFrameContainer.units do
-    		local unit = CompactRaidFrameContainer.units[i];
-            if casterGUID == UnitGUID(unit) then
+            if CustomBuffs.units[casterGUID] then
                 local duration = (CustomBuffs.NONAURAS[spellID] or CustomBuffs.NONAURAS[spellName]).duration;
                 --local _, class = UnitClass(unit)
 
-                CustomBuffs.units[casterGUID] = CustomBuffs.units[casterGUID] or {};
                 CustomBuffs.units[casterGUID].nauras = CustomBuffs.units[casterGUID].nauras or {};
                 CustomBuffs.units[casterGUID].nauras[spellID] = CustomBuffs.units[casterGUID].nauras[spellID] or {};
                 CustomBuffs.units[casterGUID].nauras[spellID].expires = GetTime() + duration;
@@ -799,33 +865,31 @@ local function handleCLEU()
                 CustomBuffs.units[casterGUID].nauras[spellID].spellName = spellName;
                 --self.units[destGUID].spellID = spell.parent and spell.parent or spellId
 
-                CompactUnitFrame_UpdateAuras(_G["CompactRaidFrame"..i]);
+                CompactUnitFrame_UpdateAuras(_G["CompactRaidFrame"..CustomBuffs.units[casterGUID].frameNum]);
 
                 -- Make sure we clear it after the duration
                 C_Timer.After(duration + 0.01, function()
                     CustomBuffs.units[casterGUID].nauras[spellID] = nil;
-                    CompactUnitFrame_UpdateAuras(_G["CompactRaidFrame"..i]);
+                    CompactUnitFrame_UpdateAuras(_G["CompactRaidFrame"..CustomBuffs.units[casterGUID].frameNum]);
                 end);
 
-                break;
+
 
             end
-        end
     end
     if  event == "UNIT_DIED" and (GetNumGroupMembers() > 0) then
-        for i=1, #CompactRaidFrameContainer.units do
-    		local unit = CompactRaidFrameContainer.units[i];
-            if destGUID == UnitGUID(unit) then
+            if CustomBuffs.units[destGUID] then
                 if UnitHealth(unit) <= 1 then
                     if CustomBuffs.units[destGUID] then
-                        twipe(CustomBuffs.units[destGUID]);
-                        CustomBuffs.units[destGUID] = nil;
-                        CompactUnitFrame_UpdateAuras(_G["CompactRaidFrame"..i]);
+                        twipe(CustomBuffs.units[destGUID].int);
+                        CustomBuffs.units[destGUID].int = nil;
+                        twipe(CustomBuffs.units[destGUID].nauras);
+                        CustomBuffs.units[destGUID].nauras = nil;
+                        CompactUnitFrame_UpdateAuras(_G["CompactRaidFrame"..CustomBuffs.units[destGUID].frameNum]);
                     end
                 end
-                break;
+
             end
-        end
     end
 end
 --Establish player class and set up class based logic
@@ -899,7 +963,8 @@ CustomBuffs.CustomBuffsFrame:SetScript("OnEvent",function(self, event, ...)
             needsUpdateVisible[frame] = nil;
         end
         --]]
-
+    elseif event == "GROUP_ROSTER_UPDATE" then
+        handleRosterUpdate();
     end
 end);
 
@@ -907,6 +972,7 @@ end);
 CustomBuffs.CustomBuffsFrame:RegisterEvent("PLAYER_REGEN_ENABLED");
 CustomBuffs.CustomBuffsFrame:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED");
 CustomBuffs.CustomBuffsFrame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED");
+CustomBuffs.CustomBuffsFrame:RegisterEvent("GROUP_ROSTER_UPDATE");
 
 
 
@@ -1243,36 +1309,12 @@ function CustomBuffs:UpdateAuras(frame)
     --If our custom aura frames have not yet loaded do nothing
     if not frame.debuffsLoaded or not frame.bossDebuffs or not frame.throughputFrames then return; end
 
-    --Update debuff display mode; allow 9 extra overflow debuff frames that grow out
-    --of the left side of the unit frame when the player's group is less than 6 people.
-    --Frames are disabled when the player's group grows past 5 players because most UI
-    --configurations wrap to a new column after 5 players.
-    if (self.db.profile.extraDebuffs or self.db.profile.extraBuffs) then
-        if GetNumGroupMembers() <= 5 then
-            if CustomBuffs.inRaidGroup then
-                if self.db.profile.extraDebuffs then
-                    CustomBuffs.MAX_DEBUFFS = 15;
-                    setUpExtraDebuffFrames(frame);
-                else
-                    CustomBuffs.MAX_BUFFS = 15;
-                    setUpExtraBuffFrames(frame);
-                end
-                CustomBuffs.inRaidGroup = false;
-            end
-        else
-            if not CustomBuffs.inRaidGroup then
-                if self.db.profile.extraDebuffs then
-                    CustomBuffs.MAX_DEBUFFS = 6;
-                    setUpExtraDebuffFrames(frame);
-                else
-                    CustomBuffs.MAX_BUFFS = 6;
-                    setUpExtraBuffFrames(frame);
-                end
-                CustomBuffs.inRaidGroup = true;
-            end
-        end
+    if frame.debuffNeedUpdate then
+        setUpExtraDebuffFrames(frame);
     end
-
+    if frame.buffNeedUpdate then
+        setUpExtraBuffFrames(frame);
+    end
 
     --Check for interrupts
     local guid = UnitGUID(frame.displayedUnit);
@@ -1696,6 +1738,8 @@ function CustomBuffs:OnEnable()
 		InterfaceOptionsFrame_OpenToCategory("CustomBuffs");
 		InterfaceOptionsFrame_OpenToCategory("CustomBuffs");
 	end);
+
+    handleRosterUpdate();
 end
 
 function CustomBuffs:Init()
