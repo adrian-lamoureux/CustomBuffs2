@@ -743,7 +743,7 @@ end
 --Check combat log events for interrupts
 local function handleCLEU()
 
-    local _, event, _,casterGUID,_,_,_, destGUID, _,_,_, spellID, spellName = CombatLogGetCurrentEventInfo();
+    local _, event, _,casterGUID,_,_,_, destGUID, destName,_,_, spellID, spellName = CombatLogGetCurrentEventInfo();
 
     -- SPELL_INTERRUPT doesn't fire for some channeled spells; if the spell isn't a known interrupt we're done
     if (event == "SPELL_INTERRUPT" or event == "SPELL_CAST_SUCCESS") and
@@ -809,6 +809,21 @@ local function handleCLEU()
 
                 break;
 
+            end
+        end
+    end
+    if  event == "UNIT_DIED" and (GetNumGroupMembers() > 0) then
+        for i=1, #CompactRaidFrameContainer.units do
+    		local unit = CompactRaidFrameContainer.units[i];
+            if destGUID == UnitGUID(unit) then
+                if UnitHealth(unit) <= 1 then
+                    if CustomBuffs.units[destGUID] then
+                        twipe(CustomBuffs.units[destGUID]);
+                        CustomBuffs.units[destGUID] = nil;
+                        CompactUnitFrame_UpdateAuras(_G["CompactRaidFrame"..i]);
+                    end
+                end
+                break;
             end
         end
     end
