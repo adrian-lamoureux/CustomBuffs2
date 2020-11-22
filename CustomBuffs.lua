@@ -879,7 +879,7 @@ local function handleCLEU()
     end
     if  event == "UNIT_DIED" and (GetNumGroupMembers() > 0) then
             if CustomBuffs.units[destGUID] then
-                if UnitHealth(unit) <= 1 then
+                if UnitHealth(CustomBuffs.units[destGUID].unit) <= 1 then
                     if CustomBuffs.units[destGUID] then
                         twipe(CustomBuffs.units[destGUID].int);
                         CustomBuffs.units[destGUID].int = nil;

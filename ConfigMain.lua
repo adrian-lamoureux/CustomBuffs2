@@ -65,7 +65,7 @@ function CustomBuffs:CreateGeneralOptions()
 				name = "Max Name Length",
 				desc = "Set the Maximum number of characters of a unit's name that will be displayed on its raid frame if clean names is enabled",
 				min = 1,
-				max = 20,
+				max = 12,
 				step = 1,
 				get = function() return self.db.profile.maxNameLength end,
 				set = function(_, value)
