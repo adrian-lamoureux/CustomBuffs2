@@ -881,10 +881,14 @@ local function handleCLEU()
             if CustomBuffs.units[destGUID] then
                 if UnitHealth(CustomBuffs.units[destGUID].unit) <= 1 then
                     if CustomBuffs.units[destGUID] then
-                        twipe(CustomBuffs.units[destGUID].int);
-                        CustomBuffs.units[destGUID].int = nil;
-                        twipe(CustomBuffs.units[destGUID].nauras);
-                        CustomBuffs.units[destGUID].nauras = nil;
+                        if CustomBuffs.units[destGUID].int then
+                            twipe(CustomBuffs.units[destGUID].int);
+                            CustomBuffs.units[destGUID].int = nil;
+                        end
+                        if CustomBuffs.units[destGUID].nauras then
+                            twipe(CustomBuffs.units[destGUID].nauras);
+                            CustomBuffs.units[destGUID].nauras = nil;
+                        end
                         CompactUnitFrame_UpdateAuras(_G["CompactRaidFrame"..CustomBuffs.units[destGUID].frameNum]);
                     end
                 end
