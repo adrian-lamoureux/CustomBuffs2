@@ -221,7 +221,7 @@ CustomBuffs.INTERRUPTS = {
 
 CustomBuffs.NONAURAS = {
     --SHAMAN
-    [108280] = { duration = 10, tbPrio = 1 }, --Healing Tide
+    [108280] = { duration = 12, tbPrio = 1 }, --Healing Tide
     [198067] = { duration = 30, tbPrio = 1 }, --Fire Elemental
     [192249] = { duration = 30, tbPrio = 1 }, --Storm Elemental
     [51533] =  { duration = 15, tbPrio = 1 }, --Feral Spirit
@@ -869,7 +869,9 @@ local function handleCLEU()
 
                 -- Make sure we clear it after the duration
                 C_Timer.After(duration + 0.01, function()
-                    CustomBuffs.units[casterGUID].nauras[spellID] = nil;
+                    if CustomBuffs.units[casterGUID].nauras and CustomBuffs.units[casterGUID].nauras[spellID] then
+                        CustomBuffs.units[casterGUID].nauras[spellID] = nil;
+                    end
                     CompactUnitFrame_UpdateAuras(_G["CompactRaidFrame"..CustomBuffs.units[casterGUID].frameNum]);
                 end);
 
