@@ -5,7 +5,7 @@
 local addonName, addonTable = ...; --make use of the default addon namespace
 addonTable.CustomBuffs = LibStub("AceAddon-3.0"):NewAddon("CustomBuffs", "AceTimer-3.0", "AceHook-3.0", "AceEvent-3.0", "AceBucket-3.0", "AceConsole-3.0");
 local CustomBuffs = addonTable.CustomBuffs;
-if Profiler then _G.CustomBuffs = CustomBuffs end
+_G.CustomBuffs = CustomBuffs
     --[[
         CustomBuffsFrame        :   Frame
 
@@ -81,28 +81,11 @@ if not CustomBuffs.BUFF_SCALE_FACTOR then
     --CustomBuffs.BIG_BUFF_SCALE_FACTOR = 1.5;
 end
 
+CustomBuffs.UPDATE_DELAY_TOLERANCE = 0.01;
 CustomBuffs.inRaidGroup = false;
 
---Deal with combat breaking frames by disabling CompactRaidFrameContainer's layoutFrames function
---while in combat so players joining or leaving the group/raid in combat won't break anyone else's frames
-local oldUpdateLayout = CompactRaidFrameContainer_LayoutFrames;
-CompactRaidFrameContainer_LayoutFrames = function(self)
-    if InCombatLockdown() then
-        CustomBuffs.layoutNeedsUpdate = true;
-    else
 
-        --updating layout makes calls to update aura frame sizes at an unfortunate time, so we set flags on
-        --each of the frames to override blizzard's overriding of their size on the next update
-        for index, frame in ipairs(_G.CompactRaidFrameContainer.flowFrames) do
-            --index 1 is a string for some reason so we skip it
-            if index ~= 1 and frame and frame.debuffFrames then
-                frame.auraNeedResize = true;
-            end
-        end
 
-        oldUpdateLayout(self);
-    end
-end
 
 --[[
 local needsUpdateVisible = {};
@@ -141,6 +124,7 @@ local setCooldownFrame = CooldownFrame_Set;
 local clearCooldownFrame = CooldownFrame_Clear;
 
 local UnitGUID = UnitGUID;
+local CompactUnitFrame_UpdateAuras = CompactUnitFrame_UpdateAuras;
 
 local dbSize = 1;
 local bSize = 1;
@@ -148,6 +132,12 @@ local tbSize = 1.2;
 local bdSize = 1.5;
 
 local NameCache = {};
+
+local function ForceUpdateFrame(fNum)
+    --local name = GetUnitName(_G["CompactRaidFrame"..fNum].unit, false);
+    --print("Forcing frame update for frame "..fNum.." for unit "..name);
+    CustomBuffs:UpdateAuras(_G["CompactRaidFrame"..fNum]);
+end
 
 
 ----------------------
@@ -392,8 +382,12 @@ CustomBuffs.EXTERNALS = {
     ["Rallying Cry"] =              EStandard,
     ["Anti-Magic Zone"] =           EStandard,
 
+
+    ["Fleshcraft"] =                EStandard,
+
     --Minor Externals worth tracking
     ["Enveloping Mist"] =           ELow,
+
 
     --Show party/raid member's stealth status in buffs
     ["Stealth"] =                   EStandard,
@@ -429,8 +423,9 @@ CustomBuffs.EXTRA_RAID_BUFFS = {
     ["Quickening"] =            ERBStandard,
     ["Ancient Flame"] =         ERBStandard,
     ["Grove Tending"] =         ERBStandard,
-    ["Blessed Portents"] =      ERBStandard
+    ["Blessed Portents"] =      ERBStandard,
 
+    ["Fleshcraft"] =            ERBStandard,
 };
 
 
@@ -797,15 +792,19 @@ local function handleRosterUpdate()
         table.invalid = true;
     end
     for i=1, #CompactRaidFrameContainer.units do
-        local unit = CompactRaidFrameContainer.units[i];
+        local frame = _G["CompactRaidFrame"..i];
+        if not frame or not frame.unit then break; end
+        local unit = _G["CompactRaidFrame"..i].unit;
         local guid = UnitGUID(unit);
         if guid then
+            --print("Frame number "..i.." id "..unit);
             CustomBuffs.units[guid] = CustomBuffs.units[guid] or {};
             CustomBuffs.units[guid].invalid = nil;
             CustomBuffs.units[guid].frameNum = i;
             CustomBuffs.units[guid].unit = unit;
         end
     end
+
     for i, table in pairs(CustomBuffs.units) do
         if table.invalid then
             twipe(CustomBuffs.units[i]);
@@ -839,12 +838,12 @@ local function handleCLEU()
                 CustomBuffs.units[destGUID].int.spellName = spellName;
                 --self.units[destGUID].spellID = spell.parent and spell.parent or spellId
 
-                CompactUnitFrame_UpdateAuras(_G["CompactRaidFrame"..CustomBuffs.units[destGUID].frameNum]);
+                ForceUpdateFrame(CustomBuffs.units[destGUID].frameNum);
 
                 -- Make sure we clear it after the duration
-                C_Timer.After(duration + 0.01, function()
+                C_Timer.After(duration + CustomBuffs.UPDATE_DELAY_TOLERANCE, function()
                     CustomBuffs.units[destGUID].int = nil;
-                    CompactUnitFrame_UpdateAuras(_G["CompactRaidFrame"..CustomBuffs.units[destGUID].frameNum]);
+                    ForceUpdateFrame(CustomBuffs.units[destGUID].frameNum);
                 end);
 
 
@@ -865,14 +864,14 @@ local function handleCLEU()
                 CustomBuffs.units[casterGUID].nauras[spellID].spellName = spellName;
                 --self.units[destGUID].spellID = spell.parent and spell.parent or spellId
 
-                CompactUnitFrame_UpdateAuras(_G["CompactRaidFrame"..CustomBuffs.units[casterGUID].frameNum]);
+                ForceUpdateFrame(CustomBuffs.units[casterGUID].frameNum);
 
                 -- Make sure we clear it after the duration
-                C_Timer.After(duration + 0.01, function()
+                C_Timer.After(duration + CustomBuffs.UPDATE_DELAY_TOLERANCE, function()
                     if CustomBuffs.units[casterGUID].nauras and CustomBuffs.units[casterGUID].nauras[spellID] then
                         CustomBuffs.units[casterGUID].nauras[spellID] = nil;
                     end
-                    CompactUnitFrame_UpdateAuras(_G["CompactRaidFrame"..CustomBuffs.units[casterGUID].frameNum]);
+                    ForceUpdateFrame(CustomBuffs.units[casterGUID].frameNum);
                 end);
 
 
@@ -891,13 +890,39 @@ local function handleCLEU()
                             twipe(CustomBuffs.units[destGUID].nauras);
                             CustomBuffs.units[destGUID].nauras = nil;
                         end
-                        CompactUnitFrame_UpdateAuras(_G["CompactRaidFrame"..CustomBuffs.units[destGUID].frameNum]);
+                        ForceUpdateFrame(CustomBuffs.units[destGUID].frameNum);
                     end
                 end
 
             end
     end
 end
+
+--Deal with combat breaking frames by disabling CompactRaidFrameContainer's layoutFrames function
+--while in combat so players joining or leaving the group/raid in combat won't break anyone else's frames
+local oldUpdateLayout = CompactRaidFrameContainer_LayoutFrames;
+CompactRaidFrameContainer_LayoutFrames = function(self)
+    if InCombatLockdown() then
+        CustomBuffs.layoutNeedsUpdate = true;
+    else
+
+        --updating layout makes calls to update aura frame sizes at an unfortunate time, so we set flags on
+        --each of the frames to override blizzard's overriding of their size on the next update
+        for index, frame in ipairs(_G.CompactRaidFrameContainer.flowFrames) do
+            --index 1 is a string for some reason so we skip it
+            if index ~= 1 and frame and frame.debuffFrames then
+                frame.auraNeedResize = true;
+            end
+        end
+
+        oldUpdateLayout(self);
+        --Make sure we update the frame numbers for each of our tracked units
+        handleRosterUpdate();
+    end
+end
+
+
+
 --Establish player class and set up class based logic
 
 --Look up player class
@@ -1685,10 +1710,37 @@ local function stripChars(str)
 end
 
 
+function CustomBuffs:CleanName(unitGUID, backupFrame)
+    local name = NameCache[unitGUID];
+    if not name or name == "Unknown" then
+        --if we don't already have the name cached then we calculate it and add it to the cache
+        if backupFrame and backupFrame.unit then
+            name = GetUnitName(backupFrame.unit, false);
+            --manually invalidate unknown names
+            if name == "Unknown" then return nil; end
+            if name then
+                --Replace special characters so we only have to deal with standard 8 bit characters
+                name = stripChars(name);
 
+                --Limit the name to specified number of characters and hide realm names
+                local lastChar, _ = string.find(name, " "); --there is a space before the realm name; this does cause problems for certain npcs that can join your group
+                if not lastChar or lastChar > (self.db.profile.maxNameLength or 12) then lastChar = (self.db.profile.maxNameLength or 12); end
+                name = strsub(name,1,lastChar);
+
+                --Update the cache for new unit
+                --Don't trust that the unitGUID given actually matches just in case
+                NameCache[UnitGUID(backupFrame.unit)] = name;
+
+                return name;
+            end
+        end
+        return nil;
+    end
+    return name;
+end
 ----[[
 --Clean Up Names
-function CustomBuffs:CleanNames(frame)
+function CustomBuffs:CleanNames(frame) --TODO rename this
     if (not frame or frame:IsForbidden() or not frame:IsShown() or not frame.debuffFrames or not frame:GetName():match("^Compact")) then return; end
         local name = "";
         if (frame.optionTable and frame.optionTable.displayName) then
@@ -1697,24 +1749,8 @@ function CustomBuffs:CleanNames(frame)
                 return;
             end
 
-            name = NameCache[UnitGUID(frame.unit)];
-            if not name or name == "Unknown" then
-                --if we don't already have the name cached then we calculate it and add it to the cache
-                name = GetUnitName(frame.unit, false);
-
-                --if we still can't find a name we give up
-                if not name then frame.name:Hide(); return; end
-
-                --Replace special characters so we only have to deal with standard 8 bit characters
-                name = stripChars(name);
-
-                --Limit the name to specified number of characters and hide realm names
-                local lastChar, _ = string.find(name, " ");
-                if not lastChar or lastChar > (self.db.profile.maxNameLength or 9) then lastChar = (self.db.profile.maxNameLength or 9); end
-                name = strsub(name,1,lastChar);
-
-                NameCache[UnitGUID(frame.unit)] = name;
-            end
+            name = CustomBuffs:CleanName(UnitGUID(frame.unit), frame);
+            if not name then frame.name:Hide(); return; end
         end
         frame.name:SetText(name);
 end--);
@@ -1740,10 +1776,12 @@ function CustomBuffs:OnEnable()
 	self:UpdateConfig();
 
 
-	self:RegisterChatCommand("cb",function()
-		InterfaceOptionsFrame_OpenToCategory("CustomBuffs");
-		InterfaceOptionsFrame_OpenToCategory("CustomBuffs");
-	end);
+	self:RegisterChatCommand("cb",function(options)
+        if options == "" then
+		    InterfaceOptionsFrame_OpenToCategory("CustomBuffs");
+		    InterfaceOptionsFrame_OpenToCategory("CustomBuffs");
+        end
+    end);
 
     handleRosterUpdate();
 end

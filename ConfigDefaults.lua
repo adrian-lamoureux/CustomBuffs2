@@ -18,7 +18,7 @@ function CustomBuffs:Defaults()
 		extraDebuffs = false,
 		extraBuffs = false,
 		cleanNames = true,
-		maxNameLength = 9
+		maxNameLength = 12
 	};
 
 	return defaults
