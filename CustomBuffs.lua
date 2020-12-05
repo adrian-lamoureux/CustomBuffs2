@@ -43,48 +43,34 @@ _G.CustomBuffs = CustomBuffs
 
 
 --Create a frame so that we can listen for and handle events
-if not CustomBuffs.CustomBuffsFrame then
-    CustomBuffs.CustomBuffsFrame = CreateFrame("Frame","CustomBuffsFrame");
-end
+CustomBuffs.CustomBuffsFrame = CustomBuffs.CustomBuffsFrame or CreateFrame("Frame","CustomBuffsFrame");
 
 --Create units table
-if not CustomBuffs.units then
-    CustomBuffs.units = {};
-end
+CustomBuffs.units = CustomBuffs.units or {};
 
 --Set up values for dispel types; used to quickly
 --determine whether a spell is dispellable by the player class;
 --used to increase the debuff priority of dispellable debuffs
-if not CustomBuffs.dispelValues then
-    CustomBuffs.dispelValues = {
-        ["magic"] = 0x1,
-        ["curse"] = 0x2,
-        ["poison"] = 0x4,
-        ["disease"] = 0x8,
-        ["massDispel"] = 0x10,
-        ["purge"] = 0x20    --Tracked for things like MC
-    };
-end
+CustomBuffs.dispelValues = CustomBuffs.dispelValues or {
+    ["magic"] = 0x1,
+    ["curse"] = 0x2,
+    ["poison"] = 0x4,
+    ["disease"] = 0x8,
+    ["massDispel"] = 0x10,
+    ["purge"] = 0x20    --Tracked for things like MC
+};
 
 --Set Max Debuffs
-if not CustomBuffs.MAX_DEBUFFS then
-    CustomBuffs.MAX_DEBUFFS = 6;
-end
-
-if not CustomBuffs.MAX_BUFFS then
-    CustomBuffs.MAX_BUFFS = 6;
-end
+CustomBuffs.MAX_DEBUFFS = CustomBuffs.MAX_DEBUFFS or 6;
+CustomBuffs.MAX_BUFFS = CustomBuffs.MAX_BUFFS or 6;
 
 --Set Buff Scale Factor
-if not CustomBuffs.BUFF_SCALE_FACTOR then
-    CustomBuffs.BUFF_SCALE_FACTOR = 10;
-    --CustomBuffs.BIG_BUFF_SCALE_FACTOR = 1.5;
-end
+CustomBuffs.BUFF_SCALE_FACTOR = CustomBuffs.BUFF_SCALE_FACTOR or 10;
 
-CustomBuffs.UPDATE_DELAY_TOLERANCE = 0.01;
+CustomBuffs.UPDATE_DELAY_TOLERANCE = CustomBuffs.UPDATE_DELAY_TOLERANCE or 0.01;
 CustomBuffs.inRaidGroup = false;
 
-
+CustomBuffs.debugMode = CustomBuffs.debugMode or false;
 
 
 --[[
@@ -662,7 +648,99 @@ CustomBuffs.CC = {
 
     --Area Denials
     ["Solar Beam"] =            CCStandard,
-    [212183] =                  CCStandard --Smoke Bomb
+    [212183] =                  CCStandard, --Smoke Bomb
+
+
+
+    -------------------------
+    -- Shadowlands Dungeon --
+    -------------------------
+
+    --De Other Side
+    ["Corrupted Blood"] =                       CCStandard,
+    ["Arcane Lightning"] =                      CCStandard,
+    [321948] =                                  CCStandard, --Localized Explosive Contrivance
+    ["Cosmic Artifice"] =                       MagicStandard,
+
+    --Halls of Atonement
+    ["Sinlight Visions"] =                      MagicStandard,
+    ["Curse of Stone"] =                        CurseStandard,
+    ["Haunting Fixation"] =                     CCStandard,
+    ["Stigma of Pride"] =                       CCStandard,
+    ["W-OOF"] =                                 CCStandard,
+
+    [325701] =                                  MagicStandard, --Siphon Life
+    ["Curse of Obliteration"] =                 CurseStandard,
+
+    --Mists of Tirna Scithe
+    ["Repulsive Visage"] =                      CCStandard,
+    ["Freeze Tag Fixation"] =                   CCStandard,
+    ["Freezing Burst"] =                        CCStandard,
+    ["Mind Link"] =                             CCStandard,
+
+    ["Overgrowth"] =                            CCStandard,
+    ["Anima Injection"] =                       MagicStandard,
+    ["Debilitating Poison"] =                   PoisonStandard,
+    ["Volatile Acid"] =                         CCStandard,
+
+    --Plaguefall
+    ["Debilitating Plague"] =                   DiseaseStandard,
+    ["Withering Filth"] =                       MagicStandard,
+    ["Cytotoxic Slash"] =                       PoisonStandard,
+    ["Shadow Ambush"] =                         CCStandard,
+    ["Infectious Rain"] =                       DiseaseStandard,
+
+    ["Violent Detonation"] =                    DiseaseStandard,
+    ["Venompiercer"] =                          PoisonStandard,
+
+    --Sanguine Depths
+    ["Juggernaut Rush"] =                       CCStandard,
+    ["Sintouched Anima"] =                      CurseStandard,
+    ["Castigate"] =                             CCStandard,
+    ["Anguished Cries"] =                       MagicStandard,
+    --["Wicked Gash"] =                           CCStandard, --TODO: Maybe add bleed category?
+
+    ["Curse of Suppression"] =                  CurseStandard,
+    ["Barbed Shackles"] =                       CCStandard,
+
+    --Spires of Ascension
+    ["Charged Anima"] =                         MagicStandard,
+    ["Lingering Doubt"] =                       CCStandard,
+    ["Anima Surge"] =                           CCStandard,
+    ["Lost Confidence"] =                       MagicStandard,
+    ["Dark Stride"] =                           CCStandard,
+    ["Purifying Blast"] =                       CCStandard,
+
+    ["Forced Confession"] =                     MagicStandard,
+    ["Internal Strife"] =                       MagicStandard,
+
+    --Necrotic Wake
+    ["Heaving Retch"] =                         DiseaseStandard,
+    ["Meat Hook"] =                             CCStandard,
+    ["Stitchneedle"] =                          CCStandard,
+    ["Morbid Fixation"] =                       CCStandard,
+
+    ["Clinging Darkness"] =                     MagicStandard,
+    ["Rasping Scream"] =                        MagicStandard, --TODO: is this magic?
+    ["Drain Fluids"] =                          CCStandard,
+    [338357] =                                  CCStandard, --Tenderize
+    ["Throw Cleaver"] =                         CCStandard,
+
+    --Theater of Pain
+    [320069] =                                  CCStandard, --Mortal Strike
+    ["Genetic Alteration"] =                    CCStandard,
+    ["Phantasmal Parasite"] =                   CCStandard,
+    ["Manifest Death"] =                        CCStandard,
+
+    ["Withering Blight"] =                      DiseaseStandard,
+    ["Curse of Desolation"] =                   CurseStandard,
+
+
+    --------------------
+    -- Castle Nathria --
+    --------------------
+
+
 
     --["Vendetta"] =              {["dispelType"] = nil, ["sdPrio"] = 3, ["bdPrio"] = 4},
     --["Counterstrike Totem"] =   {["dispelType"] = nil, ["sdPrio"] = 3, ["bdPrio"] = 4} --Debuff when affected by counterstrike totem
@@ -868,10 +946,10 @@ local function handleCLEU()
 
                 -- Make sure we clear it after the duration
                 C_Timer.After(duration + CustomBuffs.UPDATE_DELAY_TOLERANCE, function()
-                    if CustomBuffs.units[casterGUID].nauras and CustomBuffs.units[casterGUID].nauras[spellID] then
+                    if CustomBuffs.units[casterGUID] and CustomBuffs.units[casterGUID].nauras and CustomBuffs.units[casterGUID].nauras[spellID] then
                         CustomBuffs.units[casterGUID].nauras[spellID] = nil;
+                        ForceUpdateFrame(CustomBuffs.units[casterGUID].frameNum);
                     end
-                    ForceUpdateFrame(CustomBuffs.units[casterGUID].frameNum);
                 end);
 
 
@@ -897,6 +975,20 @@ local function handleCLEU()
             end
     end
 end
+
+--[[
+local oldRTU = CompactRaidFrameContainer_ReadyToUpdate;
+CompactRaidFrameContainer_ReadyToUpdate = function(self)
+    return not InCombatLockdown() and oldRTU;
+end
+--]]
+
+--[[ TODO: look into ways to force Blizzard to not attempt shuffling frames in combat
+local oldSetUnit = CompactUnitFrame_SetUnit;
+CompactUnitFrame_SetUnit = function(self)
+
+end
+--]]
 
 --Deal with combat breaking frames by disabling CompactRaidFrameContainer's layoutFrames function
 --while in combat so players joining or leaving the group/raid in combat won't break anyone else's frames
@@ -1313,11 +1405,16 @@ local function updateAura(auraFrame, index, auraData)
 
 end
 
+
 -------------------------------
 -- Main Aura Update function --
 -------------------------------
 
---We will sort the auras out into their preffered display locations
+--We will sort the auras out into their preffered display locations;
+--We keep these outside of the UpdateAuras function so we don't have to
+--create a new set of tables on every call.  This works because all of
+--the UI code is single threaded, so we can never have simultaneous executions
+--of UpdateAuras
 local bossDebuffs, throughputBuffs, buffs, debuffs = {}, {}, {}, {};
 
 function CustomBuffs:UpdateAuras(frame)
@@ -1619,10 +1716,10 @@ function CustomBuffs:UpdateAuras(frame)
     else
         frame.name:Show();
         --When we call show it doesn't update the text of the name, which
-        --means that our CleanNames code doesn't run until the next update,
+        --means that our SetName code doesn't run until the next update,
         --so we call it manually to override the default blizzard names
         if self.db.profile.cleanNames then
-            CustomBuffs:CleanNames(frame);
+            CustomBuffs:SetName(frame);
         end
     end
 
@@ -1634,6 +1731,331 @@ function CustomBuffs:UpdateAuras(frame)
     twipe(buffs);
     twipe(debuffs);
 end --);
+
+
+--------------------------------
+-- Debug Aura Update function --
+--------------------------------
+
+local function DebugUpdateFrame(frame)
+    if (not frame or not frame.displayedUnit or frame:IsForbidden() or not frame:IsShown() or not frame.debuffFrames or not frame:GetName():match("^Compact") or not frame.optionTable or not frame.optionTable.displayNonBossDebuffs) then return; end
+
+    --Handle pre calculation logic
+    if frame.optionTable.displayBuffs then frame.optionTable.displayBuffs = false; end                          --Tell buff frames to skip blizzard logic
+    if frame.optionTable.displayDebuffs then frame.optionTable.displayDebuffs = false; end                      --Tell debuff frames to skip blizzard logic
+    if frame.optionTable.displayDispelDebuffs then frame.optionTable.displayDispelDebuffs = false; end          --Prevent blizzard frames from showing dispel debuff frames
+    if frame.optionTable.displayNameWhenSelected then frame.optionTable.displayNameWhenSelected = false; end    --Don't show names when the frame is selected to prevent bossDebuff overlap
+
+    if frame.auraNeedResize or not frame.debuffsLoaded or not frame.bossDebuffs or not frame.throughputFrames then
+        setUpExtraDebuffFrames(frame);
+        setUpExtraBuffFrames(frame);
+        setUpThroughputFrames(frame);
+        setUpBossDebuffFrames(frame);
+        frame.auraNeedResize = false;
+    end
+
+    --If our custom aura frames have not yet loaded do nothing
+    if not frame.debuffsLoaded or not frame.bossDebuffs or not frame.throughputFrames then return; end
+
+    if frame.debuffNeedUpdate then
+        setUpExtraDebuffFrames(frame);
+    end
+    if frame.buffNeedUpdate then
+        setUpExtraBuffFrames(frame);
+    end
+
+    --Check for interrupts
+    local guid = UnitGUID(frame.displayedUnit);
+    if guid and CustomBuffs.units[guid] then
+        local unit = CustomBuffs.units[guid];
+        if unit.int and unit.int.expires and unit.int.expires > GetTime() then
+            --index of -1 for interrupts
+            tinsert(bossDebuffs, { ["index"] = -1, ["bdPrio"] = 1, ["auraData"] = {
+                --{icon, count, expirationTime, duration}
+                GetSpellTexture(unit.int.spellID),
+                1,
+                unit.int.expires,
+                unit.int.duration,
+                nil,                                --Interrupts do not have a dispel type
+                unit.int.spellID                    --Interrupts need a special field containing the spellID of the interrupt used
+                                                    --in order to construct a mouseover tooltip for their aura frames
+            }});
+        end
+        if unit.nauras then
+            for id, data in pairs(unit.nauras) do
+                tinsert(throughputBuffs, { ["index"] = -1, ["tbPrio"] = data.tbPrio or 1, ["sbPrio"] = data.sbPrio or 1, ["auraData"] = {
+                    --{icon, count, expirationTime, duration}
+                    GetSpellTexture(id),
+                    1,
+                    data.expires,
+                    data.duration,
+                    nil,                                --no dispel type
+                    data.spellID                    --Need a special field containing the spellID
+                }});
+            end
+        end
+    end
+
+
+    --Handle Debuffs
+    for index = 1, 40 do
+        local name, icon, count, debuffType, duration, expirationTime, unitCaster, _, _, spellID, canApplyAura, isBossAura = UnitDebuff(frame.displayedUnit, index);
+        if name then
+            if isBossAura then
+                --[[ Debug
+                if not debuffType then
+                    print("potential bug for :", name, ":");
+                end
+                -- end debug ]]
+
+                --Add to bossDebuffs
+                tinsert(bossDebuffs, {
+                    ["index"] = index,
+                    ["bdPrio"] = 2,
+                    ["sdPrio"] = 1,
+                    ["auraData"] = {icon, count, expirationTime, duration, debuffType},
+                    ["type"] = "debuff"
+                });
+            elseif (CustomBuffs.CC[name] or CustomBuffs.CC[spellID]) then
+                --Add to bossDebuffs; adjust priority if dispellable
+                local auraData = CustomBuffs.CC[name] or CustomBuffs.CC[spellID];
+                local bdPrio, sdPrio = auraData.bdPrio, auraData.sdPrio;
+
+                if auraData.canDispel then
+                    bdPrio = bdPrio - 1;
+                    sdPrio = sdPrio - 1;
+                end
+
+                tinsert(bossDebuffs, {
+                    ["index"] = index,
+                    ["bdPrio"] = bdPrio,
+                    ["sdPrio"] = sdPrio,
+                    ["auraData"] = {icon, count, expirationTime, duration, debuffType},
+                    ["type"] = "debuff"
+                });
+            elseif isPrioDebuff(name, icon, count, debuffType, duration, expirationTime, unitCaster, nil, nil, spellID) then
+                --Add to debuffs
+                tinsert(debuffs, {
+                    ["index"] = index,
+                    ["sdPrio"] = 4,
+                    ["auraData"] = {icon, count, expirationTime, duration, debuffType},
+                    ["type"] = "debuff"
+                });
+            elseif shouldDisplayDebuff(name, icon, count, debuffType, duration, expirationTime, unitCaster, nil, nil, spellID, canApplyAura, isBossAura) then
+                --Add to debuffs
+                tinsert(debuffs, {
+                    ["index"] = index,
+                    ["sdPrio"] = 5,
+                    ["auraData"] = {icon, count, expirationTime, duration, debuffType},
+                    ["type"] = "debuff"
+                });
+            end
+        else
+            break;
+        end
+    end
+
+    --Update Buffs
+    for index = 1, 40 do
+        local name, icon, count, debuffType, duration, expirationTime, unitCaster, _, _, spellID, canApplyAura, isBossAura = UnitBuff(frame.displayedUnit, index);
+        local _, _, displayedClass = UnitClass(frame.displayedUnit);
+        if name then
+            if isBossAura then
+                --Debug
+                --print("Found boss buff :", name, ":");
+                --end debug
+
+                --Add to bossDebuffs
+                tinsert(bossDebuffs, {
+                    ["index"] = index,
+                    ["bdPrio"] = 2,
+                    ["sbPrio"] = 1,
+                    ["auraData"] = {icon, count, expirationTime, duration, nil, nil, true}
+                });
+            elseif CustomBuffs.THROUGHPUT_CDS[displayedClass] and (CustomBuffs.THROUGHPUT_CDS[displayedClass][name] or CustomBuffs.THROUGHPUT_CDS[displayedClass][spellID]) then
+                --Add to throughputBuffs
+                local auraData = CustomBuffs.THROUGHPUT_CDS[displayedClass][name] or CustomBuffs.THROUGHPUT_CDS[displayedClass][spellID];
+                tinsert(throughputBuffs, {
+                    ["index"] = index,
+                    ["tbPrio"] = auraData.tbPrio;
+                    ["sbPrio"] = auraData.sbPrio,
+                    ["auraData"] = {icon, count, expirationTime, duration}
+                });
+            elseif CustomBuffs.EXTERNAL_THROUGHPUT_CDS[name] or CustomBuffs.EXTERNAL_THROUGHPUT_CDS[spellID] then
+                --Add to throughputBuffs
+                local auraData = CustomBuffs.EXTERNAL_THROUGHPUT_CDS[name] or CustomBuffs.EXTERNAL_THROUGHPUT_CDS[spellID];
+                tinsert(throughputBuffs, {
+                    ["index"] = index,
+                    ["tbPrio"] = auraData.tbPrio;
+                    ["sbPrio"] = auraData.sbPrio,
+                    ["auraData"] = {icon, count, expirationTime, duration}
+                });
+            elseif (CustomBuffs.CDS[displayedClass] and (CustomBuffs.CDS[displayedClass][name] or CustomBuffs.CDS[displayedClass][spellID])) then
+                --Add to buffs
+                local auraData = CustomBuffs.CDS[displayedClass][name] or CustomBuffs.CDS[displayedClass][spellID];
+                tinsert(buffs, {
+                    ["index"] = index,
+                    ["sbPrio"] = auraData.sbPrio,
+                    ["auraData"] = {icon, count, expirationTime, duration}
+                });
+            elseif (CustomBuffs.EXTERNALS[name] or CustomBuffs.EXTERNALS[spellID]) and unitCaster ~= "player" and unitCaster ~= "pet" then
+                --Add to buffs
+                local auraData = CustomBuffs.EXTERNALS[name] or CustomBuffs.EXTERNALS[spellID];
+                tinsert(buffs, {
+                    ["index"] = index,
+                    ["sbPrio"] = auraData.sbPrio,
+                    ["auraData"] = {icon, count, expirationTime, duration}
+                });
+            elseif (CustomBuffs.EXTRA_RAID_BUFFS[name] or CustomBuffs.EXTRA_RAID_BUFFS[spellID]) and (unitCaster == "player" or unitCaster == "pet") then
+                --Add to buffs
+                local auraData = CustomBuffs.EXTRA_RAID_BUFFS[name] or CustomBuffs.EXTRA_RAID_BUFFS[spellID];
+                tinsert(buffs, {
+                    ["index"] = index,
+                    ["sbPrio"] = auraData.sbPrio,
+                    ["auraData"] = {icon, count, expirationTime, duration}
+                });
+            elseif shouldDisplayBuff(name, icon, count, debuffType, duration, expirationTime, unitCaster, nil, nil, spellID, canApplyAura, isBossAura) then
+                --Add to buffs
+                tinsert(buffs, {
+                    ["index"] = index,
+                    ["sbPrio"] = 5,
+                    ["auraData"] = {icon, count, expirationTime, duration}
+                });
+            end
+        else
+            break;
+        end
+    end
+
+
+    --Assign auras to aura frames
+
+    --Sort bossDebuffs in priority order
+    tsort(bossDebuffs, function(a,b)
+        if not a or not b then return true; end
+        return a.bdPrio < b.bdPrio;
+    end);
+
+    --If there are more bossDebuffs than frames, copy extra auras into appropriate fallthrough locations
+    for i = 3, #bossDebuffs do
+        --Buffs fall through to buffs, debuffs fall through to debuffs
+        if bossDebuffs[i].type then
+            tinsert(debuffs, bossDebuffs[i]);
+        else
+            --[[ debug stuff
+            local name, _, _, _, _, _, _, _, _, _, _, _ = UnitBuff(frame.displayedUnit, bossDebuffs[i].index);
+            local name2, _, _, _, _, _, _, _, _, _, _, _ = UnitDebuff(frame.displayedUnit, bossDebuffs[i].index);
+            print("Boss buff ", name, " or ", name2, " falling through to buffs.");
+            -- end debug stuff ]]
+
+            tinsert(buffs, bossDebuffs[i]);
+        end
+    end
+
+    --Sort throughputBuffs in priority order
+    tsort(throughputBuffs, function(a,b)
+        if not a or not b then return true; end
+        return a.tbPrio < b.tbPrio;
+    end);
+
+    --If there are more throughputBuffs than frames, copy extra auras into appropriate fallthrough locations
+    for i = 3, #throughputBuffs do
+        tinsert(buffs, throughputBuffs[i]);
+    end
+
+    --Sort debuffs in priority order
+    tsort(debuffs, function(a,b)
+        if not a or not b then return true; end
+        return a.sdPrio < b.sdPrio;
+    end);
+
+    --Sort buffs in priority order
+    tsort(buffs, function(a,b)
+        if not a or not b then return true; end
+        return a.sbPrio < b.sbPrio;
+    end);
+
+    --Update all aura frames
+
+    --Boss Debuffs
+    local frameNum = 1;
+    while(frameNum <= 2 and bossDebuffs[frameNum]) do
+        updateAura(frame.bossDebuffs[frameNum], bossDebuffs[frameNum].index, bossDebuffs[frameNum].auraData);
+        frameNum = frameNum + 1;
+    end
+
+    --Throughput Frames
+    frameNum = 1;
+    while(frameNum <= 2 and throughputBuffs[frameNum]) do
+        updateAura(frame.throughputFrames[frameNum], throughputBuffs[frameNum].index, throughputBuffs[frameNum].auraData);
+        frameNum = frameNum + 1;
+    end
+
+    --Standard Debuffs
+    frameNum = 1;
+    while(frameNum <= frame.maxDebuffs and debuffs[frameNum]) do
+        updateAura(frame.debuffFrames[frameNum], debuffs[frameNum].index, debuffs[frameNum].auraData);
+        frameNum = frameNum + 1;
+    end
+
+    --Standard Buffs
+    frameNum = 1;
+    while(frameNum <= frame.maxBuffs and buffs[frameNum]) do
+        updateAura(frame.buffFrames[frameNum], buffs[frameNum].index, buffs[frameNum].auraData);
+        frameNum = frameNum + 1;
+    end
+
+
+
+
+    --Hide unused aura frames
+    for i = #debuffs + 1, frame.maxDebuffs do
+        local auraFrame = frame.debuffFrames[i];
+        --if auraFrame ~= frame.bossDebuffs[1] and auraFrame ~= frame.bossDebuffs[2] then auraFrame:Hide(); end
+        auraFrame:Hide();
+    end
+
+    for i = #bossDebuffs + 1, 2 do
+        frame.bossDebuffs[i]:Hide();
+    end
+
+    for i = #buffs + 1, frame.maxBuffs do
+        local auraFrame = frame.buffFrames[i];
+        --if auraFrame ~= frame.throughputFrames[1] and auraFrame ~= frame.throughputFrames[2] then auraFrame:Hide(); end
+        auraFrame:Hide();
+    end
+
+    for i = #throughputBuffs + 1, 2 do
+        frame.throughputFrames[i]:Hide();
+    end
+
+
+    --Hide the name text for frames with active bossDebuffs
+    if frame.bossDebuffs[1]:IsShown() then
+        frame.name:Hide();
+    else
+        frame.name:Show();
+        --When we call show it doesn't update the text of the name, which
+        --means that our SetName code doesn't run until the next update,
+        --so we call it manually to override the default blizzard names
+        if self.db.profile.cleanNames then
+            CustomBuffs:SetName(frame);
+        end
+    end
+
+    --Boss debuff location is variable, so we need to update their location every update
+    updateBossDebuffs(frame);
+
+    twipe(bossDebuffs);
+    twipe(throughputBuffs);
+    twipe(buffs);
+    twipe(debuffs);
+end --);
+
+--TODO: add actual functionality
+local function DebugUpdate()
+    print(CustomBuffs.debugMode);
+end
 
 --Testing fix for special characters
 local function stripChars(str)
@@ -1740,7 +2162,7 @@ function CustomBuffs:CleanName(unitGUID, backupFrame)
 end
 ----[[
 --Clean Up Names
-function CustomBuffs:CleanNames(frame) --TODO rename this
+function CustomBuffs:SetName(frame)
     if (not frame or frame:IsForbidden() or not frame:IsShown() or not frame.debuffFrames or not frame:GetName():match("^Compact")) then return; end
         local name = "";
         if (frame.optionTable and frame.optionTable.displayName) then
@@ -1780,6 +2202,9 @@ function CustomBuffs:OnEnable()
         if options == "" then
 		    InterfaceOptionsFrame_OpenToCategory("CustomBuffs");
 		    InterfaceOptionsFrame_OpenToCategory("CustomBuffs");
+        elseif options == "test" then
+            CustomBuffs.debugMode = not CustomBuffs.debugMode;
+            DebugUpdate();
         end
     end);
 
@@ -1813,10 +2238,10 @@ function CustomBuffs:UpdateConfig()
     if self.db.profile.loadTweaks then
         self:UITweaks();
     end
-    if self.db.profile.cleanNames and not self:IsHooked("CompactUnitFrame_UpdateName", function(frame) self:CleanNames(frame); end) then
-        self:SecureHook("CompactUnitFrame_UpdateName", function(frame) self:CleanNames(frame); end);
-    elseif not self.db.profile.cleanNames and self:IsHooked("CompactUnitFrame_UpdateName", function(frame) self:CleanNames(frame); end) then
-        self:Unhook("CompactUnitFrame_UpdateName", function(frame) self:CleanNames(frame); end);
+    if self.db.profile.cleanNames and not self:IsHooked("CompactUnitFrame_UpdateName", function(frame) self:SetName(frame); end) then
+        self:SecureHook("CompactUnitFrame_UpdateName", function(frame) self:SetName(frame); end);
+    elseif not self.db.profile.cleanNames and self:IsHooked("CompactUnitFrame_UpdateName", function(frame) self:SetName(frame); end) then
+        self:Unhook("CompactUnitFrame_UpdateName", function(frame) self:SetName(frame); end);
     end
 
     dbSize = self.db.profile.debuffScale;
