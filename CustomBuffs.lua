@@ -437,6 +437,7 @@ CustomBuffs.THROUGHPUT_CDS = {
         ["Essence of G'Hanir"] =                TCDStandard,
         ["Tiger's Fury"] =                      TCDStandard,
         ["Heart of the Wild"] =                 TCDStandard,
+        ["Flourish"] =                          TCDStandard,
 
     } ,
     [ 3 ] = { -- hunter
@@ -478,7 +479,7 @@ CustomBuffs.THROUGHPUT_CDS = {
         --["Divinity"] = true,
         ["Voidform"] =                          TCDStandard,
         ["Surrender to Madness"] =              TCDStandard,
-        ["Spirit Shell"] =                      TCDStandard,
+        [109964] =                              TCDStandard, --Spirit Shell
         ["Shadow Covenant"] =                   TCDStandard
     } ,
     [ 4 ] = { --rogue
@@ -662,15 +663,21 @@ CustomBuffs.CC = {
     [321948] =                                  CCStandard, --Localized Explosive Contrivance
     ["Cosmic Artifice"] =                       MagicStandard,
 
+    ["Beak Slice"] =                            CCStandard,
+    ["Wailing Grief"] =                         MagicStandard,
+
     --Halls of Atonement
     ["Sinlight Visions"] =                      MagicStandard,
     ["Curse of Stone"] =                        CurseStandard,
     ["Haunting Fixation"] =                     CCStandard,
     ["Stigma of Pride"] =                       CCStandard,
-    ["W-OOF"] =                                 CCStandard,
+    ["W-00F"] =                                 CCStandard,
 
     [325701] =                                  MagicStandard, --Siphon Life
     ["Curse of Obliteration"] =                 CurseStandard,
+    ["Jagged Swipe"] =                          CCStandard,  --TODO: Bleed tag?
+    ["Stony Veins"] =                           MagicStandard,
+    ["Turn to Stone"] =                         MagicStandard,
 
     --Mists of Tirna Scithe
     ["Repulsive Visage"] =                      CCStandard,
@@ -682,6 +689,9 @@ CustomBuffs.CC = {
     ["Anima Injection"] =                       MagicStandard,
     ["Debilitating Poison"] =                   PoisonStandard,
     ["Volatile Acid"] =                         CCStandard,
+    ["Bewildering Pollen"] =                    MagicStandard,
+    ["Soul Split"] =                            MagicStandard,
+    ["Triple Bite"] =                           PoisonStandard,
 
     --Plaguefall
     ["Debilitating Plague"] =                   DiseaseStandard,
@@ -692,6 +702,7 @@ CustomBuffs.CC = {
 
     ["Violent Detonation"] =                    DiseaseStandard,
     ["Venompiercer"] =                          PoisonStandard,
+    ["Gripping Infection"] =                    MagicStandard,
 
     --Sanguine Depths
     ["Juggernaut Rush"] =                       CCStandard,
@@ -713,6 +724,7 @@ CustomBuffs.CC = {
 
     ["Forced Confession"] =                     MagicStandard,
     ["Internal Strife"] =                       MagicStandard,
+    ["Burden of Knowledge"] =                   MagicStandard,
 
     --Necrotic Wake
     ["Heaving Retch"] =                         DiseaseStandard,
@@ -725,12 +737,15 @@ CustomBuffs.CC = {
     ["Drain Fluids"] =                          CCStandard,
     [338357] =                                  CCStandard, --Tenderize
     ["Throw Cleaver"] =                         CCStandard,
+    ["Grim Fate"] =                             CCStandard,
+    ["Boneflay"] =                              DiseaseStandard,
 
     --Theater of Pain
     [320069] =                                  CCStandard, --Mortal Strike
     ["Genetic Alteration"] =                    CCStandard,
     ["Phantasmal Parasite"] =                   CCStandard,
     ["Manifest Death"] =                        CCStandard,
+    ["Fixate"] =                                CCStandard,
 
     ["Withering Blight"] =                      DiseaseStandard,
     ["Curse of Desolation"] =                   CurseStandard,
@@ -739,7 +754,7 @@ CustomBuffs.CC = {
     --------------------
     -- Castle Nathria --
     --------------------
-
+    
 
 
     --["Vendetta"] =              {["dispelType"] = nil, ["sdPrio"] = 3, ["bdPrio"] = 4},
@@ -2090,7 +2105,8 @@ local function stripChars(str)
     tableAccents["Ü"] = "U";
     tableAccents["Ý"] = "Y";
     tableAccents["Þ"] = "P";
-    tableAccents["ß"] = "s";
+    --tableAccents["ß"] = "s";
+    tableAccents["ß"] = "B";
     tableAccents["à"] = "a";
     tableAccents["á"] = "a";
     tableAccents["â"] = "a";
@@ -2202,6 +2218,9 @@ function CustomBuffs:OnEnable()
         if options == "" then
 		    InterfaceOptionsFrame_OpenToCategory("CustomBuffs");
 		    InterfaceOptionsFrame_OpenToCategory("CustomBuffs");
+        elseif options == "weekly" then
+            LoadAddOn("Blizzard_WeeklyRewards");
+            WeeklyRewardsFrame:Show();
         elseif options == "test" then
             CustomBuffs.debugMode = not CustomBuffs.debugMode;
             DebugUpdate();
