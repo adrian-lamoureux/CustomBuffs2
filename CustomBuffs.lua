@@ -2195,6 +2195,94 @@ function CustomBuffs:SetName(frame)
 end--);
 --]]
 
+
+
+
+
+function CustomBuffs:UpdateRaidIcon(frame)
+    if (not frame or not frame:IsShown() or not frame.unit or not frame:GetName():match("^Compact")) then return; end
+
+    if not frame.Icon then
+        frame.Icon = {};
+	    frame.Icon.texture = frame:CreateTexture(nil, "OVERLAY");
+    end
+
+    if not frame.Icon then return; end
+
+    if not self.db.profile.showRaidMarkers and frame.Icon.texture then
+        frame.Icon.texture:Hide();
+        return;
+    end
+
+    local tex = frame.Icon.texture;
+    local vertOffset = -0.1 * frame:GetHeight();
+
+    if frame.powerBar and frame.powerBar:IsShown() then
+        vertOffset = vertOffset + frame.powerBar:GetHeight() + 1;
+    end
+
+    tex:ClearAllPoints();
+    tex:SetPoint("CENTER", 0, 0 + vertOffset);
+
+    tex:SetWidth(frame:GetWidth() / 6);
+    tex:SetHeight(frame:GetWidth() / 6);
+
+    tex:SetAlpha(0.5);
+
+
+    -- Get icon on unit
+	local index = GetRaidTargetIndex(frame.unit);
+
+	if index and index >= 1 and index <= 8 then
+		--the icons are stored in a single image, and UnitPopupButtons["RAID_TARGET_#"] is a table that contains the information for the texture and coords for each icon sub-texture
+		local iconTable = UnitPopupButtons["RAID_TARGET_"..index];
+		local texture = iconTable.icon;
+		local leftTexCoord = iconTable.tCoordLeft;
+		local rightTexCoord = iconTable.tCoordRight;
+		local topTexCoord = iconTable.tCoordTop;
+		local bottomTexCoord = iconTable.tCoordBottom;
+
+		frame.Icon.texture:SetTexture(texture, nil, nil, "TRILINEAR"); --use trilinear filtering to reduce jaggies
+		frame.Icon.texture:SetTexCoord(leftTexCoord, rightTexCoord, topTexCoord, bottomTexCoord); --texture contains all the icons in a single texture, and we need to set coords to crop out the other icons
+		frame.Icon.texture:Show();
+	else
+		frame.Icon.texture:Hide();
+	end
+end
+
+
+function CustomBuffs:UpdateRaidIcons()
+    if not CompactRaidFrameContainer:IsShown() then
+        return;
+    end
+
+    CompactRaidFrameContainer_ApplyToFrames(CompactRaidFrameContainer, "normal",
+			function(frame)
+				self:UpdateRaidIcon(frame);
+	        end);
+
+end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 function CustomBuffs:OnInitialize()
 	-- Set up config pane
 	self:Init();
@@ -2214,6 +2302,8 @@ function CustomBuffs:OnEnable()
 
 	self:UpdateConfig();
 
+    -- Hook raid icon updates
+	self:RegisterBucketEvent({"RAID_TARGET_UPDATE", "RAID_ROSTER_UPDATE"}, 1, "UpdateRaidIcons");
 
 	self:RegisterChatCommand("cb",function(options)
         if options == "" then
@@ -2275,6 +2365,8 @@ function CustomBuffs:UpdateConfig()
             frame.auraNeedResize = true;
         end
     end
+
+    self:UpdateRaidIcons();
 
     CustomBuffs.inRaidGroup = true;
     --Clear cached names in case updated settings change displayed names

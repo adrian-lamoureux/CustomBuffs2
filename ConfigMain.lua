@@ -185,6 +185,23 @@ function CustomBuffs:CreateGeneralOptions()
 				width = THIRD_WIDTH,
 				order = 91,
 			},
+			spacer6 = {
+                type = "header",
+				name = "Other",
+				order = 100,
+            },
+			raidMarkers = {
+				type = "toggle",
+				name = "Enable Raid Icons on Raid Frames",
+				desc = "When enabled, raid marker icons will be shown in the center of raid frames",
+				get = function() return self.db.profile.showRaidMarkers end,
+				set = function(_, value)
+					self.db.profile.showRaidMarkers = value;
+					self:UpdateConfig();
+				end,
+				width = THIRD_WIDTH * 1.5,
+				order = 110,
+			},
 		}
 	}
 

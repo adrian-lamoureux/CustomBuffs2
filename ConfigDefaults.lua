@@ -18,7 +18,8 @@ function CustomBuffs:Defaults()
 		extraDebuffs = false,
 		extraBuffs = false,
 		cleanNames = true,
-		maxNameLength = 12
+		maxNameLength = 12,
+		showRaidMarkers = true
 	};
 
 	return defaults
