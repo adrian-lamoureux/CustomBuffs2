@@ -713,6 +713,7 @@ CustomBuffs.CC = {
 
     ["Curse of Suppression"] =                  CurseStandard,
     ["Barbed Shackles"] =                       CCStandard,
+    ["Explosive Anger"] =                       CurseStandard,
 
     --Spires of Ascension
     ["Charged Anima"] =                         MagicStandard,
@@ -733,7 +734,7 @@ CustomBuffs.CC = {
     ["Morbid Fixation"] =                       CCStandard,
 
     ["Clinging Darkness"] =                     MagicStandard,
-    ["Rasping Scream"] =                        MagicStandard, --TODO: is this magic?
+    ["Rasping Scream"] =                        MagicStandard,
     ["Drain Fluids"] =                          CCStandard,
     [338357] =                                  CCStandard, --Tenderize
     ["Throw Cleaver"] =                         CCStandard,
@@ -754,7 +755,7 @@ CustomBuffs.CC = {
     --------------------
     -- Castle Nathria --
     --------------------
-    
+
 
 
     --["Vendetta"] =              {["dispelType"] = nil, ["sdPrio"] = 3, ["bdPrio"] = 4},
