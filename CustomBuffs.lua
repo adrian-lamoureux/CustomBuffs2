@@ -258,7 +258,8 @@ local CDStandard = {["sbPrio"] = 4, ["sdPrio"] = nil, ["bdPrio"] = nil, ["tbPrio
                 ["Dancing Rune Weapon"] =       CDStandard,
                 ["Hemostasis"] =                CDStandard,
                 ["Rune Tap"] =                  CDStandard,
-                ["Lichborne"] =                 CDStandard
+                ["Lichborne"] =                 CDStandard,
+                ["Swarming Mist"] =             CDStandard
             } ,
             [ 11 ] = { --Druid
                 ["Survival Instincts"] =        CDStandard,
@@ -578,6 +579,7 @@ CustomBuffs.CC = {
     ["Psychic Horror"] =        MagicStandard,
     ["Seduction"] =             MagicStandard,
     ["Hammer of Justice"] =     MagicStandard,
+    ["Holy Word: Chastise"] =   MagicStandard,
     ["Chaos Nova"] =            MagicStandard,
     ["Static Charge"] =         MagicStandard,
     ["Mind Bomb"] =             MagicStandard,
@@ -597,6 +599,7 @@ CustomBuffs.CC = {
     ["Shadowfury"] =            MagicStandard,
     ["Imprison"] =              MagicStandard,
     ["Strangulate"] =           MagicStandard,
+    ["Absolute Zero"] =         MagicStandard,
 
     --Roots
     ["Frost Nova"] =            MagicStandard,
@@ -631,6 +634,8 @@ CustomBuffs.CC = {
 
 
     ["Blind"] =                 CCStandard,
+    ["Disarm"] =                CCStandard,
+    ["Grapple Weapon"] =        CCStandard,
     ["Asphyxiate"] =            CCStandard,
     ["Bull Rush"] =             CCStandard,
     ["Intimidation"] =          CCStandard,
