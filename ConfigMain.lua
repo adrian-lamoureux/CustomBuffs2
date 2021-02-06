@@ -84,7 +84,7 @@ function CustomBuffs:CreateGeneralOptions()
 			frameScale = {
 				type = "range",
 				name = "Raidframe Scale",
-				desc = "",
+				desc = "Adjust the scale of the raid frames and all of their contents",
 				min = 0.5,
 				max = 2,
 				step = 0.1,
@@ -99,7 +99,7 @@ function CustomBuffs:CreateGeneralOptions()
 			buffScale = {
 				type = "range",
 				name = "Buff Scale",
-				desc = "",
+				desc = "Adjust the scale of the standard buffs",
 				min = 0.5,
 				max = 2,
 				step = 0.1,
@@ -114,7 +114,7 @@ function CustomBuffs:CreateGeneralOptions()
 			debuffScale = {
 				type = "range",
 				name = "Debuff Scale",
-				desc = "",
+				desc = "Adjust the scale of the standard debuffs",
 				min = 0.5,
 				max = 2,
 				step = 0.1,
@@ -129,7 +129,7 @@ function CustomBuffs:CreateGeneralOptions()
 			bossDebuffScale = {
 				type = "range",
 				name = "Boss Debuff Scale",
-				desc = "",
+				desc = "Adjust the scale of two large aura slots at the top of each frame that track important auras and CC",
 				min = 0.5,
 				max = 2,
 				step = 0.1,
@@ -144,7 +144,7 @@ function CustomBuffs:CreateGeneralOptions()
 			throughputBuffScale = {
 				type = "range",
 				name = "Throughput Buff Scale",
-				desc = "",
+				desc = "Adjust the scale of two special aura slots in the top right of each frame that track offensive cooldowns and healer cooldowns for the unit",
 				min = 0.5,
 				max = 2,
 				step = 0.1,
@@ -201,6 +201,18 @@ function CustomBuffs:CreateGeneralOptions()
 				end,
 				width = THIRD_WIDTH * 1.5,
 				order = 110,
+			},
+			partyCastBars = {
+				type = "toggle",
+				name = "Enable Cast Bars on Raid Frames",
+				desc = "When enabled, cast bars will be added to raid frames in groups of 5 or less players",
+				get = function() return self.db.profile.showCastBars end,
+				set = function(_, value)
+					self.db.profile.showCastBars = value;
+					self:UpdateConfig();
+				end,
+				width = THIRD_WIDTH * 1.5,
+				order = 111,
 			},
 		}
 	}

@@ -1,5 +1,5 @@
-local _, addonTable = ...
-local CustomBuffs = addonTable.CustomBuffs
+local _, addonTable = ...;
+local CustomBuffs = addonTable.CustomBuffs;
 
 
 -------------------------------------------------------------------------
@@ -19,8 +19,9 @@ function CustomBuffs:Defaults()
 		extraBuffs = false,
 		cleanNames = true,
 		maxNameLength = 12,
-		showRaidMarkers = true
+		showRaidMarkers = true,
+		showCastBars = false
 	};
 
-	return defaults
+	return defaults;
 end

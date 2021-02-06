@@ -370,6 +370,9 @@ CustomBuffs.EXTERNALS = {
     ["Anti-Magic Zone"] =           EStandard,
 
 
+    [344388] =                      EStandard, --Huntsman trinket
+    [344384] =                      EStandard, --Huntsman trinket target
+
     ["Fleshcraft"] =                EStandard,
 
     --Minor Externals worth tracking
@@ -399,6 +402,7 @@ CustomBuffs.EXTRA_RAID_BUFFS = {
     ["Glimmer of Light"] =      ERBStandard,
     ["Ancestral Vigor"] =       ERBStandard,
     ["Anti-Magic Zone"] =       ERBStandard,
+    ["Blessing of Sacrifice"] = ERBStandard,
 
     --BFA procs
     ["Luminous Jellyweed"] =    ERBStandard,
@@ -584,7 +588,7 @@ CustomBuffs.CC = {
     ["Static Charge"] =         MagicStandard,
     ["Mind Bomb"] =             MagicStandard,
     ["Silence"] =               MagicStandard,
-    [65813] =                   MagicStandard, --UA Silence
+    [196364] =                  MagicStandard, --UA Silence
     ["Sin and Punishment"] =    MagicStandard, --VT dispel fear
     ["Faerie Swarm"] =          MagicStandard,
     [117526] =                  MagicStandard, --Binding Shot CC
@@ -599,7 +603,7 @@ CustomBuffs.CC = {
     ["Shadowfury"] =            MagicStandard,
     ["Imprison"] =              MagicStandard,
     ["Strangulate"] =           MagicStandard,
-    ["Absolute Zero"] =         MagicStandard,
+    ["Absolute Zero"] =         MagicStandard, --Frost DK breath stun legendary CC
 
     --Roots
     ["Frost Nova"] =            MagicStandard,
@@ -910,6 +914,11 @@ local function handleRosterUpdate()
             CustomBuffs.units[i] = nil;
         end
     end
+
+    --Make sure to update raid icons on frames when we enter or leave a group
+    CustomBuffs:UpdateRaidIcons();
+
+    CustomBuffs:UpdateCastBars();
 end
 
 --Check combat log events for interrupts
@@ -2269,8 +2278,76 @@ function CustomBuffs:UpdateRaidIcons()
 end
 
 
+function CustomBuffs:UpdateCastBars()
+    if not self.db.profile.showCastBars or not CustomBuffs.CastBars or not CustomBuffs.CastBars[1] then
+        return;
+    end
+    if CustomBuffs.inRaidGroup then
+        self:DisableCastBars();
+        return;
+    end
+
+    for i,bar in ipairs(CustomBuffs.CastBars) do
+		--bar:SetScale(1);
+		bar:ClearAllPoints();
+        for j=1, #CompactRaidFrameContainer.units do
+            local frame = _G["CompactRaidFrame"..j];
+			if frame and frame.unitExists and (UnitIsUnit(frame.unit, "party"..i)) then
+				bar:SetParent(frame);
+				bar:SetPoint("TOP", frame, "BOTTOM", 10, -3);
+                CastingBarFrame_SetUnit(bar, "party"..i, true, true);
+                bar:SetWidth(frame:GetWidth());
+            elseif frame and frame.unitExists and (UnitIsUnit(frame.unit, "player")) then
+                bar:SetParent(frame);
+				bar:SetPoint("TOP", frame, "BOTTOM", 10, -3);
+                CastingBarFrame_SetUnit(bar, "player", true, true);
+                bar:SetWidth(frame:GetWidth());
+			end
+		end
+	end
+    CompactRaidFrameContainer.flowVerticalSpacing = 15;
+end
+
+--Called to enable cast bars on raid frames.  Cast bars may or may not exist at this point,
+--and the conditions to actually display the cast bars may or may not actually be met.
+--This function should create cast bars as needed, and determine whether the cast bars
+--should be shown.
+function CustomBuffs:EnableCastBars()
+    CustomBuffs.CastBars = CustomBuffs.CastBars or {};
+
+    --Create the frames for the cast bars and set them to track party members' casts
+    for i = 1, 5 do
+        if not CustomBuffs.CastBars[i] then
+            local castBar = CreateFrame("StatusBar", "raid"..i.."CastBar", UIParent, "SmallCastingBarFrameTemplate");
+            castBar:SetScale(0.83);
+            CastingBarFrame_SetUnit(castBar, "party"..i, true, true);
+            CustomBuffs.CastBars[i] = castBar;
+        end
+    end
+
+    --Make sure we catch changing the sort function and update the bars accordingly
+    if not self:IsHooked("CompactRaidFrameContainer_SetFlowSortFunction", function(frame) self:UpdateCastBars(); end) then
+        self:SecureHook("CompactRaidFrameContainer_SetFlowSortFunction", function(frame) self:UpdateCastBars(); end);
+    end
+
+    CustomBuffs:UpdateCastBars();
+end
 
 
+function CustomBuffs:DisableCastBars()
+    if self:IsHooked("CompactRaidFrameContainer_SetFlowSortFunction", function(frame) self:UpdateCastBars(); end) then
+        self:Unhook("CompactRaidFrameContainer_SetFlowSortFunction", function(frame) self:UpdateCastBars(); end);
+    end
+
+    CompactRaidFrameContainer.flowVerticalSpacing = nil;
+
+    if CustomBuffs.CastBars and CustomBuffs.CastBars[1] then
+        for _,bar in ipairs(CustomBuffs.CastBars) do
+            bar:ClearAllPoints();
+            CastingBarFrame_SetUnit(bar, nil, true, true);
+        end
+    end
+end
 
 
 
@@ -2308,7 +2385,7 @@ function CustomBuffs:OnEnable()
 	self:UpdateConfig();
 
     -- Hook raid icon updates
-	self:RegisterBucketEvent({"RAID_TARGET_UPDATE", "RAID_ROSTER_UPDATE"}, 1, "UpdateRaidIcons");
+	self:RegisterBucketEvent({"RAID_TARGET_UPDATE", "RAID_ROSTER_UPDATE"}, 0.1, "UpdateRaidIcons");
 
 	self:RegisterChatCommand("cb",function(options)
         if options == "" then
@@ -2350,13 +2427,21 @@ function CustomBuffs:UpdateConfig()
     if not InCombatLockdown() then
 		CompactRaidFrameContainer:SetScale(self.db.profile.frameScale);
 	end
+
     if self.db.profile.loadTweaks then
         self:UITweaks();
     end
+
     if self.db.profile.cleanNames and not self:IsHooked("CompactUnitFrame_UpdateName", function(frame) self:SetName(frame); end) then
         self:SecureHook("CompactUnitFrame_UpdateName", function(frame) self:SetName(frame); end);
     elseif not self.db.profile.cleanNames and self:IsHooked("CompactUnitFrame_UpdateName", function(frame) self:SetName(frame); end) then
         self:Unhook("CompactUnitFrame_UpdateName", function(frame) self:SetName(frame); end);
+    end
+
+    if self.db.profile.showCastBars then
+        self:EnableCastBars();
+    else
+        self:DisableCastBars();
     end
 
     dbSize = self.db.profile.debuffScale;
@@ -2374,6 +2459,8 @@ function CustomBuffs:UpdateConfig()
     self:UpdateRaidIcons();
 
     CustomBuffs.inRaidGroup = true;
+
+    handleRosterUpdate();
     --Clear cached names in case updated settings change displayed names
     twipe(NameCache);
 end
