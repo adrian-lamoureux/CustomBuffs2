@@ -674,6 +674,7 @@ CustomBuffs.CC = {
 
     ["Beak Slice"] =                            CCStandard,
     ["Wailing Grief"] =                         MagicStandard,
+    [332707] =                                  MagicStandard, --Shadow word pain from priests
 
     --Halls of Atonement
     ["Sinlight Visions"] =                      MagicStandard,
@@ -735,6 +736,7 @@ CustomBuffs.CC = {
     ["Forced Confession"] =                     MagicStandard,
     ["Internal Strife"] =                       MagicStandard,
     ["Burden of Knowledge"] =                   MagicStandard,
+    ["Insideous Venom"] =                       MagicStandard,
 
     --Necrotic Wake
     ["Heaving Retch"] =                         DiseaseStandard,
@@ -757,6 +759,7 @@ CustomBuffs.CC = {
     ["Manifest Death"] =                        CCStandard,
     ["Fixate"] =                                CCStandard,
 
+    ["Soul Corruption"] =                       MagicStandard,
     ["Withering Blight"] =                      DiseaseStandard,
     ["Curse of Desolation"] =                   CurseStandard,
 
@@ -2277,53 +2280,104 @@ function CustomBuffs:UpdateRaidIcons()
 
 end
 
+--Hides but does not fully disable cast bars; used to hide cast bars in raid groups of
+--over 5 people
+function CustomBuffs:HideCastBars()
+    CompactRaidFrameContainer.flowVerticalSpacing = nil;
 
-function CustomBuffs:UpdateCastBars()
-    if not self.db.profile.showCastBars or not CustomBuffs.CastBars or not CustomBuffs.CastBars[1] then
-        return;
+    if CustomBuffs.CastBars and CustomBuffs.CastBars[1] then
+        for _,bar in ipairs(CustomBuffs.CastBars) do
+            bar:ClearAllPoints();
+            CastingBarFrame_SetUnit(bar, nil, true, true);
+        end
     end
-    if CustomBuffs.inRaidGroup then
-        self:DisableCastBars();
-        return;
-    end
-
-    for i,bar in ipairs(CustomBuffs.CastBars) do
-		--bar:SetScale(1);
-		bar:ClearAllPoints();
-        for j=1, #CompactRaidFrameContainer.units do
-            local frame = _G["CompactRaidFrame"..j];
-			if frame and frame.unitExists and (UnitIsUnit(frame.unit, "party"..i)) then
-				bar:SetParent(frame);
-				bar:SetPoint("TOP", frame, "BOTTOM", 10, -3);
-                CastingBarFrame_SetUnit(bar, "party"..i, true, true);
-                bar:SetWidth(frame:GetWidth());
-            elseif frame and frame.unitExists and (UnitIsUnit(frame.unit, "player")) then
-                bar:SetParent(frame);
-				bar:SetPoint("TOP", frame, "BOTTOM", 10, -3);
-                CastingBarFrame_SetUnit(bar, "player", true, true);
-                bar:SetWidth(frame:GetWidth());
-			end
-		end
-	end
-    CompactRaidFrameContainer.flowVerticalSpacing = 15;
 end
 
---Called to enable cast bars on raid frames.  Cast bars may or may not exist at this point,
---and the conditions to actually display the cast bars may or may not actually be met.
---This function should create cast bars as needed, and determine whether the cast bars
---should be shown.
-function CustomBuffs:EnableCastBars()
+--Creates 5 cast bars to be used for the player and up to 4 party/raid members
+function CustomBuffs:CreateCastBars()
     CustomBuffs.CastBars = CustomBuffs.CastBars or {};
 
     --Create the frames for the cast bars and set them to track party members' casts
     for i = 1, 5 do
         if not CustomBuffs.CastBars[i] then
-            local castBar = CreateFrame("StatusBar", "raid"..i.."CastBar", UIParent, "SmallCastingBarFrameTemplate");
+            --bar 5 is reserved as the player's cast bar
+            local unitName = "party"..i;
+            if i == 5 then unitName = "player"; end
+
+            local castBar = CreateFrame("StatusBar", unitName.."CastBar", UIParent, "SmallCastingBarFrameTemplate");
             castBar:SetScale(0.83);
-            CastingBarFrame_SetUnit(castBar, "party"..i, true, true);
+            CastingBarFrame_SetUnit(castBar, unitName, true, true);
             CustomBuffs.CastBars[i] = castBar;
         end
     end
+end
+
+function CustomBuffs:UpdateCastBars()
+    --Only set up cast bars if enabled and in a group of 5 or less players
+    if not self.db.profile.showCastBars then return; end
+
+    --If the raid size is larger than 5 people we need to make sure all of the cast bars are hidden
+    if CustomBuffs.inRaidGroup then
+        self:HideCastBars();
+        return;
+    end
+
+    --Create castbars if they don't already exist
+    if not CustomBuffs.CastBars or not CustomBuffs.CastBars[1] then
+        self:CreateCastBars();
+    end
+
+    --Overridable default cast bar positioning values
+    CustomBuffs.castBarOffsetX = CustomBuffs.castBarOffsetX or 10;
+    CustomBuffs.castBarOffsetY = CustomBuffs.castBarOffsetY or -3;
+    CustomBuffs.castBarAnchorPoint = CustomBuffs.castBarAnchorPoint or "TOP";
+    CustomBuffs.castBarAnchorTo = CustomBuffs.castBarAnchorTo or "BOTTOM";
+
+    local xOff = CustomBuffs.castBarOffsetX;
+    local yOff = CustomBuffs.castBarOffsetY;
+    local anchor = CustomBuffs.castBarAnchorPoint;
+    local anchorTo = CustomBuffs.castBarAnchorTo;
+
+
+
+    --Find the player's raid frame and attach the player cast bar to it
+    local pbar = CustomBuffs.CastBars[5];
+    for j=1, #CompactRaidFrameContainer.units do
+        local frame = _G["CompactRaidFrame"..j];
+        if frame and frame.unitExists and UnitIsUnit(frame.unit, "player") then
+            pbar:SetParent(frame);
+            pbar:SetPoint(anchor, frame, anchorTo, xOff, yOff);
+            CastingBarFrame_SetUnit(pbar, frame.unit, true, true);
+            pbar:SetWidth(frame:GetWidth());
+        end
+    end
+
+    --Find the first for party members' raid frames and attach their corresponding cast bars
+    for i = 1, 4 do
+        local bar = CustomBuffs.CastBars[i];
+        if not bar then break; end
+
+        --for i,bar in ipairs(CustomBuffs.CastBars) do
+		--bar:SetScale(1);
+		bar:ClearAllPoints();
+        for j=1, #CompactRaidFrameContainer.units do
+            local frame = _G["CompactRaidFrame"..j];
+            if frame and frame.unitExists and (UnitIsUnit(frame.unit, "party"..i) and not UnitIsUnit(frame.unit, "player")) then
+                bar:SetParent(frame);
+                bar:SetPoint(anchor, frame, anchorTo, xOff, yOff);
+                CastingBarFrame_SetUnit(bar, frame.unit, true, true);
+                bar:SetWidth(frame:GetWidth());
+			end
+		end
+	end
+
+    --Increase the vertical spacing between the raid frames to make space for the new cast bars
+    CompactRaidFrameContainer.flowVerticalSpacing = 15;
+    FlowContainer_DoLayout(_G.CompactRaidFrameContainer);
+end
+
+function CustomBuffs:EnableCastBars()
+    self:CreateCastBars();
 
     --Make sure we catch changing the sort function and update the bars accordingly
     if not self:IsHooked("CompactRaidFrameContainer_SetFlowSortFunction", function(frame) self:UpdateCastBars(); end) then
@@ -2334,19 +2388,13 @@ function CustomBuffs:EnableCastBars()
 end
 
 
+
 function CustomBuffs:DisableCastBars()
     if self:IsHooked("CompactRaidFrameContainer_SetFlowSortFunction", function(frame) self:UpdateCastBars(); end) then
         self:Unhook("CompactRaidFrameContainer_SetFlowSortFunction", function(frame) self:UpdateCastBars(); end);
     end
 
-    CompactRaidFrameContainer.flowVerticalSpacing = nil;
-
-    if CustomBuffs.CastBars and CustomBuffs.CastBars[1] then
-        for _,bar in ipairs(CustomBuffs.CastBars) do
-            bar:ClearAllPoints();
-            CastingBarFrame_SetUnit(bar, nil, true, true);
-        end
-    end
+    self:HideCastBars();
 end
 
 
