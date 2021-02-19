@@ -293,7 +293,7 @@ local CDStandard = {["sbPrio"] = 4, ["sdPrio"] = nil, ["bdPrio"] = nil, ["tbPrio
                 ["Eye for an Eye"] =            CDStandard,
                 ["Shield of Vengeance"] =       CDStandard,
                 ["Guardian of Ancient Kings"] = CDStandard,
-                ["Seraphim"] =                  CDStandard,
+                --["Seraphim"] =                  CDStandard, moved to throughput cds
                 ["Guardian of the fortress"] =  CDStandard,
                 ["Shield of the Righteous"] =   CDStandard
             } ,
@@ -385,7 +385,7 @@ CustomBuffs.EXTERNALS = {
     ["Prowl"] =                     EStandard,
 
     --Previous expansion effects
-    ["Vampiric Aura"] =             EStandard
+    --["Vampiric Aura"] =             EStandard
 
 };
 
@@ -430,7 +430,8 @@ local TCDLow      = {["sbPrio"] = 6, ["sdPrio"] = nil, ["bdPrio"] = nil, ["tbPri
 CustomBuffs.THROUGHPUT_CDS = {
     [ 6 ] = { -- dk
         ["Pillar of Frost"] =                   TCDStandard,
-        ["Unholy Frenzy"] =                     TCDStandard
+        ["Unholy Frenzy"] =                     TCDStandard,
+        ["Empower Rune Weapon"] =               TCDStandard
     } ,
     [ 11 ] = { --druid
         ["Incarnation: Tree of Life"] =         TCDStandard,
@@ -469,7 +470,8 @@ CustomBuffs.THROUGHPUT_CDS = {
         ["Avenging Wrath"] =                    TCDStandard,
         ["Avenging Crusader"] =                 TCDStandard,
         ["Holy Avenger"] =                      TCDStandard,
-        ["Crusade"] =                           TCDStandard
+        ["Crusade"] =                           TCDStandard,
+        ["Seraphim"] =                          TCDStandard
         --Testing displaying their active aura here; maybe move
         --["Concentration Aura"] =                TCDLow,
         --["Retribution Aura"] =                  TCDLow,
@@ -499,7 +501,8 @@ CustomBuffs.THROUGHPUT_CDS = {
         ["Ascendance"] =                        TCDStandard,
         ["Ancestral Guidance"] =                TCDStandard,
         ["Stormkeeper"] =                       TCDStandard,
-        ["Icefury"] =                           TCDStandard
+        ["Icefury"] =                           TCDStandard,
+        ["Doom Winds"] =                        TCDStandard
     } ,
     [ 9 ] = { --lock
         ["Soul Harvest"] =                      TCDStandard,
@@ -526,15 +529,26 @@ CustomBuffs.THROUGHPUT_CDS = {
     --Aura Sources:         any
     --Aura Type:            buff
     --Standard Priority Level:
-local ETCDStandard = {["sbPrio"] = 3, ["sdPrio"] = nil, ["bdPrio"] = nil, ["tbPrio"] = 3};
+local ETCDStandard          = {["sbPrio"] = 3, ["sdPrio"] = nil, ["bdPrio"] = nil, ["tbPrio"] = 3};
+local ETCDNoFallthrough     = {["sbPrio"] = nil, ["sdPrio"] = nil, ["bdPrio"] = nil, ["tbPrio"] = 4};
+local ETCDPrioNoFallthrough = {["sbPrio"] = nil, ["sdPrio"] = nil, ["bdPrio"] = nil, ["tbPrio"] = 1};
 CustomBuffs.EXTERNAL_THROUGHPUT_CDS = {
-    ["Dark Archangel"] =    ETCDStandard,
-    ["Power Infusion"] =    ETCDStandard,
-    ["Blood Fury"] =        ETCDStandard,
-    ["Berserking"] =        ETCDStandard,
+    ["Dark Archangel"] =                ETCDStandard,
+    ["Power Infusion"] =                ETCDStandard,
+    ["Blood Fury"] =                    ETCDStandard,
+    ["Berserking"] =                    ETCDStandard,
+
+    --TRINKET STUFF
+    ["Gladiator's Badge"] =             ETCDNoFallthrough,
+    ["Gladiator's Insignia"] =          ETCDNoFallthrough,
+    ["Inscrutable Quantum Device"] =    ETCDNoFallthrough,
+    ["Anima Infusion"] =                ETCDNoFallthrough,
+    ["Anima Font"] =                    ETCDNoFallthrough,
+    ["Unbound Changling"] =             ETCDNoFallthrough,
+    [345805] =                          ETCDNoFallthrough, --Soulletting Ruby
 
     --Other Stuff
-    ["Earthen Wall"] =      {["sbPrio"] = 3, ["tbPrio"] = 1}
+    ["Earthen Wall"] =                  ETCDPrioNoFallthrough
 };
 
 
@@ -565,6 +579,7 @@ local MagicStandard =   {["dispelType"] = "magic", ["sdPrio"] = 3, ["bdPrio"] = 
 local CurseStandard =   {["dispelType"] = "curse", ["sdPrio"] = 3, ["bdPrio"] = 4};
 local CurseLow =        {["dispelType"] = "curse", ["sdPrio"] = 3, ["bdPrio"] = 5};
 local DiseaseStandard = {["dispelType"] = "disease", ["sdPrio"] = 3, ["bdPrio"] = 4};
+local DiseaseLow =      {["dispelType"] = "disease", ["sdPrio"] = 3, ["bdPrio"] = 5};
 local PoisonStandard =  {["dispelType"] = "poison", ["sdPrio"] = 3, ["bdPrio"] = 4};
 local MDStandard =      {["dispelType"] = "massDispel", ["sdPrio"] = 3, ["bdPrio"] = 4};
 local PurgeStandard =   {["dispelType"] = "purge", ["sdPrio"] = 3, ["bdPrio"] = 4};
@@ -621,11 +636,17 @@ CustomBuffs.CC = {
     ["Spider Sting"] =          PoisonStandard,
     --[233022] = true, --Spider Sting Silence
     ["Cyclone"] =               MDStandard,
+    ["Delirium"] =              DiseaseLow,
 
     --Not CC but track anyway
-    ["Gladiator's Maledict"] =  MagicStandard,
-    ["Touch of Karma"] =        MagicStandard, --Touch of karma debuff
+    [122470] =                  CCStandard, --Touch of karma debuff
+
+    ["Mirrors of Torment"] =    CCStandard,
+
+    --[[ BFA STUFF
     ["Obsidian Claw"] =         MagicStandard,
+    ["Gladiator's Maledict"] =  MagicStandard, ]]
+
 
     --Warlock Curses
     ["Curse of Exhaustion"] =   CurseLow,
@@ -646,6 +667,7 @@ CustomBuffs.CC = {
     ["Kidney Shot"] =           CCStandard,
     ["Maim"] =                  CCStandard,
     ["Enraged Maim"] =          CCStandard,
+    ["Axe Toss"] =              CCStandard,
     --["Between the Eyes"] =      CCStandard, no longer cc
     ["Mighty Bash"] =           CCStandard,
     ["Sap"] =                   CCStandard,
@@ -655,6 +677,8 @@ CustomBuffs.CC = {
     ["Intimidating Shout"] =    CCStandard,
     ["Quaking Palm"] =          CCStandard,
     ["Paralysis"] =             CCStandard,
+    ["Scatter Shot"] =          CCStandard,
+    [207167] =                  CCStandard, --Blinding Sleet CC
 
     --Area Denials
     ["Solar Beam"] =            CCStandard,
@@ -1643,6 +1667,7 @@ function CustomBuffs:UpdateAuras(frame)
 
     --Assign auras to aura frames
 
+
     --Sort bossDebuffs in priority order
     tsort(bossDebuffs, function(a,b)
         if not a or not b then return true; end
@@ -1652,9 +1677,14 @@ function CustomBuffs:UpdateAuras(frame)
     --If there are more bossDebuffs than frames, copy extra auras into appropriate fallthrough locations
     for i = 3, #bossDebuffs do
         --Buffs fall through to buffs, debuffs fall through to debuffs
-        if bossDebuffs[i].type then
+        --If the boss aura is a debuff and has a prio set for debuffs (is intended to fall through)
+        --it goes into the debuff list
+        if bossDebuffs[i].type and bossDebuffs[i].sdPrio then
             tinsert(debuffs, bossDebuffs[i]);
-        else
+
+        --If the boss aura is a buff or doesn't have a standard debuff prio we check if it is flagged
+        --to show in a buff slot instead
+        elseif bossDebuffs[i].sbPrio then
             --[[ debug stuff
             local name, _, _, _, _, _, _, _, _, _, _, _ = UnitBuff(frame.displayedUnit, bossDebuffs[i].index);
             local name2, _, _, _, _, _, _, _, _, _, _, _ = UnitDebuff(frame.displayedUnit, bossDebuffs[i].index);
@@ -1673,7 +1703,10 @@ function CustomBuffs:UpdateAuras(frame)
 
     --If there are more throughputBuffs than frames, copy extra auras into appropriate fallthrough locations
     for i = 3, #throughputBuffs do
-        tinsert(buffs, throughputBuffs[i]);
+        --If the extra throughput buff has a standard buff priority then we allow it to fall through
+        if throughputBuffs[i].sbPrio then
+            tinsert(buffs, throughputBuffs[i]);
+        end
     end
 
     --Sort debuffs in priority order
