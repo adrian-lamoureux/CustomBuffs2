@@ -318,7 +318,7 @@ local CDStandard = {["sbPrio"] = 4, ["sdPrio"] = nil, ["bdPrio"] = nil, ["tbPrio
             [ 9 ] = { --Warlock
                 ["Unending Resolve"] =          CDStandard,
                 ["Dark Pact"] =                 CDStandard,
-                ["Nether Ward"] =                CDStandard
+                ["Nether Ward"] =               CDStandard
             } ,
             [ 1 ] = { --Warrior
                 ["Shield Wall"] =               CDStandard,
@@ -369,11 +369,17 @@ CustomBuffs.EXTERNALS = {
     ["Rallying Cry"] =              EStandard,
     ["Anti-Magic Zone"] =           EStandard,
 
+    ["Stoneform"] =                 EStandard,
+    ["Fireblood"] =                 EStandard,
+
 
     [344388] =                      EStandard, --Huntsman trinket
     [344384] =                      EStandard, --Huntsman trinket target
+    ["Tuft of Smoldering Plumage"]= Estandard,
 
     ["Fleshcraft"] =                EStandard,
+
+    ["Gladiator's Emblem"] =        EStandard,
 
     --Minor Externals worth tracking
     ["Enveloping Mist"] =           ELow,
@@ -396,27 +402,36 @@ CustomBuffs.EXTERNALS = {
     --Standard Priority Level:
 local ERBStandard = {["sbPrio"] = 5, ["sdPrio"] = nil, ["bdPrio"] = nil, ["tbPrio"] = nil};
 CustomBuffs.EXTRA_RAID_BUFFS = {
-    ["Cultivation"] =           ERBStandard,
-    ["Spring Blossoms"] =       ERBStandard,
-    [290754] =                  ERBStandard, --Lifebloom from early spring honor talent
-    ["Glimmer of Light"] =      ERBStandard,
-    ["Ancestral Vigor"] =       ERBStandard,
-    ["Anti-Magic Zone"] =       ERBStandard,
-    ["Blessing of Sacrifice"] = ERBStandard,
+    ["Cultivation"] =               ERBStandard,
+    ["Spring Blossoms"] =           ERBStandard,
+    [290754] =                      ERBStandard, --Lifebloom from early spring honor talent
+    ["Glimmer of Light"] =          ERBStandard,
+    ["Ancestral Vigor"] =           ERBStandard,
+    ["Anti-Magic Zone"] =           ERBStandard,
+    ["Blessing of Sacrifice"] =     ERBStandard,
 
     --BFA procs
-    ["Luminous Jellyweed"] =    ERBStandard,
-    ["Costal Surge"] =          ERBStandard,
-    ["Concentrated Mending"] =  ERBStandard,
-    ["Touch of the Voodoo"] =   ERBStandard,
-    ["Egg on Your Face"] =      ERBStandard,
-    ["Coastal Surge"] =         ERBStandard,
-    ["Quickening"] =            ERBStandard,
-    ["Ancient Flame"] =         ERBStandard,
-    ["Grove Tending"] =         ERBStandard,
-    ["Blessed Portents"] =      ERBStandard,
+    ["Luminous Jellyweed"] =        ERBStandard,
+    ["Costal Surge"] =              ERBStandard,
+    ["Concentrated Mending"] =      ERBStandard,
+    ["Touch of the Voodoo"] =       ERBStandard,
+    ["Egg on Your Face"] =          ERBStandard,
+    ["Coastal Surge"] =             ERBStandard,
+    ["Quickening"] =                ERBStandard,
+    ["Ancient Flame"] =             ERBStandard,
+    ["Grove Tending"] =             ERBStandard,
+    ["Blessed Portents"] =          ERBStandard,
 
-    ["Fleshcraft"] =            ERBStandard,
+    ["Fleshcraft"] =                ERBStandard,
+
+    ["Stoneform"] =                 ERBStandard,
+    ["Fireblood"] =                 ERBStandard,
+
+    ["Gladiator's Emblem"] =        ERBStandard,
+
+    [344388] =                      ERBStandard, --Huntsman trinket
+    [344384] =                      ERBStandard, --Huntsman trinket target
+    ["Tuft of Smoldering Plumage"]= ERBStandard,
 };
 
 
@@ -537,6 +552,7 @@ CustomBuffs.EXTERNAL_THROUGHPUT_CDS = {
     ["Power Infusion"] =                ETCDStandard,
     ["Blood Fury"] =                    ETCDStandard,
     ["Berserking"] =                    ETCDStandard,
+    ["Skyfury Totem"] =                 ETCDStandard,
 
     --TRINKET STUFF
     ["Gladiator's Badge"] =             ETCDNoFallthrough,
@@ -678,6 +694,7 @@ CustomBuffs.CC = {
     ["Quaking Palm"] =          CCStandard,
     ["Paralysis"] =             CCStandard,
     ["Scatter Shot"] =          CCStandard,
+    ["Fel Eruption"] =          CCStandard,
     [207167] =                  CCStandard, --Blinding Sleet CC
 
     --Area Denials
@@ -1013,6 +1030,15 @@ local function handleCLEU()
 
             end
     end
+
+    --[[ Adding tracking for PvP Trinkets here
+    if (event == "SPELL_CAST_SUCCESS") and
+        (CustomBuffs.NONAURAS[spellID] or CustomBuffs.NONAURAS[spellName])
+    then
+
+    end
+    --]]
+
     if  event == "UNIT_DIED" and (GetNumGroupMembers() > 0) then
             if CustomBuffs.units[destGUID] then
                 if UnitHealth(CustomBuffs.units[destGUID].unit) <= 1 then
