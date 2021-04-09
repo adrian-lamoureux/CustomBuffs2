@@ -68,7 +68,7 @@ CustomBuffs.MAX_BUFFS = CustomBuffs.MAX_BUFFS or 6;
 CustomBuffs.BUFF_SCALE_FACTOR = CustomBuffs.BUFF_SCALE_FACTOR or 10;
 
 CustomBuffs.UPDATE_DELAY_TOLERANCE = CustomBuffs.UPDATE_DELAY_TOLERANCE or 0.01;
-CustomBuffs.inRaidGroup = false;
+--CustomBuffs.inRaidGroup = false;
 
 CustomBuffs.debugMode = CustomBuffs.debugMode or false;
 
@@ -198,6 +198,7 @@ CustomBuffs.INTERRUPTS = {
 CustomBuffs.NONAURAS = {
     --SHAMAN
     [108280] = { duration = 12, tbPrio = 1 }, --Healing Tide
+    [16191] =  { duration = 8,  tbPrio = 1 }, --Mana Tide
     [198067] = { duration = 30, tbPrio = 1 }, --Fire Elemental
     [192249] = { duration = 30, tbPrio = 1 }, --Storm Elemental
     [51533] =  { duration = 15, tbPrio = 1 }, --Feral Spirit
@@ -421,6 +422,8 @@ CustomBuffs.EXTRA_RAID_BUFFS = {
     ["Ancient Flame"] =             ERBStandard,
     ["Grove Tending"] =             ERBStandard,
     ["Blessed Portents"] =          ERBStandard,
+
+    [344227] =                      ERBStandard, --Consumptive Infusion
 
     ["Fleshcraft"] =                ERBStandard,
 
@@ -930,6 +933,14 @@ local function handleRosterUpdate()
                 end
                 CustomBuffs.inRaidGroup = true;
             end
+        end
+    elseif CustomBuffs.db.profile.showCastBars then
+        --We only show cast bars in groups of 5 or less, so we still need to update our group
+        --size tracker if cast bars are enabled
+        if GetNumGroupMembers() <= 5 then
+             CustomBuffs.inRaidGroup = false;
+        else
+             CustomBuffs.inRaidGroup = true;
         end
     end
 
@@ -2564,8 +2575,6 @@ function CustomBuffs:UpdateConfig()
     end
 
     self:UpdateRaidIcons();
-
-    CustomBuffs.inRaidGroup = true;
 
     handleRosterUpdate();
     --Clear cached names in case updated settings change displayed names
