@@ -2506,6 +2506,8 @@ function CustomBuffs:OnEnable()
 	self:RegisterBucketEvent({"RAID_TARGET_UPDATE", "RAID_ROSTER_UPDATE"}, 0.1, "UpdateRaidIcons");
 
 	self:RegisterChatCommand("cb",function(options)
+        options = string.lower(options);
+
         if options == "" then
 		    InterfaceOptionsFrame_OpenToCategory("CustomBuffs");
 		    InterfaceOptionsFrame_OpenToCategory("CustomBuffs");
