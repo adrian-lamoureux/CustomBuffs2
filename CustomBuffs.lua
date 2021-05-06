@@ -569,7 +569,7 @@ CustomBuffs.EXTERNAL_THROUGHPUT_CDS = {
     [345805] =                          ETCDNoFallthrough, --Soulletting Ruby
 
     --Other Stuff
-    ["Earthen Wall"] =                  ETCDPrioNoFallthrough
+    ["Earthen Wall"] =                  ETCDPrioNoFallthrough,
 
     --Dungeon Stuff
 
