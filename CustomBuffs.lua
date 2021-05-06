@@ -192,12 +192,13 @@ CustomBuffs.INTERRUPTS = {
     ["Solar Beam"] = { duration = 5 },
 
     --Non player interrupts BETA FEATURE
-    ["Quake"] = { duration = 5 } --240448
+    ["Quake"]               = { duration = 5 }, --240448
+    ["Deafening Crash"]     = { duration = 2 },
 };
 
 CustomBuffs.NONAURAS = {
     --SHAMAN
-    [108280] = { duration = 12, tbPrio = 1 }, --Healing Tide
+    [108280] = { duration = 12, tbPrio = 1 }, --Healing Tide (Assumes leveling perk for +2 seconds)
     [16191] =  { duration = 8,  tbPrio = 1 }, --Mana Tide
     [198067] = { duration = 30, tbPrio = 1 }, --Fire Elemental
     [192249] = { duration = 30, tbPrio = 1 }, --Storm Elemental
@@ -548,6 +549,7 @@ CustomBuffs.THROUGHPUT_CDS = {
     --Aura Type:            buff
     --Standard Priority Level:
 local ETCDStandard          = {["sbPrio"] = 3, ["sdPrio"] = nil, ["bdPrio"] = nil, ["tbPrio"] = 3};
+local ETCDLow               = {["sbPrio"] = 3, ["sdPrio"] = nil, ["bdPrio"] = nil, ["tbPrio"] = 4};
 local ETCDNoFallthrough     = {["sbPrio"] = nil, ["sdPrio"] = nil, ["bdPrio"] = nil, ["tbPrio"] = 4};
 local ETCDPrioNoFallthrough = {["sbPrio"] = nil, ["sdPrio"] = nil, ["bdPrio"] = nil, ["tbPrio"] = 1};
 CustomBuffs.EXTERNAL_THROUGHPUT_CDS = {
@@ -568,6 +570,13 @@ CustomBuffs.EXTERNAL_THROUGHPUT_CDS = {
 
     --Other Stuff
     ["Earthen Wall"] =                  ETCDPrioNoFallthrough
+
+    --Dungeon Stuff
+
+    --Spires of Ascension
+    ["Bless Weapon"] =                  ETCDLow,
+    ["Infuse Weapon"] =                 ETCDLow,
+    ["Imbue Weapon"] =                  ETCDLow,
 };
 
 
@@ -594,6 +603,7 @@ CustomBuffs.BOSS_BUFFS = { --Custom Buffs that should be displayed in the Boss D
     --Aura Type:            debuff
     --Standard Priority Level: (priority is increased one level for debuffs that are currently dispellable)
 local CCStandard =      {["sbPrio"] = nil, ["sdPrio"] = 3, ["bdPrio"] = 4, ["tbPrio"] = nil};
+local CCLow =           {["sbPrio"] = nil, ["sdPrio"] = 3, ["bdPrio"] = 5, ["tbPrio"] = nil};
 local MagicStandard =   {["dispelType"] = "magic", ["sdPrio"] = 3, ["bdPrio"] = 4};
 local CurseStandard =   {["dispelType"] = "curse", ["sdPrio"] = 3, ["bdPrio"] = 4};
 local CurseLow =        {["dispelType"] = "curse", ["sdPrio"] = 3, ["bdPrio"] = 5};
@@ -755,6 +765,8 @@ CustomBuffs.CC = {
     ["Infectious Rain"] =                       DiseaseStandard,
 
     ["Violent Detonation"] =                    DiseaseStandard,
+    ["Plague Bomb"] =                           DiseaseStandard,
+    ["Corroded Claws"] =                        DiseaseStandard,
     ["Venompiercer"] =                          PoisonStandard,
     ["Gripping Infection"] =                    MagicStandard,
 
@@ -763,24 +775,28 @@ CustomBuffs.CC = {
     ["Sintouched Anima"] =                      CurseStandard,
     ["Castigate"] =                             CCStandard,
     ["Anguished Cries"] =                       MagicStandard,
-    --["Wicked Gash"] =                           CCStandard, --TODO: Maybe add bleed category?
+    ["Wicked Gash"] =                           CCLow, --TODO: Maybe add bleed category?
 
     ["Curse of Suppression"] =                  CurseStandard,
     ["Barbed Shackles"] =                       CCStandard,
     ["Explosive Anger"] =                       CurseStandard,
+    ["Wrack Soul"] =                            MagicStandard,
+
 
     --Spires of Ascension
     ["Charged Anima"] =                         MagicStandard,
     ["Lingering Doubt"] =                       CCStandard,
     ["Anima Surge"] =                           CCStandard,
     ["Lost Confidence"] =                       MagicStandard,
+    ["Dark Lance"] =                            MagicStandard,
     ["Dark Stride"] =                           CCStandard,
     ["Purifying Blast"] =                       CCStandard,
+    ["Blinding Flash"] =                        CCStandard,
 
     ["Forced Confession"] =                     MagicStandard,
     ["Internal Strife"] =                       MagicStandard,
     ["Burden of Knowledge"] =                   MagicStandard,
-    ["Insideous Venom"] =                       MagicStandard,
+    ["Insidious Venom"] =                       MagicStandard,
 
     --Necrotic Wake
     ["Heaving Retch"] =                         DiseaseStandard,
@@ -788,6 +804,7 @@ CustomBuffs.CC = {
     ["Stitchneedle"] =                          CCStandard,
     ["Morbid Fixation"] =                       CCStandard,
 
+    ["Rasping Scream"] =                        MagicStandard,
     ["Clinging Darkness"] =                     MagicStandard,
     ["Rasping Scream"] =                        MagicStandard,
     ["Drain Fluids"] =                          CCStandard,
@@ -795,6 +812,7 @@ CustomBuffs.CC = {
     ["Throw Cleaver"] =                         CCStandard,
     ["Grim Fate"] =                             CCStandard,
     ["Boneflay"] =                              DiseaseStandard,
+    ["Goresplatter"] =                          DiseaseStandard,
 
     --Theater of Pain
     [320069] =                                  CCStandard, --Mortal Strike
@@ -805,13 +823,14 @@ CustomBuffs.CC = {
 
     ["Soul Corruption"] =                       MagicStandard,
     ["Withering Blight"] =                      DiseaseStandard,
+    ["Decaying Blight"] =                       DiseaseStandard,
     ["Curse of Desolation"] =                   CurseStandard,
 
 
     --------------------
     -- Castle Nathria --
     --------------------
-
+    [324982] =                                  CCStandard,
 
 
     --["Vendetta"] =              {["dispelType"] = nil, ["sdPrio"] = 3, ["bdPrio"] = 4},
@@ -982,8 +1001,8 @@ local function handleCLEU()
     local _, event, _,casterGUID,_,_,_, destGUID, destName,_,_, spellID, spellName = CombatLogGetCurrentEventInfo();
 
     -- SPELL_INTERRUPT doesn't fire for some channeled spells; if the spell isn't a known interrupt we're done
-    if (event == "SPELL_INTERRUPT" or event == "SPELL_CAST_SUCCESS") and
-        (CustomBuffs.INTERRUPTS[spellName] or CustomBuffs.INTERRUPTS[spellID]) then
+    if (event == "SPELL_INTERRUPT" or event == "SPELL_CAST_SUCCESS") then
+        if (CustomBuffs.INTERRUPTS[spellName] or CustomBuffs.INTERRUPTS[spellID]) then
         --Maybe needed if combat log events are returning spellIDs of 0
         --if spellID == 0 then spellID = lookupIDByName[spellName] end
 
@@ -1011,6 +1030,40 @@ local function handleCLEU()
 
 
             end
+        else
+            --If an interrupt was detected but we don't recognize the spell then we just trigger some
+            --generic interrupt behavior to show that the player was interrupted.
+            --The real problem here is that we don't actually have any way of knowing how long the target
+            --is actually locked out for, so we just assume 2 seconds, since there are virtually no interrupts
+            --in the game that are shorter than 2 seconds
+            if CustomBuffs.units[destGUID] and (event ~= "SPELL_CAST_SUCCESS" or
+                (UnitChannelInfo and select(7, UnitChannelInfo(CustomBuffs.units[destGUID].unit)) == false))
+            then
+                local duration = 2;
+                --local _, class = UnitClass(unit)
+
+                CustomBuffs.units[destGUID].int = CustomBuffs.units[destGUID].int or {};
+                CustomBuffs.units[destGUID].int.expires = GetTime() + duration;
+                CustomBuffs.units[destGUID].int.spellID = spellID;
+                CustomBuffs.units[destGUID].int.duration = duration;
+                CustomBuffs.units[destGUID].int.spellName = spellName;
+                --self.units[destGUID].spellID = spell.parent and spell.parent or spellId
+
+                ForceUpdateFrame(CustomBuffs.units[destGUID].frameNum);
+
+                --Print a message with the spell's name and ID to make it easier to add new interrupts
+                --in the future
+                print("Detected unknown interrupt: ", spellName, " / ", spellID);
+
+                -- Make sure we clear it after the duration
+                C_Timer.After(duration + CustomBuffs.UPDATE_DELAY_TOLERANCE, function()
+                    CustomBuffs.units[destGUID].int = nil;
+                    ForceUpdateFrame(CustomBuffs.units[destGUID].frameNum);
+                end);
+
+
+            end
+        end
     end
     if (event == "SPELL_CAST_SUCCESS") and
         (CustomBuffs.NONAURAS[spellID] or CustomBuffs.NONAURAS[spellName])
