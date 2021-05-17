@@ -769,6 +769,7 @@ CustomBuffs.CC = {
     ["Corroded Claws"] =                        DiseaseStandard,
     ["Venompiercer"] =                          PoisonStandard,
     ["Gripping Infection"] =                    MagicStandard,
+    ["Corrosive Gunk"] =                        DiseaseStandard,
 
     --Sanguine Depths
     ["Juggernaut Rush"] =                       CCStandard,
@@ -1036,8 +1037,8 @@ local function handleCLEU()
             --The real problem here is that we don't actually have any way of knowing how long the target
             --is actually locked out for, so we just assume 2 seconds, since there are virtually no interrupts
             --in the game that are shorter than 2 seconds
-            if CustomBuffs.units[destGUID] and (event ~= "SPELL_CAST_SUCCESS" or
-                (UnitChannelInfo and select(7, UnitChannelInfo(CustomBuffs.units[destGUID].unit)) == false))
+            if CustomBuffs.units[destGUID] and event ~= "SPELL_CAST_SUCCESS" --or
+                --(UnitChannelInfo and select(7, UnitChannelInfo(CustomBuffs.units[destGUID].unit)) == false)
             then
                 local duration = 2;
                 --local _, class = UnitClass(unit)
