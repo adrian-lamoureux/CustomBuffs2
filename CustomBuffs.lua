@@ -232,6 +232,31 @@ CustomBuffs.INTERRUPTS = {
     ["Deafening Crash"]     = { duration = 2 },
 };
 
+local BCC_INTERRUPTS = {
+    [1766] =   { duration = 5 }, -- Kick (Rogue)
+	[1767] =   { duration = 5 }, -- Kick (Rogue)
+	[1768] =   { duration = 5 }, -- Kick (Rogue)
+	[1769] =   { duration = 5 }, -- Kick (Rogue)
+	[38768] =   { duration = 5 }, -- Kick (Rogue)
+    [2139] =   { duration = 8 }, -- Counterspell (Mage)
+    [6552] =   { duration = 4 }, -- Pummel (Warrior)
+	[6554] =   { duration = 4 }, -- Pummel (Warrior)
+	[19644] =  { duration = 6 }, -- Spell Lock (Warlock)
+    [19647] =  { duration = 6 }, -- Spell Lock (Warlock)
+    [8042] =  { duration = 2 }, -- Earth Shock (Shaman)
+	[8044] =  { duration = 2 }, -- Earth Shock (Shaman)
+	[8045] =  { duration = 2 }, -- Earth Shock (Shaman)
+	[8046] =  { duration = 2 }, -- Earth Shock (Shaman)
+	[10412] =  { duration = 2 }, -- Earth Shock (Shaman)
+	[10413] =  { duration = 2 }, -- Earth Shock (Shaman)
+	[10414] =  { duration = 2 }, -- Earth Shock (Shaman)
+	[25454] =  { duration = 2 }, -- Earth Shock (Shaman)
+    [16979] = { duration = 4 }, -- Feral Charge (Feral)
+
+    --Non player interrupts BETA FEATURE
+
+};
+
 CustomBuffs.NONAURAS = {
     --SHAMAN
     [108280] = { duration = 12, tbPrio = 1 }, --Healing Tide (Assumes leveling perk for +2 seconds)
@@ -286,94 +311,153 @@ CustomBuffs.NONAURAS = {
     --Aura Type:            buff
     --Standard Priority Level:
 local CDStandard = {["sbPrio"] = 4, ["sdPrio"] = nil, ["bdPrio"] = nil, ["tbPrio"] = nil};
-        CustomBuffs.CDS = {
-            [ 6 ] = { --Death Knight
-                ["Icebound Fortitude"] =        CDStandard,
-                ["Anti-Magic Shell"] =          CDStandard,
-                ["Vampiric Blood"] =            CDStandard,
-                ["Corpse Shield"] =             CDStandard,
-                ["Bone Shield"] =               CDStandard,
-                ["Dancing Rune Weapon"] =       CDStandard,
-                ["Hemostasis"] =                CDStandard,
-                ["Rune Tap"] =                  CDStandard,
-                ["Lichborne"] =                 CDStandard,
-                ["Swarming Mist"] =             CDStandard
-            } ,
-            [ 11 ] = { --Druid
-                ["Survival Instincts"] =        CDStandard,
-                ["Barkskin"] =                  CDStandard,
-                ["Ironfur"] =                   CDStandard,
-                ["Frenzied Regeneration"] =     CDStandard
-            } ,
-            [ 3 ] = { --Hunter
-                ["Aspect of the Turtle"] =      CDStandard,
-                ["Survival of the Fittest"] =   CDStandard
-            } ,
-            [ 8 ] = { --Mage
-                ["Ice Block"] =                 CDStandard,
-                ["Evanesce"] =                  CDStandard,
-                ["Greater Invisibility"] =      CDStandard,
-                ["Alter Time"] =                CDStandard,
-                ["Temporal Shield"] =           CDStandard
-            } ,
-            [ 10 ] = { --Monk
-                ["Zen Meditation"] =            CDStandard,
-                ["Diffuse Magic"] =             CDStandard,
-                ["Dampen Harm"] =               CDStandard,
-                ["Touch of Karma"] =            CDStandard,
-                ["Fortifying Brew"] =           CDStandard
-            } ,
-            [ 2 ] = { --Paladin
-                ["Divine Shield"] =             CDStandard,
-                ["Divine Protection"] =         CDStandard,
-                ["Ardent Defender"] =           CDStandard,
-                ["Aegis of Light"] =            CDStandard,
-                ["Eye for an Eye"] =            CDStandard,
-                ["Shield of Vengeance"] =       CDStandard,
-                ["Guardian of Ancient Kings"] = CDStandard,
-                --["Seraphim"] =                  CDStandard, moved to throughput cds
-                ["Guardian of the fortress"] =  CDStandard,
-                ["Shield of the Righteous"] =   CDStandard
-            } ,
-            [ 5 ] = { --Priest
-                ["Dispersion"] =                CDStandard,
-                ["Fade"] =                      CDStandard,
-                ["Greater Fade"] =              CDStandard
-            } ,
-            [ 4 ] = { --Rogue
-                ["Evasion"] =                   CDStandard,
-                ["Cloak of Shadows"] =          CDStandard,
-                ["Feint"] =                     CDStandard,
-                ["Readiness"] =                 CDStandard,
-                ["Riposte"] =                   CDStandard,
-                ["Crimson Vial"] =              CDStandard
-            } ,
-            [ 7 ] = { --Shaman
-                ["Astral Shift"] =              CDStandard,
-                ["Shamanistic Rage"] =          CDStandard,
-                ["Harden Skin"] =               CDStandard
-            } ,
-            [ 9 ] = { --Warlock
-                ["Unending Resolve"] =          CDStandard,
-                ["Dark Pact"] =                 CDStandard,
-                ["Nether Ward"] =               CDStandard
-            } ,
-            [ 1 ] = { --Warrior
-                ["Shield Wall"] =               CDStandard,
-                ["Spell Reflection"] =          CDStandard,
-                ["Shield Block"] =              CDStandard,
-                ["Last Stand"] =                CDStandard,
-                ["Die By The Sword"] =          CDStandard,
-                ["Defensive Stance"] =          CDStandard
-            },
-            [ 12 ] = { --Demon Hunter
-                ["Netherwalk"] =                CDStandard,
-                ["Blur"] =                      CDStandard,
-                ["Darkness"] =                  CDStandard,
-                ["Demon Spikes"] =              CDStandard,
-                ["Soul Fragments"] =            CDStandard
-            }
-        };
+CustomBuffs.CDS = {
+    [ 6 ] = { --Death Knight
+        ["Icebound Fortitude"] =        CDStandard,
+        ["Anti-Magic Shell"] =          CDStandard,
+        ["Vampiric Blood"] =            CDStandard,
+        ["Corpse Shield"] =             CDStandard,
+        ["Bone Shield"] =               CDStandard,
+        ["Dancing Rune Weapon"] =       CDStandard,
+        ["Hemostasis"] =                CDStandard,
+        ["Rune Tap"] =                  CDStandard,
+        ["Lichborne"] =                 CDStandard,
+        ["Swarming Mist"] =             CDStandard
+    } ,
+    [ 11 ] = { --Druid
+        ["Survival Instincts"] =        CDStandard,
+        ["Barkskin"] =                  CDStandard,
+        ["Ironfur"] =                   CDStandard,
+        ["Frenzied Regeneration"] =     CDStandard
+    } ,
+    [ 3 ] = { --Hunter
+        ["Aspect of the Turtle"] =      CDStandard,
+        ["Survival of the Fittest"] =   CDStandard
+    } ,
+    [ 8 ] = { --Mage
+        ["Ice Block"] =                 CDStandard,
+        ["Evanesce"] =                  CDStandard,
+        ["Greater Invisibility"] =      CDStandard,
+        ["Alter Time"] =                CDStandard,
+        ["Temporal Shield"] =           CDStandard
+    } ,
+    [ 10 ] = { --Monk
+        ["Zen Meditation"] =            CDStandard,
+        ["Diffuse Magic"] =             CDStandard,
+        ["Dampen Harm"] =               CDStandard,
+        ["Touch of Karma"] =            CDStandard,
+        ["Fortifying Brew"] =           CDStandard
+    } ,
+    [ 2 ] = { --Paladin
+        ["Divine Shield"] =             CDStandard,
+        ["Divine Protection"] =         CDStandard,
+        ["Ardent Defender"] =           CDStandard,
+        ["Aegis of Light"] =            CDStandard,
+        ["Eye for an Eye"] =            CDStandard,
+        ["Shield of Vengeance"] =       CDStandard,
+        ["Guardian of Ancient Kings"] = CDStandard,
+        --["Seraphim"] =                  CDStandard, moved to throughput cds
+        ["Guardian of the fortress"] =  CDStandard,
+        ["Shield of the Righteous"] =   CDStandard
+    } ,
+    [ 5 ] = { --Priest
+        ["Dispersion"] =                CDStandard,
+        ["Fade"] =                      CDStandard,
+        ["Greater Fade"] =              CDStandard
+    } ,
+    [ 4 ] = { --Rogue
+        ["Evasion"] =                   CDStandard,
+        ["Cloak of Shadows"] =          CDStandard,
+        ["Feint"] =                     CDStandard,
+        ["Readiness"] =                 CDStandard,
+        ["Riposte"] =                   CDStandard,
+        ["Crimson Vial"] =              CDStandard
+    } ,
+    [ 7 ] = { --Shaman
+        ["Astral Shift"] =              CDStandard,
+        ["Shamanistic Rage"] =          CDStandard,
+        ["Harden Skin"] =               CDStandard
+    } ,
+    [ 9 ] = { --Warlock
+        ["Unending Resolve"] =          CDStandard,
+        ["Dark Pact"] =                 CDStandard,
+        ["Nether Ward"] =               CDStandard
+    } ,
+    [ 1 ] = { --Warrior
+        ["Shield Wall"] =               CDStandard,
+        ["Spell Reflection"] =          CDStandard,
+        ["Shield Block"] =              CDStandard,
+        ["Last Stand"] =                CDStandard,
+        ["Die By The Sword"] =          CDStandard,
+        ["Defensive Stance"] =          CDStandard
+    },
+    [ 12 ] = { --Demon Hunter
+        ["Netherwalk"] =                CDStandard,
+        ["Blur"] =                      CDStandard,
+        ["Darkness"] =                  CDStandard,
+        ["Demon Spikes"] =              CDStandard,
+        ["Soul Fragments"] =            CDStandard
+    }
+};
+
+
+local BCC_CDS = {
+    [ 11 ] = { --Druid
+        ["Barkskin"] =                  CDStandard,
+        ["Frenzied Regeneration"] =     CDStandard
+    } ,
+    [ 3 ] = { --Hunter
+        ["Deterrence"] =      			CDStandard,
+    } ,
+    [ 8 ] = { --Mage
+        ["Ice Block"] =                 CDStandard,
+    } ,
+    [ 2 ] = { --Paladin
+        ["Divine Shield"] =             CDStandard,
+        ["Divine Protection"] =         CDStandard,
+        ["Ardent Defender"] =           CDStandard,
+        ["Aegis of Light"] =            CDStandard,
+        ["Eye for an Eye"] =            CDStandard,
+        ["Shield of Vengeance"] =       CDStandard,
+        ["Guardian of Ancient Kings"] = CDStandard,
+        ["Guardian of the fortress"] =  CDStandard,
+        ["Shield of the Righteous"] =   CDStandard
+    } ,
+    [ 5 ] = { --Priest
+        ["Dispersion"] =                CDStandard,
+        ["Fade"] =                      CDStandard,
+        ["Greater Fade"] =              CDStandard
+    } ,
+    [ 4 ] = { --Rogue
+        ["Evasion"] =                   CDStandard,
+        ["Cloak of Shadows"] =          CDStandard,
+        ["Feint"] =                     CDStandard,
+        ["Readiness"] =                 CDStandard,
+        ["Riposte"] =                   CDStandard,
+        ["Crimson Vial"] =              CDStandard
+    } ,
+    [ 7 ] = { --Shaman
+        ["Astral Shift"] =              CDStandard,
+        ["Shamanistic Rage"] =          CDStandard,
+        ["Harden Skin"] =               CDStandard
+    } ,
+    [ 9 ] = { --Warlock
+        ["Unending Resolve"] =          CDStandard,
+        ["Dark Pact"] =                 CDStandard,
+        ["Nether Ward"] =               CDStandard
+    } ,
+    [ 1 ] = { --Warrior
+        ["Shield Wall"] =               CDStandard,
+        ["Spell Reflection"] =          CDStandard,
+        ["Shield Block"] =              CDStandard,
+        ["Last Stand"] =                CDStandard,
+        ["Die By The Sword"] =          CDStandard,
+        ["Defensive Stance"] =          CDStandard
+    }
+};
+
+
+
 --Externals show important buffs applied by units other than the player in the standard buff location
     --Display Location:     standard buff
     --Aura Sources:         non player (formerly to prevent duplicates for player casted versions)
@@ -433,6 +517,60 @@ CustomBuffs.EXTERNALS = {
 
 };
 
+
+local BCC_EXTERNALS = {
+    --Major Externals
+    ["Ironbark"] =                  EStandard,
+    ["Life Cocoon"] =               EStandard,
+    ["Blessing of Protection"] =    EStandard,
+    ["Blessing of Sacrifice"] =     EStandard,
+    ["Blessing of Spellwarding"] =  EStandard,
+    ["Pain Suppression"] =          EStandard,
+    ["Guardian Spirit"] =           EStandard,
+    ["Roar of Sacrifice"] =         EStandard,
+    ["Innervate"] =                 EStandard,
+    ["Cenarion Ward"] =             EStandard,
+    ["Safeguard"] =                 EStandard,
+    ["Vigilance"] =                 EStandard,
+    ["Earth Shield"] =              EStandard,
+    ["Tiger's Lust"] =              EStandard,
+    ["Beacon of Virtue"] =          EStandard,
+    ["Beacon of Faith"] =           EStandard,
+    ["Beacon of Light"] =           EStandard,
+    ["Lifebloom"] =                 EStandard,
+    ["Spirit Mend"] =               EStandard,
+    ["Misdirection"] =              EStandard,
+    ["Tricks of the Trade"] =       EStandard,
+    ["Rallying Cry"] =              EStandard,
+    ["Anti-Magic Zone"] =           EStandard,
+
+    ["Stoneform"] =                 EStandard,
+    ["Fireblood"] =                 EStandard,
+
+
+    [344388] =                      EStandard, --Huntsman trinket
+    [344384] =                      EStandard, --Huntsman trinket target
+    ["Tuft of Smoldering Plumage"]= Estandard,
+
+    ["Fleshcraft"] =                EStandard,
+
+    ["Gladiator's Emblem"] =        EStandard,
+
+    --Minor Externals worth tracking
+    ["Enveloping Mist"] =           ELow,
+
+
+    --Show party/raid member's stealth status in buffs
+    ["Stealth"] =                   EStandard,
+    ["Vanish"] =                    EStandard,
+    ["Prowl"] =                     EStandard,
+
+    --Previous expansion effects
+    --["Vampiric Aura"] =             EStandard
+
+};
+
+
 --Extra raid buffs show untracked buffs from the player on anyone in the standard buff location
     --Display Location:     standard buff
     --Aura Sources:         player
@@ -474,6 +612,41 @@ CustomBuffs.EXTRA_RAID_BUFFS = {
     ["Tuft of Smoldering Plumage"]= ERBStandard,
 };
 
+
+local BCC_EXTRA_RAID_BUFFS = {
+    ["Cultivation"] =               ERBStandard,
+    ["Spring Blossoms"] =           ERBStandard,
+    [290754] =                      ERBStandard, --Lifebloom from early spring honor talent
+    ["Glimmer of Light"] =          ERBStandard,
+    ["Ancestral Vigor"] =           ERBStandard,
+    ["Anti-Magic Zone"] =           ERBStandard,
+    ["Blessing of Sacrifice"] =     ERBStandard,
+
+    --BFA procs
+    ["Luminous Jellyweed"] =        ERBStandard,
+    ["Costal Surge"] =              ERBStandard,
+    ["Concentrated Mending"] =      ERBStandard,
+    ["Touch of the Voodoo"] =       ERBStandard,
+    ["Egg on Your Face"] =          ERBStandard,
+    ["Coastal Surge"] =             ERBStandard,
+    ["Quickening"] =                ERBStandard,
+    ["Ancient Flame"] =             ERBStandard,
+    ["Grove Tending"] =             ERBStandard,
+    ["Blessed Portents"] =          ERBStandard,
+
+    [344227] =                      ERBStandard, --Consumptive Infusion
+
+    ["Fleshcraft"] =                ERBStandard,
+
+    ["Stoneform"] =                 ERBStandard,
+    ["Fireblood"] =                 ERBStandard,
+
+    ["Gladiator's Emblem"] =        ERBStandard,
+
+    [344388] =                      ERBStandard, --Huntsman trinket
+    [344384] =                      ERBStandard, --Huntsman trinket target
+    ["Tuft of Smoldering Plumage"]= ERBStandard,
+};
 
 --Throughput CDs show important CDs cast by the unit in a special set of throughput buff frames
     --Display Location:     throughtput frames
@@ -579,6 +752,88 @@ CustomBuffs.THROUGHPUT_CDS = {
     }
 };
 
+local BCC_THROUGHPUT_CDS = {
+    [ 11 ] = { --druid
+        ["Incarnation: Tree of Life"] =         TCDStandard,
+        ["Incarnation: King of the Jungle"] =   TCDStandard,
+        ["Berserk"] =                           TCDStandard,
+        ["Incarnation: Guardian of Ursoc"] =    TCDStandard,
+        ["Incarnation: Chosen of Elune"] =      TCDStandard,
+        ["Celestial Alignment"] =               TCDStandard,
+        ["Essence of G'Hanir"] =                TCDStandard,
+        ["Tiger's Fury"] =                      TCDStandard,
+        ["Heart of the Wild"] =                 TCDStandard,
+        ["Flourish"] =                          TCDStandard,
+
+    } ,
+    [ 3 ] = { -- hunter
+        ["Aspect of the Wild"] =                TCDStandard,
+        ["Aspect of the Eagle"] =               TCDStandard,
+        ["Bestial Wrath"] =                     TCDStandard,
+        ["Trueshot"] =                          TCDStandard,
+        ["Volley"] =                            TCDStandard
+    } ,
+    [ 8 ] = { --mage
+        ["Icy Veins"] =                         TCDStandard,
+        ["Combustion"] =                        TCDStandard,
+        ["Arcane Power"] =                      TCDStandard,
+        ["Rune of Power"] =                     TCDStandard
+
+    } ,
+    [ 2 ] = { --paladin
+        ["Avenging Wrath"] =                    TCDStandard,
+        ["Avenging Crusader"] =                 TCDStandard,
+        ["Holy Avenger"] =                      TCDStandard,
+        ["Crusade"] =                           TCDStandard,
+        ["Seraphim"] =                          TCDStandard
+        --Testing displaying their active aura here; maybe move
+        --["Concentration Aura"] =                TCDLow,
+        --["Retribution Aura"] =                  TCDLow,
+        --["Crusader Aura"] =                     TCDLow,
+        --["Devotion Aura"] =                     TCDLow
+    } ,
+    [ 5 ] = { --priest
+        ["Archangel"] =                         TCDStandard,
+        ["Dark Archangel"] =                    TCDStandard,
+        ["Rapture"] =                           TCDStandard,
+        ["Apotheosis"] =                        TCDStandard,
+        --["Divinity"] = true,
+        ["Voidform"] =                          TCDStandard,
+        ["Surrender to Madness"] =              TCDStandard,
+        [109964] =                              TCDStandard, --Spirit Shell
+        ["Shadow Covenant"] =                   TCDStandard
+    } ,
+    [ 4 ] = { --rogue
+        ["Shadow Blades"] =                     TCDStandard,
+        ["Shadow Dance"] =                      TCDStandard,
+        ["Shadowy Duel"] =                      TCDStandard,
+        ["Adrenaline Rush"] =                   TCDStandard,
+        ["Blade Flurry"] =                      TCDStandard,
+        ["Killing Spree"] =                     TCDStandard
+    } ,
+    [ 7 ] = { --shaman
+        ["Ascendance"] =                        TCDStandard,
+        ["Ancestral Guidance"] =                TCDStandard,
+        ["Stormkeeper"] =                       TCDStandard,
+        ["Icefury"] =                           TCDStandard,
+        ["Doom Winds"] =                        TCDStandard
+    } ,
+    [ 9 ] = { --lock
+        ["Soul Harvest"] =                      TCDStandard,
+        ["Dark Soul: Instability"] =            TCDStandard,
+        ["Dark Soul: Misery"] =                 TCDStandard,
+        ["Nether Portal"] =                     TCDStandard
+    } ,
+    [ 1 ] = { --warrior
+        ["Battle Cry"] =                        TCDStandard,
+        ["Avatar"] =                            TCDStandard,
+        ["Bladestorm"] =                        TCDStandard,
+        ["Bloodbath"] =                         TCDStandard
+
+    }
+};
+
+
 --External Throughput CDs show important CDs cast by anyone in a special set of throughput buff frames
     --Display Location:     throughtput frames
     --Aura Sources:         any
@@ -614,6 +869,17 @@ CustomBuffs.EXTERNAL_THROUGHPUT_CDS = {
     ["Infuse Weapon"] =                 ETCDLow,
     ["Imbue Weapon"] =                  ETCDLow,
 };
+
+local BCC_EXTERNAL_THROUGHPUT_CDS = {
+    ["Dark Archangel"] =                ETCDStandard,
+    ["Power Infusion"] =                ETCDStandard,
+    ["Blood Fury"] =                    ETCDStandard,
+    ["Berserking"] =                    ETCDStandard,
+    ["Skyfury Totem"] =                 ETCDStandard,
+
+};
+
+
 
 
 --Boss buffs display custom flagged buffs in the boss debuff frames
@@ -728,6 +994,7 @@ CustomBuffs.CC = {
     ["Grapple Weapon"] =        CCStandard,
     ["Asphyxiate"] =            CCStandard,
     ["Bull Rush"] =             CCStandard,
+	["War Stomp"] =             CCStandard,
     ["Intimidation"] =          CCStandard,
     ["Kidney Shot"] =           CCStandard,
     ["Maim"] =                  CCStandard,
@@ -873,6 +1140,83 @@ CustomBuffs.CC = {
     --["Vendetta"] =              {["dispelType"] = nil, ["sdPrio"] = 3, ["bdPrio"] = 4},
     --["Counterstrike Totem"] =   {["dispelType"] = nil, ["sdPrio"] = 3, ["bdPrio"] = 4} --Debuff when affected by counterstrike totem
 };
+
+local BCC_CC = {
+
+    --------------------
+    --   Dispelable   --
+    --------------------
+
+    ["Polymorph"] =             MagicStandard,
+    ["Freezing Trap"] =         MagicStandard,
+    ["Fear"] =                  MagicStandard,
+    ["Howl of Terror"] =        MagicStandard,
+    ["Death Coil"] =           	MagicStandard,
+    ["Psychic Scream"] =        MagicStandard,
+    ["Psychic Horror"] =        MagicStandard,
+    ["Seduction"] =             MagicStandard,
+    ["Hammer of Justice"] =     MagicStandard,
+    ["Silence"] =               MagicStandard,
+	["Silencing Shot"] =        MagicStandard,
+	[18469] =                   MagicStandard, --Mage Blanket
+	[24259] =                   MagicStandard, --Lock Blanket
+    [31117] =                   MagicStandard, --UA Silence
+    --["Sin and Punishment"] =    MagicStandard, --VT dispel fear
+    --[117526] =                  MagicStandard, --Binding Shot CC
+    ["Arcane Torrent"] = 		MagicStandard,
+    ["Repentance"] =            MagicStandard,
+    ["Dragon's Breath"] =       MagicStandard,
+    ["Shadowfury"] =            MagicStandard,
+
+    --Roots
+    ["Frost Nova"] =            MagicStandard,
+    ["Entangling Roots"] =      MagicStandard,
+    ["Freeze"] =                MagicStandard,
+
+    --poison/curse/disease/MD dispellable
+    ["Mind Control"] =          PurgeStandard,
+    ["Wyvern Sting"] =          PoisonStandard,
+    ["Spider Sting"] =          PoisonStandard,
+    --[233022] = true, --Spider Sting Silence
+    ["Cyclone"] =               MDStandard,
+
+    --Warlock Curses
+    ["Curse of Exhaustion"] =   CurseLow,
+    ["Curse of Tongues"] =      CurseLow,
+    ["Curse of Weakness"] =     CurseLow,
+
+    --------------------
+    -- Not Dispelable --
+    --------------------
+
+
+    ["Blind"] =                 CCStandard,
+    ["Disarm"] =                CCStandard,
+    ["War Stomp"] =             CCStandard,
+    ["Intimidation"] =          CCStandard,
+    ["Kidney Shot"] =           CCStandard,
+    ["Maim"] =                  CCStandard,
+    ["Axe Toss"] =              CCStandard,
+    ["Bash"] =           		CCStandard,
+    ["Sap"] =                   CCStandard,
+    ["Storm Bolt"] =            CCStandard,
+    ["Cheap Shot"] =            CCStandard,
+    ["Intimidating Shout"] =    CCStandard,
+    ["Scatter Shot"] =          CCStandard,
+    [207167] =                  CCStandard, --Blinding Sleet CC
+
+
+};
+
+if CustomBuffs.gameVersion == 2 then
+	CustomBuffs.INTERRUPTS = BCC_INTERRUPTS;
+	CustomBuffs.CDS = BCC_CDS;
+	CustomBuffs.EXTERNALS = BCC_EXTERNALS;
+	CustomBuffs.EXTRA_RAID_BUFFS = BCC_EXTRA_RAID_BUFFS;
+	CustomBuffs.THROUGHPUT_CDS = BCC_THROUGHPUT_CDS;
+	CustomBuffs.EXTERNAL_THROUGHPUT_CDS = BCC_EXTERNAL_THROUGHPUT_CDS;
+	CustomBuffs.CC = BCC_CC;
+end
 
 ------- Setup -------
 --Helper function to determine if the dispel type of a debuff matches available dispels
