@@ -8,15 +8,64 @@ local function CBFVoid()
     return;
 end
 
-local BUTTON_SCALE = 0.7;
-
-function CustomBuffs:UITweaks()
 --Create a permanently hidden frame to set as the parent of blizzard frames
 --we want to hide later
 if not MyHiddenFrame then
     MyHiddenFrame = CreateFrame("Frame","MyHiddenFrame");
     MyHiddenFrame:Hide();
 end
+
+local BUTTON_SCALE = 0.7;
+
+function CustomBuffs:UITweaks()
+    if CustomBuffs.gameVersion == 0 then
+        CustomBuffs:UITweaksRetail();
+    else
+        CustomBuffs:UITweaksClassic();
+    end
+end
+
+
+function CustomBuffs:UITweaksClassic()
+
+    MainMenuBarLeftEndCap:Hide();
+    MainMenuBarRightEndCap:Hide();
+    --:SetParent("MyHiddenFrame");
+    MainMenuBarTexture1:Hide();
+    MainMenuBarTexture2:Hide();
+    MainMenuBarTexture3:Hide();
+    MainMenuBarTexture0:Hide();
+    MainMenuBarMaxLevelBar:Hide();
+    MainMenuBarMaxLevelBar:SetParent("MyHiddenFrame");
+    MainMenuBarMaxLevelBar.ignoreFramePositionManager = true;
+
+    MainMenuExpBar:ClearAllPoints();
+    MainMenuXPBarTexture0:Hide();
+    MainMenuXPBarTexture1:Hide();
+    MainMenuXPBarTexture2:Hide();
+    MainMenuXPBarTexture3:Hide();
+    MainMenuExpBar:SetPoint("BOTTOM",UIParent,"BOTTOM",0,0);
+    MainMenuExpBar:SetPoint("TOP",UIParent,"BOTTOM",0,8);
+    MainMenuExpBar.ignoreFramePositionManager = true;
+
+    MultiBarBottomLeft:ClearAllPoints();
+    MultiBarBottomLeft:SetPoint("BOTTOMLEFT", ActionButton1, "TOPLEFT",0,7);
+    MultiBarBottomLeft.ignoreFramePositionManager = true;
+
+    MultiBarBottomRightButton1:ClearAllPoints();
+    MultiBarBottomRightButton1:SetPoint("LEFT", MultiBarBottomLeftButton12, "RIGHT",12,0);
+    MultiBarBottomRightButton1.ignoreFramePositionManager = true;
+
+    MainMenuBar:ClearAllPoints();
+    MainMenuBar:SetPoint("BOTTOM",MainMenuExpBar,"TOP",0,0);
+    MainMenuBar.ignoreFramePositionManager = true;
+
+
+end
+
+
+function CustomBuffs:UITweaksRetail()
+
 
 ------- Macro Test Stuff -------
 local hexMac1 = CreateFrame("Button", "hexMac1", UIParent, "SecureActionButtonTemplate");

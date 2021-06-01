@@ -5,6 +5,15 @@
 local addonName, addonTable = ...; --make use of the default addon namespace
 addonTable.CustomBuffs = LibStub("AceAddon-3.0"):NewAddon("CustomBuffs", "AceTimer-3.0", "AceHook-3.0", "AceEvent-3.0", "AceBucket-3.0", "AceConsole-3.0");
 local CustomBuffs = addonTable.CustomBuffs;
+
+if WOW_PROJECT_ID == WOW_PROJECT_CLASSIC then
+	CustomBuffs.gameVersion = 1; --Classic
+elseif WOW_PROJECT_ID == WOW_PROJECT_BURNING_CRUSADE_CLASSIC then
+	CustomBuffs.gameVersion = 2; --BC
+else
+    CustomBuffs.gameVersion = 0; --Retail
+end
+
 _G.CustomBuffs = CustomBuffs
     --[[
         CustomBuffsFrame        :   Frame
@@ -103,9 +112,6 @@ local twipe = table.wipe;
 
 local setMaxDebuffs = CompactUnitFrame_SetMaxDebuffs;
 local setMaxBuffs = CompactUnitFrame_SetMaxBuffs;
-local isPrioDebuff = CompactUnitFrame_Util_IsPriorityDebuff;
-local shouldDisplayDebuff = CompactUnitFrame_Util_ShouldDisplayDebuff;
-local shouldDisplayBuff = CompactUnitFrame_UtilShouldDisplayBuff;
 local setCooldownFrame = CooldownFrame_Set;
 local clearCooldownFrame = CooldownFrame_Clear;
 
@@ -118,6 +124,36 @@ local tbSize = 1.2;
 local bdSize = 1.5;
 
 local NameCache = {};
+
+--Copies of blizz functions
+
+local CompactUnitFrame_Util_IsPriorityDebuff = CompactUnitFrame_Util_IsPriorityDebuff;
+local function isPrioDebuff(...)
+    if CustomBuffs.gameVersion == 0 then
+        return CompactUnitFrame_Util_IsPriorityDebuff(...);
+    else
+        return false;
+    end
+end
+local function shouldDisplayDebuff(...)
+	local name, icon, count, debuffType, duration, expirationTime, unitCaster, canStealOrPurge, _, spellId, canApplyAura, isBossAura = ...;
+	local hasCustom, alwaysShowMine, showForMySpec = SpellGetVisibilityInfo(spellId, UnitAffectingCombat("player") and "RAID_INCOMBAT" or "RAID_OUTOFCOMBAT");
+	if ( hasCustom ) then
+		return showForMySpec or (alwaysShowMine and (unitCaster == "player" or unitCaster == "pet" or unitCaster == "vehicle") );	--Would only be "mine" in the case of something like forbearance.
+	else
+		return true;
+	end
+end --= CompactUnitFrame_Util_ShouldDisplayDebuff;
+local  function shouldDisplayBuff(...)
+	local name, icon, count, debuffType, duration, expirationTime, unitCaster, canStealOrPurge, _, spellId, canApplyAura = ...;
+	local hasCustom, alwaysShowMine, showForMySpec = SpellGetVisibilityInfo(spellId, UnitAffectingCombat("player") and "RAID_INCOMBAT" or "RAID_OUTOFCOMBAT");
+	if ( hasCustom ) then
+		return showForMySpec or (alwaysShowMine and (unitCaster == "player" or unitCaster == "pet" or unitCaster == "vehicle"));
+	else
+		return (unitCaster == "player" or unitCaster == "pet" or unitCaster == "vehicle") and canApplyAura and not SpellIsSelfBuff(spellId);
+	end
+end --= CompactUnitFrame_UtilShouldDisplayBuff;
+
 
 local function ForceUpdateFrame(fNum)
     --local name = GetUnitName(_G["CompactRaidFrame"..fNum].unit, false);
@@ -854,6 +890,9 @@ end
 
 --Helper function to manage responses to spec changes
 function CustomBuffs:updatePlayerSpec()
+    --No spec lookup on classic
+    if not CustomBuffs.gameVersion ~= 0 then return; end
+
     --Check if player can dispel magic (is a healing spec or priest)
     --Technically warlocks can sometimes dispel magic with an imp and demon hunters can dispel
     --magic with a pvp talent, but we ignore these cases
@@ -1241,7 +1280,9 @@ end);
 
 --Register frame for events
 CustomBuffs.CustomBuffsFrame:RegisterEvent("PLAYER_REGEN_ENABLED");
-CustomBuffs.CustomBuffsFrame:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED");
+if CustomBuffs.gameVersion == 0 then
+    CustomBuffs.CustomBuffsFrame:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED");
+end
 CustomBuffs.CustomBuffsFrame:RegisterEvent("COMBAT_LOG_EVENT_UNFILTERED");
 CustomBuffs.CustomBuffsFrame:RegisterEvent("GROUP_ROSTER_UPDATE");
 
@@ -2565,7 +2606,7 @@ function CustomBuffs:OnEnable()
         if options == "" then
 		    InterfaceOptionsFrame_OpenToCategory("CustomBuffs");
 		    InterfaceOptionsFrame_OpenToCategory("CustomBuffs");
-        elseif options == "weekly" then
+        elseif options == "weekly" and CustomBuffs.gameVersion == 0 then
             LoadAddOn("Blizzard_WeeklyRewards");
             WeeklyRewardsFrame:Show();
         elseif options == "test" then
