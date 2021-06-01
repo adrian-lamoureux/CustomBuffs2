@@ -941,6 +941,8 @@ CustomBuffs.CC = {
     --["Arcane Torrent"] = {["dispelType"] = "magic"},
     --["Earthfury"] = {["dispelType"] = "magic"},
     ["Repentance"] =            MagicStandard,
+	["Scare Beast"] =           MagicStandard,
+	["Hibernate"] =             MagicStandard,
     ["Lightning Lasso"] =       MagicStandard,
     ["Blinding Light"] =        MagicStandard,
     ["Ring of Frost"] =         MagicStandard,
@@ -1011,6 +1013,7 @@ CustomBuffs.CC = {
     ["Paralysis"] =             CCStandard,
     ["Scatter Shot"] =          CCStandard,
     ["Fel Eruption"] =          CCStandard,
+	["Gouge"] =          		CCStandard,
     [207167] =                  CCStandard, --Blinding Sleet CC
 
     --Area Denials
@@ -1155,11 +1158,14 @@ local BCC_CC = {
     ["Psychic Scream"] =        MagicStandard,
     ["Psychic Horror"] =        MagicStandard,
     ["Seduction"] =             MagicStandard,
+	["Scare Beast"] =           MagicStandard,
+	["Hibernate"] =             MagicStandard,
     ["Hammer of Justice"] =     MagicStandard,
     ["Silence"] =               MagicStandard,
 	["Silencing Shot"] =        MagicStandard,
 	[18469] =                   MagicStandard, --Mage Blanket
 	[24259] =                   MagicStandard, --Lock Blanket
+	[18425] =          			MagicStandard, --Improved Kick
     [31117] =                   MagicStandard, --UA Silence
     --["Sin and Punishment"] =    MagicStandard, --VT dispel fear
     --[117526] =                  MagicStandard, --Binding Shot CC
@@ -1167,11 +1173,17 @@ local BCC_CC = {
     ["Repentance"] =            MagicStandard,
     ["Dragon's Breath"] =       MagicStandard,
     ["Shadowfury"] =            MagicStandard,
+	[22703] =                   MagicStandard, --Infernal Stun
+
 
     --Roots
     ["Frost Nova"] =            MagicStandard,
     ["Entangling Roots"] =      MagicStandard,
+	["Nature's Grasp"] =      	MagicStandard,
+	["Entangling Roots"] =      MagicStandard,
     ["Freeze"] =                MagicStandard,
+	[12494] =      				MagicStandard, --Frostbite
+
 
     --poison/curse/disease/MD dispellable
     ["Mind Control"] =          PurgeStandard,
@@ -1189,21 +1201,36 @@ local BCC_CC = {
     -- Not Dispelable --
     --------------------
 
-
+	["Counterattack"] =      	CCStandard,
+	[12809] =                   CCStandard, --Concussion Blow
+	[7922] =                    CCStandard, --Charge Stun
+	[16922] =                 	CCStandard, --Starfire Stun
+	[19410] =                 	CCStandard, --Improved Concussive Shot
+	[12355] =                 	CCStandard, --Impact
+	[20170] =                 	CCStandard, --Seal of Justice
+	[15269] =                 	CCStandard, --Blackout
+	[18093] =                 	CCStandard, --Pyroclasm
+	[12798] =                 	CCStandard, --Revenge Stun
+	[5530] =                 	CCStandard, --Mace Spec Stun
+	[15283] =                 	CCStandard, --Stunning Blow
+	[56] =                 		CCStandard, --Stun Proc
     ["Blind"] =                 CCStandard,
     ["Disarm"] =                CCStandard,
     ["War Stomp"] =             CCStandard,
     ["Intimidation"] =          CCStandard,
     ["Kidney Shot"] =           CCStandard,
+	["Pounce"] =           		CCStandard,
     ["Maim"] =                  CCStandard,
-    ["Axe Toss"] =              CCStandard,
+    ["Intercept Stun"] =        CCStandard,
     ["Bash"] =           		CCStandard,
     ["Sap"] =                   CCStandard,
     ["Storm Bolt"] =            CCStandard,
     ["Cheap Shot"] =            CCStandard,
     ["Intimidating Shout"] =    CCStandard,
     ["Scatter Shot"] =          CCStandard,
-    [207167] =                  CCStandard, --Blinding Sleet CC
+	["Gouge"] =          		CCStandard,
+	["Garrote"] =          		CCStandard,
+
 
 
 };
