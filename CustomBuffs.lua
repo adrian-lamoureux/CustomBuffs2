@@ -146,6 +146,11 @@ local function shouldDisplayDebuff(...)
 end --= CompactUnitFrame_Util_ShouldDisplayDebuff;
 local  function shouldDisplayBuff(...)
 	local name, icon, count, debuffType, duration, expirationTime, unitCaster, canStealOrPurge, _, spellId, canApplyAura = ...;
+
+	if(CustomBuffs.BuffBlacklist[name] or CustomBuffs.BuffBlacklist[spellId]) then
+		return false;
+	end
+
 	local hasCustom, alwaysShowMine, showForMySpec = SpellGetVisibilityInfo(spellId, UnitAffectingCombat("player") and "RAID_INCOMBAT" or "RAID_OUTOFCOMBAT");
 	if ( hasCustom ) then
 		return showForMySpec or (alwaysShowMine and (unitCaster == "player" or unitCaster == "pet" or unitCaster == "vehicle"));
@@ -404,6 +409,7 @@ CustomBuffs.CDS = {
 local BCC_CDS = {
     [ 11 ] = { --Druid
         ["Barkskin"] =                  CDStandard,
+		["Enrage"] =                  	CDStandard,
         ["Frenzied Regeneration"] =     CDStandard
     } ,
     [ 3 ] = { --Hunter
@@ -438,6 +444,7 @@ local BCC_CDS = {
     } ,
     [ 7 ] = { --Shaman
         ["Astral Shift"] =              CDStandard,
+		["Water Shield"] =              CDStandard,
         ["Shamanistic Rage"] =          CDStandard,
         ["Harden Skin"] =               CDStandard
     } ,
@@ -512,6 +519,9 @@ CustomBuffs.EXTERNALS = {
     ["Vanish"] =                    EStandard,
     ["Prowl"] =                     EStandard,
 
+	["Food"] =              		EStandard,
+    ["Drink"] =           			EStandard,
+
     --Previous expansion effects
     --["Vampiric Aura"] =             EStandard
 
@@ -548,14 +558,6 @@ local BCC_EXTERNALS = {
     ["Fireblood"] =                 EStandard,
 
 
-    [344388] =                      EStandard, --Huntsman trinket
-    [344384] =                      EStandard, --Huntsman trinket target
-    ["Tuft of Smoldering Plumage"]= Estandard,
-
-    ["Fleshcraft"] =                EStandard,
-
-    ["Gladiator's Emblem"] =        EStandard,
-
     --Minor Externals worth tracking
     ["Enveloping Mist"] =           ELow,
 
@@ -564,6 +566,9 @@ local BCC_EXTERNALS = {
     ["Stealth"] =                   EStandard,
     ["Vanish"] =                    EStandard,
     ["Prowl"] =                     EStandard,
+
+	["Food"] =              		EStandard,
+    ["Drink"] =           			EStandard,
 
     --Previous expansion effects
     --["Vampiric Aura"] =             EStandard
@@ -610,6 +615,9 @@ CustomBuffs.EXTRA_RAID_BUFFS = {
     [344388] =                      ERBStandard, --Huntsman trinket
     [344384] =                      ERBStandard, --Huntsman trinket target
     ["Tuft of Smoldering Plumage"]= ERBStandard,
+
+	["Food"] =              		ERBStandard,
+    ["Drink"] =           			ERBStandard,
 };
 
 
@@ -621,6 +629,10 @@ local BCC_EXTRA_RAID_BUFFS = {
     ["Ancestral Vigor"] =           ERBStandard,
     ["Anti-Magic Zone"] =           ERBStandard,
     ["Blessing of Sacrifice"] =     ERBStandard,
+
+	["Healing Way"] =     			ERBStandard,
+	["Ancestral Fortitude"] =     	ERBStandard,
+
 
     --BFA procs
     ["Luminous Jellyweed"] =        ERBStandard,
@@ -646,6 +658,9 @@ local BCC_EXTRA_RAID_BUFFS = {
     [344388] =                      ERBStandard, --Huntsman trinket
     [344384] =                      ERBStandard, --Huntsman trinket target
     ["Tuft of Smoldering Plumage"]= ERBStandard,
+
+	["Food"] =              		ERBStandard,
+    ["Drink"] =           			ERBStandard,
 };
 
 --Throughput CDs show important CDs cast by the unit in a special set of throughput buff frames
@@ -877,6 +892,9 @@ local BCC_EXTERNAL_THROUGHPUT_CDS = {
     ["Berserking"] =                    ETCDStandard,
     ["Skyfury Totem"] =                 ETCDStandard,
 
+	--Trinkets
+	["Haste"] =							ETCDLow,
+	["Spell Haste"] =					ETCDLow,
 };
 
 
@@ -1235,6 +1253,21 @@ local BCC_CC = {
 
 };
 
+--List of Buffs that will not shown on frames
+CustomBuffs.BuffBlacklist = {
+	["Healing Stream"] = true,
+	["Fire Resistance"] = true,
+	["Frost Resistance"] = true,
+	["Grace of Air"] = true,
+	["Nature Resistance"] = true,
+	["Stoneskin"] = true,
+	["Strength of Earth"] = true,
+	["Windwall"] = true,
+	["Wrath of Air Totem"] = true,
+	["Mana Spring"] = true,
+	["Tranquil Air"] = true,
+};
+
 if CustomBuffs.gameVersion == 2 then
 	CustomBuffs.INTERRUPTS = BCC_INTERRUPTS;
 	CustomBuffs.CDS = BCC_CDS;
@@ -1400,6 +1433,13 @@ local function handleRosterUpdate()
         end
     end
 
+	for index, frame in ipairs(_G.CompactRaidFrameContainer.flowFrames) do
+		--index 1 is a string for some reason so we skip it
+		if index ~= 1 and frame and frame.debuffFrames then
+			frame.auraNeedResize = true;
+		end
+	end
+
     --Make sure to update raid icons on frames when we enter or leave a group
     CustomBuffs:UpdateRaidIcons();
 
@@ -1462,9 +1502,13 @@ local function handleCLEU()
 
                 ForceUpdateFrame(CustomBuffs.units[destGUID].frameNum);
 
+
                 --Print a message with the spell's name and ID to make it easier to add new interrupts
                 --in the future
                 print("Detected unknown interrupt: ", spellName, " / ", spellID);
+				--CustomBuffs.db.global.unknownInterrupts = CustomBuffs.db.global.unknownInterrupts or {};
+
+				CustomBuffs.db.global.unknownInterrupts[spellID] = spellName;
 
                 -- Make sure we clear it after the duration
                 C_Timer.After(duration + CustomBuffs.UPDATE_DELAY_TOLERANCE, function()
@@ -1680,7 +1724,7 @@ local function setUpExtraDebuffFrames(frame)
             bf.baseSize=22;
             bf:Hide();
         end
-        frame.debuffsLoaded = true;
+        --frame.debuffsLoaded = true;
     end
 
     --Set the size of default debuffs
@@ -1986,7 +2030,7 @@ function CustomBuffs:UpdateAuras(frame)
     if frame.optionTable.displayDispelDebuffs then frame.optionTable.displayDispelDebuffs = false; end          --Prevent blizzard frames from showing dispel debuff frames
     if frame.optionTable.displayNameWhenSelected then frame.optionTable.displayNameWhenSelected = false; end    --Don't show names when the frame is selected to prevent bossDebuff overlap
 
-    if frame.auraNeedResize or not frame.debuffsLoaded or not frame.bossDebuffs or not frame.throughputFrames then
+    if frame.auraNeedResize or not frame.debuffFrames[CustomBuffs.MAX_DEBUFFS] or not frame.buffFrames[CustomBuffs.MAX_BUFFS] or not frame.bossDebuffs or not frame.throughputFrames then
         setUpExtraDebuffFrames(frame);
         setUpExtraBuffFrames(frame);
         setUpThroughputFrames(frame);
@@ -1995,7 +2039,7 @@ function CustomBuffs:UpdateAuras(frame)
     end
 
     --If our custom aura frames have not yet loaded do nothing
-    if not frame.debuffsLoaded or not frame.bossDebuffs or not frame.throughputFrames then return; end
+    if --[[not frame.debuffsLoaded or]] not frame.bossDebuffs or not frame.throughputFrames then return; end
 
     if frame.debuffNeedUpdate then
         setUpExtraDebuffFrames(frame);
@@ -2983,6 +3027,14 @@ function CustomBuffs:OnEnable()
         elseif options == "test" then
             CustomBuffs.debugMode = not CustomBuffs.debugMode;
             DebugUpdate();
+		elseif options == "ints" then
+			if self.db.global.unknownInterrupts then
+				for k, v in pairs(self.db.global.unknownInterrupts) do
+					print(v, ": ", k);
+				end
+			end
+		elseif options == "wipe ints" then
+			self.db.global.unknownInterrupts = {};
         end
     end);
 

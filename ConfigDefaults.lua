@@ -8,7 +8,11 @@ local CustomBuffs = addonTable.CustomBuffs;
 function CustomBuffs:Defaults()
 	local defaults = {};
 
+	defaults.global = {
+		unknownInterrupts = {}
+	};
 	defaults.profile = {
+
 		frameScale = 1,
 		buffScale = 1,
 		debuffScale = 1,
