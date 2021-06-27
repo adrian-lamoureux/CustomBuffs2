@@ -311,7 +311,7 @@ local BCC_NAURAS = {
 
 };
 
-CustomBuffs.BCC_NAURAS = CustomBuffs.NONAURAS = {
+local BCC_NONAURAS = CustomBuffs.NONAURAS = {
     --SHAMAN
     ["Mana Tide Totem"] =  { duration = 12,  tbPrio = 1 }, --Mana Tide
     ["Fire Elemental Totem"] = { duration = 120, tbPrio = 1 }, --Fire Elemental
@@ -1294,7 +1294,7 @@ CustomBuffs.BuffBlacklist = {
 };
 
 if CustomBuffs.gameVersion == 2 then
-	CustomBuffs.NAURAS = BCC_NAURAS;
+	CustomBuffs.NONAURAS = BCC_NONAURAS;
 	CustomBuffs.INTERRUPTS = BCC_INTERRUPTS;
 	CustomBuffs.CDS = BCC_CDS;
 	CustomBuffs.EXTERNALS = BCC_EXTERNALS;
