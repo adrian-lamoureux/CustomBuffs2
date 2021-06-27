@@ -311,7 +311,7 @@ local BCC_NAURAS = {
 
 };
 
-local BCC_NONAURAS = CustomBuffs.NONAURAS = {
+local BCC_NONAURAS = {
     --SHAMAN
     ["Mana Tide Totem"] =  { duration = 12,  tbPrio = 1 }, --Mana Tide
     ["Fire Elemental Totem"] = { duration = 120, tbPrio = 1 }, --Fire Elemental
