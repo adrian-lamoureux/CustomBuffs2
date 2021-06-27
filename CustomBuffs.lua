@@ -264,7 +264,7 @@ local BCC_INTERRUPTS = {
 
 };
 
-CustomBuffs.NONAURAS = {
+local BCC_NAURAS = {
     --SHAMAN
     [108280] = { duration = 12, tbPrio = 1 }, --Healing Tide (Assumes leveling perk for +2 seconds)
     [16191] =  { duration = 8,  tbPrio = 1 }, --Mana Tide
@@ -1294,7 +1294,7 @@ CustomBuffs.BuffBlacklist = {
 };
 
 if CustomBuffs.gameVersion == 2 then
-	CustomBuffs.NAURAS = CustomBuffs.BCC_NAURAS;
+	CustomBuffs.NAURAS = BCC_NAURAS;
 	CustomBuffs.INTERRUPTS = BCC_INTERRUPTS;
 	CustomBuffs.CDS = BCC_CDS;
 	CustomBuffs.EXTERNALS = BCC_EXTERNALS;
