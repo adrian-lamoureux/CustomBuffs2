@@ -311,6 +311,29 @@ CustomBuffs.NONAURAS = {
 
 };
 
+CustomBuffs.BCC_NAURAS = CustomBuffs.NONAURAS = {
+    --SHAMAN
+    ["Mana Tide Totem"] =  { duration = 12,  tbPrio = 1 }, --Mana Tide
+    ["Fire Elemental Totem"] = { duration = 120, tbPrio = 1 }, --Fire Elemental
+
+    --DRUID
+
+    --MAGE
+    [198149] = { duration = 10, tbPrio = 1 }, --Frozen Orb PvP Talent
+    [84714] = { duration = 10, tbPrio = 1 }, --Frozen Orb
+
+    --PRIEST
+
+    --HUNTER
+
+    --PALADIN
+
+    --WARRIOR
+
+    --ROGUE
+
+};
+
 
 --CDs show self-applied class-specific buffs in the standard buff location
     --Display Location:     standard buff
@@ -1271,6 +1294,7 @@ CustomBuffs.BuffBlacklist = {
 };
 
 if CustomBuffs.gameVersion == 2 then
+	CustomBuffs.NAURAS = CustomBuffs.BCC_NAURAS;
 	CustomBuffs.INTERRUPTS = BCC_INTERRUPTS;
 	CustomBuffs.CDS = BCC_CDS;
 	CustomBuffs.EXTERNALS = BCC_EXTERNALS;
