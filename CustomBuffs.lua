@@ -264,7 +264,7 @@ local BCC_INTERRUPTS = {
 
 };
 
-local BCC_NAURAS = {
+CustomBuffs.NONAURAS = {
     --SHAMAN
     [108280] = { duration = 12, tbPrio = 1 }, --Healing Tide (Assumes leveling perk for +2 seconds)
     [16191] =  { duration = 8,  tbPrio = 1 }, --Mana Tide
@@ -327,6 +327,7 @@ local BCC_NONAURAS = {
     --HUNTER
 
     --PALADIN
+	["Blessing of Sacrifice"] =  { duration = 30,  tbPrio = 1 }, --Show when a paladin is taking damage for someone else --TODO move this to normal buff slots
 
     --WARRIOR
 
@@ -916,6 +917,9 @@ local BCC_EXTERNAL_THROUGHPUT_CDS = {
     ["Blood Fury"] =                    ETCDStandard,
     ["Berserking"] =                    ETCDStandard,
     ["Skyfury Totem"] =                 ETCDStandard,
+	--since these are party specific we show them in bc to see which groups are lusted in raid
+	["Bloodlust"] =                 	ETCDStandard,
+	["Drums of Battle"] =              	ETCDStandard,
 
 	--Trinkets
 	["Haste"] =							ETCDLow,
