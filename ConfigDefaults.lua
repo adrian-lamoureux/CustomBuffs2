@@ -9,7 +9,7 @@ function CustomBuffs:Defaults()
 	local defaults = {};
 
 	defaults.global = {
-		unknownInterrupts = {}
+		["unknownInterrupts"] = {value = 00002},
 	};
 	defaults.profile = {
 

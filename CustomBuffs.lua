@@ -3,8 +3,10 @@
 --issue with raid frames sometimes losing click interaction functionality maybe because of this addon
 
 local addonName, addonTable = ...; --make use of the default addon namespace
-addonTable.CustomBuffs = LibStub("AceAddon-3.0"):NewAddon("CustomBuffs", "AceTimer-3.0", "AceHook-3.0", "AceEvent-3.0", "AceBucket-3.0", "AceConsole-3.0");
+addonTable.CustomBuffs = LibStub("AceAddon-3.0"):NewAddon("CustomBuffs", "AceTimer-3.0", "AceHook-3.0", "AceEvent-3.0", "AceBucket-3.0", "AceConsole-3.0", "AceComm-3.0");
 local CustomBuffs = addonTable.CustomBuffs;
+local LibAceSerializer = LibStub:GetLibrary("AceSerializer-3.0");
+
 
 if WOW_PROJECT_ID == WOW_PROJECT_CLASSIC then
 	CustomBuffs.gameVersion = 1; --Classic
@@ -2988,8 +2990,17 @@ end
 
 
 
-
-
+function CustomBuffs:OnCommReceived(prefix, message, distribution, sender)
+	local success, deserialized = LibAceSerializer:Deserialize(message);
+	if success then
+		if self.db.global.unknownInterrupts and deserialized then
+			for k, v in pairs(deserialized) do
+				self.db.global.unknownInterrupts[k] = v or nil;
+				print(v, ": ", k);
+			end
+		end
+	end
+end
 
 
 
@@ -3007,7 +3018,7 @@ function CustomBuffs:OnDisable() end
 
 function CustomBuffs:OnEnable()
 	self:SecureHook("CompactUnitFrame_UpdateAuras", function(frame) self:UpdateAuras(frame); end);
-
+	self:RegisterComm("CBSync", "OnCommReceived");
 
 
 	self:UpdateConfig();
@@ -3027,11 +3038,26 @@ function CustomBuffs:OnEnable()
         elseif options == "test" then
             CustomBuffs.debugMode = not CustomBuffs.debugMode;
             DebugUpdate();
+
+		elseif options == "sync" then
+			print("synching...");
+			if self.db.global.unknownInterrupts then
+				local serialized = LibAceSerializer:Serialize(self.db.global.unknownInterrupts);
+				self:SendCommMessage("CBSync", serialized, "GUILD", nil, "BULK");
+				self:SendCommMessage("CBSync", serialized, "RAID", 	nil, "BULK");
+				self:SendCommMessage("CBSync", serialized, "PARTY", nil, "BULK");
+
+			end
 		elseif options == "ints" then
 			if self.db.global.unknownInterrupts then
 				for k, v in pairs(self.db.global.unknownInterrupts) do
-					print(v, ": ", k);
+						print(v, ": ", k);
 				end
+			end
+		elseif options == "test ints" then
+			print("setting test value")
+			if self.db.global.unknownInterrupts then
+				self.db.global.unknownInterrupts[00002] = "fake";
 			end
 		elseif options == "wipe ints" then
 			self.db.global.unknownInterrupts = {};
