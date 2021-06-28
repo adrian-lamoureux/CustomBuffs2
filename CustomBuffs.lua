@@ -354,6 +354,13 @@ local BCC_INTERRUPTS = {
 
 	--Non Player
 	[13281] = { duration = 2 },
+	[13728] = { duration = 2 },
+	[15122] = { duration = 15},
+	[2676] =  { duration = 2 },
+	[32691] = { duration = 6 },
+	[32846] = { duration = 4 },
+	[11972] = { duration = 8 },
+	[29560] = { duration = 2 },
 };
 
 CustomBuffs.NONAURAS = {
