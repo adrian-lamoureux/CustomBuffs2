@@ -432,8 +432,8 @@ local BCC_NONAURAS = {
 	[32982] = 					{ duration = 120, tbPrio = 1, type = "summon"}, --Fire Elemental
 	[33663] = 					{ duration = 60, tbPrio = 1, type = "summon"}, --Earth Elemental
 	[2062] = 					{ duration = 120, tbPrio = 1, type = "summon", chain = true, owner = 33663 }, --Earth Elemental Totem
-	[11315] = 					{ duration = 15, tbPrio = 1, type = "summon"},
-	[25533] = 					{ duration = 60, tbPrio = 1, type = "summon"},
+	--[11315] = 					{ duration = 15, tbPrio = 1, type = "summon"},
+	--[25533] = 					{ duration = 60, tbPrio = 1, type = "summon"},
 
     --DRUID
 
