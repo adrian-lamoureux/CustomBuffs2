@@ -59,6 +59,8 @@ CustomBuffs.CustomBuffsFrame = CustomBuffs.CustomBuffsFrame or CreateFrame("Fram
 --Create units table
 CustomBuffs.units = CustomBuffs.units or {};
 
+CustomBuffs.verbose = CustomBuffs.verbose or false;
+
 --Set up values for dispel types; used to quickly
 --determine whether a spell is dispellable by the player class;
 --used to increase the debuff priority of dispellable debuffs
@@ -168,6 +170,96 @@ local function ForceUpdateFrame(fNum)
     CustomBuffs:UpdateAuras(_G["CompactRaidFrame"..fNum]);
 end
 
+CustomBuffs.trackedSummons = CustomBuffs.trackedSummons or {};
+CustomBuffs.trackedOwners = CustomBuffs.trackedOwners or {};
+
+
+local function vprint(...)
+	if CustomBuffs.verbose then
+		local txt = "";
+		for _, text in ipairs(...) do
+			if text then
+				txt = txt..text;
+			end
+		end
+		print(txt);
+	end
+end
+
+
+
+local function addTrackedSummon(casterGUID, spellID, spellName, destGUID, daisyChainOwner)
+	local owner = casterGUID;
+
+	if daisyChainOwner then
+		if (CustomBuffs.NONAURAS[spellID] or CustomBuffs.NONAURAS[spellName]).owner then
+			CustomBuffs.trackedOwners[spellID] = {destGUID, casterGUID = casterGUID};
+		elseif CustomBuffs.trackedOwners[spellID] and CustomBuffs.trackedOwners[spellID].casterGUID == casterGUID then
+			owner = CustomBuffs.trackedOwners[spellID].casterGUID;
+		end
+	end
+
+
+	if CustomBuffs.verbose then print("Added summon: ", destGUID, " from owner ", owner); end
+
+	local duration = (CustomBuffs.NONAURAS[spellID] or CustomBuffs.NONAURAS[spellName]).duration;
+	CustomBuffs.trackedSummons[destGUID] = {owner, spellID = spellID, owner = owner};
+
+	--local _, class = UnitClass(unit)
+
+	CustomBuffs.units[casterGUID].nauras = CustomBuffs.units[casterGUID].nauras or {};
+	CustomBuffs.units[casterGUID].nauras[spellID] = CustomBuffs.units[casterGUID].nauras[spellID] or {};
+	CustomBuffs.units[casterGUID].nauras[spellID].expires = GetTime() + duration;
+	CustomBuffs.units[casterGUID].nauras[spellID].spellID = spellID;
+	CustomBuffs.units[casterGUID].nauras[spellID].duration = duration;
+	CustomBuffs.units[casterGUID].nauras[spellID].spellName = spellName;
+	CustomBuffs.units[casterGUID].nauras[spellID].summon = true;
+	CustomBuffs.units[casterGUID].nauras[spellID].trackedUnit = destGUID;
+
+	ForceUpdateFrame(CustomBuffs.units[casterGUID].frameNum);
+
+	-- Make sure we clear it after the duration
+	C_Timer.After(duration + CustomBuffs.UPDATE_DELAY_TOLERANCE, function()
+		if CustomBuffs.units[casterGUID] and CustomBuffs.units[casterGUID].nauras and CustomBuffs.units[casterGUID].nauras[spellID] then
+			CustomBuffs.units[casterGUID].nauras[spellID] = nil;
+			ForceUpdateFrame(CustomBuffs.units[casterGUID].frameNum);
+		end
+	end);
+
+end
+
+local function removeTrackedSummon(summonGUID)
+	if CustomBuffs.trackedSummons and CustomBuffs.trackedSummons[summonGUID] and not CustomBuffs.trackedSummons[summonGUID].invalid and CustomBuffs.trackedSummons[summonGUID][1] then
+	local ownerGUID = CustomBuffs.trackedSummons[summonGUID][1] or summonGUID;
+	if CustomBuffs.verbose then print("tracked summon ", summonGUID, " died, owner was ", ownerGUID); end
+		if CustomBuffs.trackedSummons[summonGUID] and CustomBuffs.trackedSummons[summonGUID].spellID then
+			local spellID = CustomBuffs.trackedSummons[summonGUID].spellID;
+			twipe(CustomBuffs.trackedSummons[summonGUID]);
+			CustomBuffs.trackedSummons[summonGUID].invalid = true;
+			CustomBuffs.trackedSummons[summonGUID] = nil;
+			CustomBuffs.units[ownerGUID].nauras[spellID] = nil;
+			ForceUpdateFrame(CustomBuffs.units[ownerGUID].frameNum);
+		end
+	end
+end
+
+local function checkForSummon(spellID)
+	for k, v in pairs(CustomBuffs.trackedSummons) do
+		if v and not v.invalid then
+			if v.spellID and v.spellID == spellID then return true; end
+		end
+	end
+end
+
+local function handleSummon(spellID, spellName, casterGUID, destGUID)
+	if CustomBuffs.verbose then print("Summon: ", spellID, " : ", spellName); end
+	if ((CustomBuffs.NONAURAS[spellID] and CustomBuffs.NONAURAS[spellID].type and CustomBuffs.NONAURAS[spellID].type == "summon") or (CustomBuffs.NONAURAS[spellName] and CustomBuffs.NONAURAS[spellName].type and CustomBuffs.NONAURAS[spellName].type == "summon" )) then
+		if CustomBuffs.units[casterGUID] then
+			--local realID = select(14, CombatLogGetCurrentEventInfo());
+			addTrackedSummon(casterGUID, spellID, spellName, destGUID, (CustomBuffs.NONAURAS[spellID] or CustomBuffs.NONAURAS[spellName]).chain or false);
+		end
+	end
+end
 
 ----------------------
 ----    Tables    ----
@@ -260,23 +352,31 @@ local BCC_INTERRUPTS = {
 	[25454] =  { duration = 2 }, -- Earth Shock (Shaman)
     [16979] = { duration = 4 }, -- Feral Charge (Feral)
 
-    --Non player interrupts BETA FEATURE
-
+	--Non Player
+	[13281] = { duration = 2 },
 };
 
 CustomBuffs.NONAURAS = {
     --SHAMAN
-    [108280] = { duration = 12, tbPrio = 1 }, --Healing Tide (Assumes leveling perk for +2 seconds)
-    [16191] =  { duration = 8,  tbPrio = 1 }, --Mana Tide
-    [198067] = { duration = 30, tbPrio = 1 }, --Fire Elemental
-    [192249] = { duration = 30, tbPrio = 1 }, --Storm Elemental
-    [51533] =  { duration = 15, tbPrio = 1 }, --Feral Spirit
+    [108280] = { duration = 12, tbPrio = 10, type = "summon" }, 	--Healing Tide (Assumes leveling perk for +2 seconds)
+    [16191] =  { duration = 8,  tbPrio = 10, type = "summon" }, 	--Mana Tide
+    [188592] = { duration = 47.1, tbPrio = 1, type = "summon" },	--Regular Fire Elemental
+	[188291] = { duration = 47.1, tbPrio = 1, noSum = 188592 },		--Fire Elemental Pet
+	[188616] = { duration = 60, tbPrio = 1, type = "summon" }, 		--Earth Elemental
+	[198103] = { duration = 60, tbPrio = 1, noSum = 188616}, 		--Earth Elemental Pet
+	[157299] = { duration = 60, tbPrio = 1, type = "summon" }, 		--Storm Elemental
+    [192249] = { duration = 47.1, tbPrio = 1}, 						--Storm Elemental Pet
+    [51533] =  { duration = 15, tbPrio = 1}, 						--Feral Spirit
+	--[5394] =   { duration = 15, tbPrio = 1, type = "summon" },
+	[157153] = { duration = 15, tbPrio = 1, sbPrio = nil, type = "summon" }, --Cloudburst
+	--[2484] = 	{ duration = 40, tbPrio = 20, type = "summon" },
+	[192077] = 	{ duration = 15, tbPrio = 1, sbPrio = nil, type = "summon" },	--Wind Rush Totem
 
     --LOCK
-    [205180] = { duration = 20, tbPrio = 1 }, --Summon Darkglare
-    [111898] = { duration = 17, tbPrio = 1 }, --Grimoire: Felguard
-    [265187] = { duration = 15, tbPrio = 1 }, --Summon Demonic Tyrant
-    [1122] = { duration = 30, tbPrio = 1 }, --Summon Infernal
+    [205180] = { duration = 20, tbPrio = 1, type = "summon" }, --Summon Darkglare
+    [111898] = { duration = 17, tbPrio = 1, type = "summon" }, --Grimoire: Felguard
+    [265187] = { duration = 15, tbPrio = 1, type = "summon" }, --Summon Demonic Tyrant
+    [111685] = { duration = 30, tbPrio = 1, type = "summon" }, --Summon Infernal
 
     --DRUID
     --[157982] = { duration = 1.5, tbPrio = 1 }, --Tranquility
@@ -296,10 +396,10 @@ CustomBuffs.NONAURAS = {
     [42650] = { duration = 30, tbPrio = 1 }, --Army of the Dead
 
     --MONK
-    [325197] = { duration = 25, tbPrio = 1 }, --Invoke Chi-ji
-    [322118] = { duration = 25, tbPrio = 1 }, --Yu'lon
-    [123904] = { duration = 24, tbPrio = 1 }, --Xuen
-    [132578] = { duration = 25, tbPrio = 1 }, --Niuzao
+    [325197] = { duration = 25, tbPrio = 1, type = "summon" }, --Invoke Chi-ji
+    [322118] = { duration = 25, tbPrio = 1, type = "summon" }, --Yu'lon
+    [123904] = { duration = 24, tbPrio = 1, type = "summon" }, --Xuen
+    [132578] = { duration = 25, tbPrio = 1, type = "summon" }, --Niuzao
 
     --DH
 
@@ -309,12 +409,19 @@ CustomBuffs.NONAURAS = {
 
     --ROGUE
 
+	--Other
+	[336126] = { duration = 0.5, tbPrio = -2, sbPrio = nil }, --Show 0.5 second flash on frame when someone uses a pvp trinket
 };
 
 local BCC_NONAURAS = {
     --SHAMAN
-    ["Mana Tide Totem"] =  { duration = 12,  tbPrio = 1 }, --Mana Tide
-    ["Fire Elemental Totem"] = { duration = 120, tbPrio = 1 }, --Fire Elemental
+    ["Mana Tide Totem"] =  { duration = 12,  tbPrio = 1, type = "summon" }, --Mana Tide
+    [2894] = 					{ duration = 120, tbPrio = 1, type = "summon", chain = true, owner = 32982 }, --Fire Elemental Totem
+	[32982] = 					{ duration = 120, tbPrio = 1, type = "summon"}, --Fire Elemental
+	[33663] = 					{ duration = 60, tbPrio = 1, type = "summon"}, --Earth Elemental
+	[2062] = 					{ duration = 120, tbPrio = 1, type = "summon", chain = true, owner = 33663 }, --Earth Elemental Totem
+	[11315] = 					{ duration = 15, tbPrio = 1, type = "summon"},
+	[25533] = 					{ duration = 60, tbPrio = 1, type = "summon"},
 
     --DRUID
 
@@ -1480,6 +1587,8 @@ end
 local function handleCLEU()
 
     local _, event, _,casterGUID,_,_,_, destGUID, destName,_,_, spellID, spellName = CombatLogGetCurrentEventInfo();
+	CustomBuffs.trackedSummons = CustomBuffs.trackedSummons or {};
+	wipeTrackedSummon = wipeTrackedSummon or {};
 
     -- SPELL_INTERRUPT doesn't fire for some channeled spells; if the spell isn't a known interrupt we're done
     if (event == "SPELL_INTERRUPT" or event == "SPELL_CAST_SUCCESS") then
@@ -1550,34 +1659,40 @@ local function handleCLEU()
             end
         end
     end
+	if (event == "SPELL_INSTAKILL" or event == "UNIT_DIED" or event == "UNIT_DISSIPATES" or event == "UNIT_DESTROYED") then
+			--print("unit died");
+			removeTrackedSummon(destGUID);
+	end
+	if (event == "SPELL_SUMMON") then
+		handleSummon(spellID, spellName, casterGUID, destGUID);
+	end
     if (event == "SPELL_CAST_SUCCESS") and
-        (CustomBuffs.NONAURAS[spellID] or CustomBuffs.NONAURAS[spellName])
-    then
-            if CustomBuffs.units[casterGUID] then
-                local duration = (CustomBuffs.NONAURAS[spellID] or CustomBuffs.NONAURAS[spellName]).duration;
-                --local _, class = UnitClass(unit)
+        CustomBuffs.NONAURAS[spellID] or (CustomBuffs.NONAURAS[SpellName] and (not CustomBuffs.NONAURAS[spellID].type or CustomBuffs.NONAURAS[spellID].type ~= "summon")) or (CustomBuffs.NONAURAS[spellName] and (not CustomBuffs.NONAURAS[spellName].type or CustomBuffs.NONAURAS[spellName].type ~= "summon")) then
+		if (CustomBuffs.NONAURAS[spellID] or CustomBuffs.NONAURAS[spellName]).noSum and not checkForSummon((CustomBuffs.NONAURAS[spellID] or CustomBuffs.NONAURAS[spellName]).noSum) then
+        	if CustomBuffs.units[casterGUID] then
+            	local duration = (CustomBuffs.NONAURAS[spellID] or CustomBuffs.NONAURAS[spellName]).duration;
+            	--local _, class = UnitClass(unit)
+            	CustomBuffs.units[casterGUID].nauras = CustomBuffs.units[casterGUID].nauras or {};
+				CustomBuffs.units[casterGUID].nauras[spellID] = CustomBuffs.units[casterGUID].nauras[spellID] or {};
+            	CustomBuffs.units[casterGUID].nauras[spellID].expires = GetTime() + duration;
+				CustomBuffs.units[casterGUID].nauras[spellID].spellID = spellID;
+            	CustomBuffs.units[casterGUID].nauras[spellID].duration = duration;
+        		CustomBuffs.units[casterGUID].nauras[spellID].spellName = spellName;
+        		--self.units[destGUID].spellID = spell.parent and spell.parent or spellId
 
-                CustomBuffs.units[casterGUID].nauras = CustomBuffs.units[casterGUID].nauras or {};
-                CustomBuffs.units[casterGUID].nauras[spellID] = CustomBuffs.units[casterGUID].nauras[spellID] or {};
-                CustomBuffs.units[casterGUID].nauras[spellID].expires = GetTime() + duration;
-                CustomBuffs.units[casterGUID].nauras[spellID].spellID = spellID;
-                CustomBuffs.units[casterGUID].nauras[spellID].duration = duration;
-                CustomBuffs.units[casterGUID].nauras[spellID].spellName = spellName;
-                --self.units[destGUID].spellID = spell.parent and spell.parent or spellId
-
-                ForceUpdateFrame(CustomBuffs.units[casterGUID].frameNum);
-
-                -- Make sure we clear it after the duration
-                C_Timer.After(duration + CustomBuffs.UPDATE_DELAY_TOLERANCE, function()
-                    if CustomBuffs.units[casterGUID] and CustomBuffs.units[casterGUID].nauras and CustomBuffs.units[casterGUID].nauras[spellID] then
-                        CustomBuffs.units[casterGUID].nauras[spellID] = nil;
-                        ForceUpdateFrame(CustomBuffs.units[casterGUID].frameNum);
-                    end
-                end);
+        		ForceUpdateFrame(CustomBuffs.units[casterGUID].frameNum);
+            		-- Make sure we clear it after the duration
+            		C_Timer.After(duration + CustomBuffs.UPDATE_DELAY_TOLERANCE, function()
+                		if CustomBuffs.units[casterGUID] and CustomBuffs.units[casterGUID].nauras and CustomBuffs.units[casterGUID].nauras[spellID] then
+                			CustomBuffs.units[casterGUID].nauras[spellID] = nil;
+                			ForceUpdateFrame(CustomBuffs.units[casterGUID].frameNum);
+            			end
+        			end);
 
 
 
-            end
+        		end
+		end
     end
 
     --[[ Adding tracking for PvP Trinkets here
@@ -1588,7 +1703,7 @@ local function handleCLEU()
     end
     --]]
 
-    if  event == "UNIT_DIED" and (GetNumGroupMembers() > 0) then
+    if event == "UNIT_DIED" and (GetNumGroupMembers() > 0) then
             if CustomBuffs.units[destGUID] then
                 if UnitHealth(CustomBuffs.units[destGUID].unit) <= 1 then
                     if CustomBuffs.units[destGUID] then
@@ -1603,10 +1718,9 @@ local function handleCLEU()
                         ForceUpdateFrame(CustomBuffs.units[destGUID].frameNum);
                     end
                 end
-
             end
-    end
-end
+    	end
+	end
 
 --[[
 local oldRTU = CompactRaidFrameContainer_ReadyToUpdate;
@@ -2016,7 +2130,7 @@ local function updateAura(auraFrame, index, auraData)
         --end
     end
 
-    if ( expirationTime and expirationTime ~= 0 ) then
+    if ( (expirationTime and expirationTime ~= 0) or (auraData and auraData.summon and auraData.trackedSummon and not CustomBuffs.trackedSummons[auraData.trackedSummon])) then
         local startTime = expirationTime - duration;
         setCooldownFrame(auraFrame.cooldown, startTime, duration, true);
     else
@@ -2036,6 +2150,7 @@ local function updateAura(auraFrame, index, auraData)
     end
 
     auraFrame:Show();
+
 
 end
 
@@ -2097,14 +2212,16 @@ function CustomBuffs:UpdateAuras(frame)
         end
         if unit.nauras then
             for id, data in pairs(unit.nauras) do
-                tinsert(throughputBuffs, { ["index"] = -1, ["tbPrio"] = data.tbPrio or 1, ["sbPrio"] = data.sbPrio or 1, ["auraData"] = {
+                tinsert(throughputBuffs, { ["index"] = -1, ["tbPrio"] = data.tbPrio or 1, ["sbPrio"] = data.sbPrio or nil, ["auraData"] = {
                     --{icon, count, expirationTime, duration}
                     GetSpellTexture(id),
                     1,
                     data.expires,
                     data.duration,
-                    nil,                                --no dispel type
-                    data.spellID                    --Need a special field containing the spellID
+                    nil,                             --no dispel type
+                    data.spellID,                    --Need a special field containing the spellID
+					summon = data.summon or false,
+					trackedUnit = data.trackedUnit or nil,
                 }});
             end
         end
@@ -2432,8 +2549,11 @@ local function DebugUpdateFrame(frame)
                     1,
                     data.expires,
                     data.duration,
-                    nil,                                --no dispel type
-                    data.spellID                    --Need a special field containing the spellID
+                    nil,                             --no dispel type
+                    data.spellID,                    --Need a special field containing the spellID
+					summon = data.summon or false,
+					trackedUnit = data.trackedUnit or nil,
+
                 }});
             end
         end
@@ -3068,7 +3188,7 @@ function CustomBuffs:OnEnable()
             DebugUpdate();
 
 		elseif options == "sync" then
-			print("synching...");
+			print("sending int data...");
 			if self.db.global.unknownInterrupts then
 				local serialized = LibAceSerializer:Serialize(self.db.global.unknownInterrupts);
 				self:SendCommMessage("CBSync", serialized, "GUILD", nil, "BULK");
@@ -3079,7 +3199,18 @@ function CustomBuffs:OnEnable()
 		elseif options == "ints" then
 			if self.db.global.unknownInterrupts then
 				for k, v in pairs(self.db.global.unknownInterrupts) do
-						print(v, ": ", k);
+					local link = GetSpellLink(k);
+					print(k, ": ", link);
+				end
+			end
+		elseif options == "verbose" then
+			CustomBuffs.verbose = not CustomBuffs.verbose;
+			print("CustomBuffs verbose mode", CustomBuffs.verbose and " enabled" or " disabled");
+		elseif options == "test sums" then
+			print("Printing CustomBuffs.trackedSummons table...");
+			for k, v in pairs(CustomBuffs.trackedSummons) do
+				if v and not v.invalid then
+					print(k, ": ", v[1], " from spell", v.spellID);
 				end
 			end
 		elseif options == "test ints" then
