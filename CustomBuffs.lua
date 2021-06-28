@@ -361,6 +361,11 @@ local BCC_INTERRUPTS = {
 	[32846] = { duration = 4 },
 	[11972] = { duration = 8 },
 	[29560] = { duration = 2 },
+	[29961] = { duration = 10},
+	[19675] = { duration = 4 },
+	[13281] = { duration = 2 },
+	[33871] = { duration = 8 },
+
 };
 
 CustomBuffs.NONAURAS = {
