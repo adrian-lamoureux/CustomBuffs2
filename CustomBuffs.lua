@@ -370,8 +370,8 @@ local BCC_INTERRUPTS = {
 
 CustomBuffs.NONAURAS = {
     --SHAMAN
-    [108280] = { duration = 12, tbPrio = 10, type = "summon" }, 	--Healing Tide (Assumes leveling perk for +2 seconds)
-    [16191] =  { duration = 8,  tbPrio = 10, type = "summon" }, 	--Mana Tide
+    [108280] = { duration = 12, tbPrio = 2, type = "summon" }, 	--Healing Tide (Assumes leveling perk for +2 seconds)
+    [16191] =  { duration = 8,  tbPrio = 2, type = "summon" }, 	--Mana Tide
     [188592] = { duration = 47.1, tbPrio = 1, type = "summon" },	--Regular Fire Elemental
 	[188291] = { duration = 47.1, tbPrio = 1, noSum = 188592 },		--Fire Elemental Pet
 	[188616] = { duration = 60, tbPrio = 1, type = "summon" }, 		--Earth Elemental
@@ -379,9 +379,9 @@ CustomBuffs.NONAURAS = {
 	[157299] = { duration = 60, tbPrio = 1, type = "summon" }, 		--Storm Elemental
     [192249] = { duration = 47.1, tbPrio = 1}, 						--Storm Elemental Pet
     [51533] =  { duration = 15, tbPrio = 1}, 						--Feral Spirit
-	--[5394] =   { duration = 15, tbPrio = 1, type = "summon" },
-	[157153] = { duration = 15, tbPrio = 1, sbPrio = nil, type = "summon" }, --Cloudburst
-	--[2484] = 	{ duration = 40, tbPrio = 20, type = "summon" },
+	[5394] =   { duration = 15, tbPrio = 1, type = "summon" },
+	[157153] = { duration = 15, tbPrio = 20, sbPrio = nil, type = "summon" }, --Cloudburst
+	[2484] = 	{ duration = 40, tbPrio = 20, type = "summon" },
 	[192077] = 	{ duration = 15, tbPrio = 1, sbPrio = nil, type = "summon" },	--Wind Rush Totem
 
     --LOCK
@@ -422,7 +422,7 @@ CustomBuffs.NONAURAS = {
     --ROGUE
 
 	--Other
-	[336126] = { duration = 0.5, tbPrio = -2, sbPrio = nil }, --Show 0.5 second flash on frame when someone uses a pvp trinket
+	[336126] = { duration = 0.3, tbPrio = -2}, --Show 0.5 second flash on frame when someone uses a pvp trinket
 };
 
 local BCC_NONAURAS = {
@@ -1678,32 +1678,38 @@ local function handleCLEU()
 	if (event == "SPELL_SUMMON") then
 		handleSummon(spellID, spellName, casterGUID, destGUID);
 	end
-    if (event == "SPELL_CAST_SUCCESS") and
-        CustomBuffs.NONAURAS[spellID] or (CustomBuffs.NONAURAS[SpellName] and (not CustomBuffs.NONAURAS[spellID].type or CustomBuffs.NONAURAS[spellID].type ~= "summon")) or (CustomBuffs.NONAURAS[spellName] and (not CustomBuffs.NONAURAS[spellName].type or CustomBuffs.NONAURAS[spellName].type ~= "summon")) then
-		if (CustomBuffs.NONAURAS[spellID] or CustomBuffs.NONAURAS[spellName]).noSum and not checkForSummon((CustomBuffs.NONAURAS[spellID] or CustomBuffs.NONAURAS[spellName]).noSum) then
-        	if CustomBuffs.units[casterGUID] then
-            	local duration = (CustomBuffs.NONAURAS[spellID] or CustomBuffs.NONAURAS[spellName]).duration;
-            	--local _, class = UnitClass(unit)
-            	CustomBuffs.units[casterGUID].nauras = CustomBuffs.units[casterGUID].nauras or {};
-				CustomBuffs.units[casterGUID].nauras[spellID] = CustomBuffs.units[casterGUID].nauras[spellID] or {};
-            	CustomBuffs.units[casterGUID].nauras[spellID].expires = GetTime() + duration;
-				CustomBuffs.units[casterGUID].nauras[spellID].spellID = spellID;
-            	CustomBuffs.units[casterGUID].nauras[spellID].duration = duration;
-        		CustomBuffs.units[casterGUID].nauras[spellID].spellName = spellName;
-        		--self.units[destGUID].spellID = spell.parent and spell.parent or spellId
+    if (event == "SPELL_CAST_SUCCESS") and CustomBuffs.NONAURAS[spellID] or CustomBuffs.NONAURAS[spellName] then
+		local record = (CustomBuffs.NONAURAS[spellID] or CustomBuffs.NONAURAS[spellName]);
+		if not record.type or record.type ~= "summon" then
+			local noSum = record.noSum;
 
-        		ForceUpdateFrame(CustomBuffs.units[casterGUID].frameNum);
-            		-- Make sure we clear it after the duration
-            		C_Timer.After(duration + CustomBuffs.UPDATE_DELAY_TOLERANCE, function()
-                		if CustomBuffs.units[casterGUID] and CustomBuffs.units[casterGUID].nauras and CustomBuffs.units[casterGUID].nauras[spellID] then
-                			CustomBuffs.units[casterGUID].nauras[spellID] = nil;
-                			ForceUpdateFrame(CustomBuffs.units[casterGUID].frameNum);
-            			end
-        			end);
+				if not noSum or not checkForSummon(noSum) then
+        			if CustomBuffs.units[casterGUID] then
+						--print("Found Cast Success");
+            			local duration = record.duration;
+            			--local _, class = UnitClass(unit)
+            			CustomBuffs.units[casterGUID].nauras = CustomBuffs.units[casterGUID].nauras or {};
+						CustomBuffs.units[casterGUID].nauras[spellID] = CustomBuffs.units[casterGUID].nauras[spellID] or {};
+            			CustomBuffs.units[casterGUID].nauras[spellID].expires = GetTime() + duration;
+						CustomBuffs.units[casterGUID].nauras[spellID].spellID = spellID;
+            			CustomBuffs.units[casterGUID].nauras[spellID].duration = duration;
+        				CustomBuffs.units[casterGUID].nauras[spellID].spellName = spellName;
+        				--self.units[destGUID].spellID = spell.parent and spell.parent or spellId
+
+        				ForceUpdateFrame(CustomBuffs.units[casterGUID].frameNum);
+            			-- Make sure we clear it after the duration
+            			C_Timer.After(duration + CustomBuffs.UPDATE_DELAY_TOLERANCE, function()
+                			if CustomBuffs.units[casterGUID] and CustomBuffs.units[casterGUID].nauras and CustomBuffs.units[casterGUID].nauras[spellID] then
+                				CustomBuffs.units[casterGUID].nauras[spellID] = nil;
+                				ForceUpdateFrame(CustomBuffs.units[casterGUID].frameNum);
+            				end
+        				end);
 
 
 
-        		end
+        			end
+				end
+
 		end
     end
 
@@ -2224,7 +2230,13 @@ function CustomBuffs:UpdateAuras(frame)
         end
         if unit.nauras then
             for id, data in pairs(unit.nauras) do
-                tinsert(throughputBuffs, { ["index"] = -1, ["tbPrio"] = data.tbPrio or 1, ["sbPrio"] = data.sbPrio or nil, ["auraData"] = {
+				local prioData = nil;
+				if (CustomBuffs.NONAURAS[data.spellID] or CustomBuffs.NONAURAS[data.spellName]) then
+					prioData = (CustomBuffs.NONAURAS[data.spellID] or CustomBuffs.NONAURAS[data.spellName]);
+				end
+
+				--if prioData and prioData.tbPrio then print(prioData.tbPrio); end
+                tinsert(throughputBuffs, { index = -1, tbPrio = prioData.tbPrio or 7, sbPrio = prioData.sbPrio or nil, auraData = {
                     --{icon, count, expirationTime, duration}
                     GetSpellTexture(id),
                     1,
