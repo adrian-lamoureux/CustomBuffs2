@@ -370,18 +370,18 @@ local BCC_INTERRUPTS = {
 
 CustomBuffs.NONAURAS = {
     --SHAMAN
-    [108280] = { duration = 12, tbPrio = 2, type = "summon" }, 	--Healing Tide (Assumes leveling perk for +2 seconds)
+    [108280] = { duration = 12, tbPrio = 1, type = "summon" }, 	--Healing Tide (Assumes leveling perk for +2 seconds)
     [16191] =  { duration = 8,  tbPrio = 2, type = "summon" }, 	--Mana Tide
     [188592] = { duration = 47.1, tbPrio = 1, type = "summon" },	--Regular Fire Elemental
 	[188291] = { duration = 47.1, tbPrio = 1, noSum = 188592 },		--Fire Elemental Pet
-	[188616] = { duration = 60, tbPrio = 1, type = "summon" }, 		--Earth Elemental
+	[188616] = { duration = 60, tbPrio = 2, type = "summon" }, 		--Earth Elemental
 	[198103] = { duration = 60, tbPrio = 1, noSum = 188616}, 		--Earth Elemental Pet
 	[157299] = { duration = 60, tbPrio = 1, type = "summon" }, 		--Storm Elemental
     [192249] = { duration = 47.1, tbPrio = 1}, 						--Storm Elemental Pet
     [51533] =  { duration = 15, tbPrio = 1}, 						--Feral Spirit
 	[5394] =   { duration = 15, tbPrio = 1, type = "summon" },
 	[157153] = { duration = 15, tbPrio = 20, sbPrio = nil, type = "summon" }, --Cloudburst
-	[2484] = 	{ duration = 40, tbPrio = 20, type = "summon" },
+	--[2484] = 	{ duration = 40, tbPrio = 20, type = "summon" },
 	[192077] = 	{ duration = 15, tbPrio = 1, sbPrio = nil, type = "summon" },	--Wind Rush Totem
 
     --LOCK
@@ -421,8 +421,11 @@ CustomBuffs.NONAURAS = {
 
     --ROGUE
 
-	--Other
-	[336126] = { duration = 0.3, tbPrio = -2}, --Show 0.5 second flash on frame when someone uses a pvp trinket
+	--Cooldown Flashes
+	--Show short flash on frame when a player activates an ability
+	[336126] = { duration = 0.5, tbPrio = -2}, --Show 0.5 second flash on frame when someone uses a pvp trinket
+	[326059] = { duration = 0.5, tbPrio = -2},
+	[98008] = { duration = 0.5, tbPrio = -2}, --Spirit Link
 };
 
 local BCC_NONAURAS = {
@@ -452,6 +455,29 @@ local BCC_NONAURAS = {
 
     --ROGUE
 
+	--Cooldown Flashes
+	--Show short flash on frame when a player activates an ability or item
+	[1766] = { duration = 0.5, tbPrio = -2}, --Show 0.5 second flash on frame when someone uses a pvp trinket
+	[1766] =   { duration = 0.5, tbPrio = -2}, -- Kick (Rogue)
+	[1767] =   { duration = 0.5, tbPrio = -2}, -- Kick (Rogue)
+	[1768] =   { duration = 0.5, tbPrio = -2}, -- Kick (Rogue)
+	[1769] =   { duration = 0.5, tbPrio = -2}, -- Kick (Rogue)
+	[38768] =   { duration = 0.5, tbPrio = -2}, -- Kick (Rogue)
+    [2139] =   { duration = 0.5, tbPrio = -2}, -- Counterspell (Mage)
+    [6552] =   { duration = 0.5, tbPrio = -2}, -- Pummel (Warrior)
+	[6554] =   { duration = 0.5, tbPrio = -2}, -- Pummel (Warrior)
+	[19644] =  { duration = 0.5, tbPrio = -2}, -- Spell Lock (Warlock)
+    [19647] =  { duration = 0.5, tbPrio = -2}, -- Spell Lock (Warlock)
+    [8042] =  { duration = 0.5, tbPrio = -2}, -- Earth Shock (Shaman)
+	[8044] =  { duration = 0.5, tbPrio = -2}, -- Earth Shock (Shaman)
+	[8045] =  { duration = 0.5, tbPrio = -2}, -- Earth Shock (Shaman)
+	[8046] =  { duration = 0.5, tbPrio = -2}, -- Earth Shock (Shaman)
+	[10412] =  { duration = 0.5, tbPrio = -2}, -- Earth Shock (Shaman)
+	[10413] =  { duration = 0.5, tbPrio = -2}, -- Earth Shock (Shaman)
+	[10414] =  { duration = 0.5, tbPrio = -2}, -- Earth Shock (Shaman)
+	[25454] =  { duration = 0.5, tbPrio = -2}, -- Earth Shock (Shaman)
+    [16979] = { duration = 0.5, tbPrio = -2}, -- Feral Charge (Feral)
+	[8177] = { duration = 0.5, tbPrio = -2}, --Grounding Totem
 };
 
 
