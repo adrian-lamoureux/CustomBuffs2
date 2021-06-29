@@ -39,6 +39,9 @@ function CustomBuffs:CreateGeneralOptions()
 				set = function(_, value)
 					self.db.profile.loadTweaks = value;
 					self:UpdateConfig();
+					if not self.db.profile.loadTweaks then
+						ReloadUI();
+					end
 				end,
 				width = THIRD_WIDTH * 2,
 				order = 20,
@@ -185,6 +188,7 @@ function CustomBuffs:CreateGeneralOptions()
 				width = THIRD_WIDTH,
 				order = 91,
 			},
+
 			spacer6 = {
                 type = "header",
 				name = "Other",
@@ -213,6 +217,18 @@ function CustomBuffs:CreateGeneralOptions()
 				end,
 				width = THIRD_WIDTH * 1.5,
 				order = 111,
+			},
+			cooldownFlash = {
+				type = "toggle",
+				name = "Enable Cooldown Flashes",
+				desc = "Briefly shows the icon of important spells on party/raid members' frames when they cast them",
+				get = function() return self.db.profile.cooldownFlash end,
+				set = function(_, value)
+					self.db.profile.cooldownFlash = value;
+					self:UpdateConfig();
+				end,
+				width = THIRD_WIDTH,
+				order = 112,
 			},
 		}
 	}

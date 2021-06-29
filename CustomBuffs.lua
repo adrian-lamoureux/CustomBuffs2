@@ -368,6 +368,9 @@ local BCC_INTERRUPTS = {
 
 };
 
+--Template table for CD flashes
+local CDFlash = { duration = 1, tbPrio = -2, isFlash = true };
+
 CustomBuffs.NONAURAS = {
     --SHAMAN
     [108280] = { duration = 12, tbPrio = 1, type = "summon" }, 	--Healing Tide (Assumes leveling perk for +2 seconds)
@@ -376,7 +379,7 @@ CustomBuffs.NONAURAS = {
 	[188291] = { duration = 47.1, tbPrio = 1, noSum = 188592 },		--Fire Elemental Pet
 	[188616] = { duration = 60, tbPrio = 2, type = "summon" }, 		--Earth Elemental
 	[198103] = { duration = 60, tbPrio = 1, noSum = 188616}, 		--Earth Elemental Pet
-	[157299] = { duration = 60, tbPrio = 1, type = "summon" }, 		--Storm Elemental
+	[157299] = { duration = 47.1, tbPrio = 1, type = "summon" }, 		--Storm Elemental
     [192249] = { duration = 47.1, tbPrio = 1}, 						--Storm Elemental Pet
     [51533] =  { duration = 15, tbPrio = 1}, 						--Feral Spirit
 	[5394] =   { duration = 15, tbPrio = 1, type = "summon" },
@@ -421,11 +424,57 @@ CustomBuffs.NONAURAS = {
 
     --ROGUE
 
-	--Cooldown Flashes
-	--Show short flash on frame when a player activates an ability
-	[336126] = { duration = 0.5, tbPrio = -2}, --Show 0.5 second flash on frame when someone uses a pvp trinket
-	[326059] = { duration = 0.5, tbPrio = -2},
-	[98008] = { duration = 0.5, tbPrio = -2}, --Spirit Link
+	--COOLDOWN FLASHES
+	--Show short flash on frame when a player activates an ability or item
+	[336126] = CDFlash, --Show 0.5 second flash on frame when someone uses a pvp trinket
+
+	--Interrupts
+	[1766] =   	CDFlash, -- Kick (Rogue)
+    [2139] =   	CDFlash, -- Counterspell (Mage)
+    [6552] =   	CDFlash, -- Pummel (Warrior)
+    [19647] =  	CDFlash, -- Spell Lock (Warlock)
+    [47528] =  	CDFlash, -- Mind Freeze (Death Knight)
+    [57994] =  	CDFlash, -- Wind Shear (Shaman)
+    [91802] =  	CDFlash, -- Shambling Rush (Death Knight)
+    [96231] =  	CDFlash, -- Rebuke (Paladin)
+    [106839] = 	CDFlash, -- Skull Bash (Feral)
+    [115781] = 	CDFlash, -- Optical Blast (Warlock)
+    [116705] = 	CDFlash, -- Spear Hand Strike (Monk)
+    [132409] = 	CDFlash, -- Spell Lock (Warlock)
+    [147362] = 	CDFlash, -- Countershot (Hunter)
+    [171138] = 	CDFlash, -- Shadow Lock (Warlock)
+    [183752] = 	CDFlash, -- Consume Magic (Demon Hunter)
+    [187707] = 	CDFlash, -- Muzzle (Hunter)
+    [212619] = 	CDFlash, -- Call Felhunter (Warlock)
+
+	--SHAMAN
+	[326059] = 	CDFlash, --Primordial Wave
+	[98008]  = 	CDFlash, --Spirit Link
+
+	--LOCK
+
+	--DRUID
+
+
+	--MAGE
+
+	--PRIEST
+
+	--HUNTER
+
+	--DK
+
+	--MONK
+
+	--DH
+
+	--PALADIN
+
+	--WARRIOR
+
+	--ROGUE
+
+
 };
 
 local BCC_NONAURAS = {
@@ -457,27 +506,67 @@ local BCC_NONAURAS = {
 
 	--Cooldown Flashes
 	--Show short flash on frame when a player activates an ability or item
-	[1766] = { duration = 0.5, tbPrio = -2}, --Show 0.5 second flash on frame when someone uses a pvp trinket
-	[1766] =   { duration = 0.5, tbPrio = -2}, -- Kick (Rogue)
-	[1767] =   { duration = 0.5, tbPrio = -2}, -- Kick (Rogue)
-	[1768] =   { duration = 0.5, tbPrio = -2}, -- Kick (Rogue)
-	[1769] =   { duration = 0.5, tbPrio = -2}, -- Kick (Rogue)
-	[38768] =   { duration = 0.5, tbPrio = -2}, -- Kick (Rogue)
-    [2139] =   { duration = 0.5, tbPrio = -2}, -- Counterspell (Mage)
-    [6552] =   { duration = 0.5, tbPrio = -2}, -- Pummel (Warrior)
-	[6554] =   { duration = 0.5, tbPrio = -2}, -- Pummel (Warrior)
-	[19644] =  { duration = 0.5, tbPrio = -2}, -- Spell Lock (Warlock)
-    [19647] =  { duration = 0.5, tbPrio = -2}, -- Spell Lock (Warlock)
-    [8042] =  { duration = 0.5, tbPrio = -2}, -- Earth Shock (Shaman)
-	[8044] =  { duration = 0.5, tbPrio = -2}, -- Earth Shock (Shaman)
-	[8045] =  { duration = 0.5, tbPrio = -2}, -- Earth Shock (Shaman)
-	[8046] =  { duration = 0.5, tbPrio = -2}, -- Earth Shock (Shaman)
-	[10412] =  { duration = 0.5, tbPrio = -2}, -- Earth Shock (Shaman)
-	[10413] =  { duration = 0.5, tbPrio = -2}, -- Earth Shock (Shaman)
-	[10414] =  { duration = 0.5, tbPrio = -2}, -- Earth Shock (Shaman)
-	[25454] =  { duration = 0.5, tbPrio = -2}, -- Earth Shock (Shaman)
-    [16979] = { duration = 0.5, tbPrio = -2}, -- Feral Charge (Feral)
-	[8177] = { duration = 0.5, tbPrio = -2}, --Grounding Totem
+	[1766] =  CDFlash, --Show 0.5 second flash on frame when someone uses a pvp trinket
+	[1766] =  CDFlash, -- Kick (Rogue)
+	[1767] =  CDFlash, -- Kick (Rogue)
+	[1768] =  CDFlash, -- Kick (Rogue)
+	[1769] =  CDFlash, -- Kick (Rogue)
+	[38768] = CDFlash, -- Kick (Rogue)
+    [2139] =  CDFlash, -- Counterspell (Mage)
+    [6552] =  CDFlash, -- Pummel (Warrior)
+	[6554] =  CDFlash, -- Pummel (Warrior)
+	[19644] = CDFlash, -- Spell Lock (Warlock)
+    [19647] = CDFlash, -- Spell Lock (Warlock)
+    [8042] =  CDFlash, -- Earth Shock (Shaman)
+	[8044] =  CDFlash, -- Earth Shock (Shaman)
+	[8045] =  CDFlash, -- Earth Shock (Shaman)
+	[8046] =  CDFlash, -- Earth Shock (Shaman)
+	[10412] = CDFlash, -- Earth Shock (Shaman)
+	[10413] = CDFlash, -- Earth Shock (Shaman)
+	[10414] = CDFlash, -- Earth Shock (Shaman)
+	[25454] = CDFlash, -- Earth Shock (Shaman)
+    [16979] = CDFlash, -- Feral Charge (Feral)
+
+	--SHAMAN
+	[8177] = 	CDFlash, --Grounding Totem
+	[16188] = 	CDFlash, --Nature's Swiftness
+
+	--LOCK
+
+	--DRUID
+	[6795] =	CDFlash, --Growl
+	[9000] =	CDFlash, --Cower
+	[768] =		CDFlash, --Cat Form
+	[783] =		CDFlash, --Travel Form
+	[9634] =	CDFlash, --Dire Bear Form
+	[1066] =	CDFlash, --Aquatic Form
+	[5209] =	CDFlash, --Challenging Roar
+	[8983] =	CDFlash, --Bash
+	[17401] =	CDFlash, --Hurricane
+	[9862] =	CDFlash, --Tranquility
+
+
+
+
+	--MAGE
+
+	--PRIEST
+
+	--HUNTER
+
+	--DK
+
+	--MONK
+
+	--DH
+
+	--PALADIN
+
+	--WARRIOR
+
+	--ROGUE
+
+
 };
 
 
@@ -533,7 +622,7 @@ CustomBuffs.CDS = {
         ["Shield of Vengeance"] =       CDStandard,
         ["Guardian of Ancient Kings"] = CDStandard,
         --["Seraphim"] =                  CDStandard, moved to throughput cds
-        ["Guardian of the fortress"] =  CDStandard,
+        ["Guardian of the Fortress"] =  CDStandard,
         ["Shield of the Righteous"] =   CDStandard
     } ,
     [ 5 ] = { --Priest
@@ -552,6 +641,7 @@ CustomBuffs.CDS = {
     [ 7 ] = { --Shaman
         ["Astral Shift"] =              CDStandard,
         ["Shamanistic Rage"] =          CDStandard,
+		["Water Shield"] =				CDStandard,
         ["Harden Skin"] =               CDStandard
     } ,
     [ 9 ] = { --Warlock
@@ -581,7 +671,9 @@ local BCC_CDS = {
     [ 11 ] = { --Druid
         ["Barkskin"] =                  CDStandard,
 		["Enrage"] =                  	CDStandard,
-        ["Frenzied Regeneration"] =     CDStandard
+        ["Frenzied Regeneration"] =     CDStandard,
+		["Dash"] = 						CDStandard,
+		["Prowl"] = 					CDStandard,
     } ,
     [ 3 ] = { --Hunter
         ["Deterrence"] =      			CDStandard,
@@ -611,7 +703,9 @@ local BCC_CDS = {
         ["Feint"] =                     CDStandard,
         ["Readiness"] =                 CDStandard,
         ["Riposte"] =                   CDStandard,
-        ["Crimson Vial"] =              CDStandard
+        ["Crimson Vial"] =              CDStandard,
+		["Stealth"] =              		CDStandard,
+		["Vanish"] =              		CDStandard,
     } ,
     [ 7 ] = { --Shaman
         ["Astral Shift"] =              CDStandard,
@@ -734,9 +828,7 @@ local BCC_EXTERNALS = {
 
 
     --Show party/raid member's stealth status in buffs
-    ["Stealth"] =                   EStandard,
     ["Vanish"] =                    EStandard,
-    ["Prowl"] =                     EStandard,
 
 	["Food"] =              		EStandard,
     ["Drink"] =           			EStandard,
@@ -1069,6 +1161,7 @@ local BCC_EXTERNAL_THROUGHPUT_CDS = {
 	--Trinkets
 	["Haste"] =							ETCDLow,
 	["Spell Haste"] =					ETCDLow,
+	[35165] =							ETCDLow,
 };
 
 
@@ -1469,19 +1562,19 @@ end
 
 --Helper function to manage responses to spec changes
 function CustomBuffs:updatePlayerSpec()
-    --No spec lookup on classic
-    if not CustomBuffs.gameVersion ~= 0 then return; end
-
     --Check if player can dispel magic (is a healing spec or priest)
     --Technically warlocks can sometimes dispel magic with an imp and demon hunters can dispel
     --magic with a pvp talent, but we ignore these cases
     if not CustomBuffs.playerClass then CustomBuffs.playerClass = select(2, UnitClass("player")); end
 
+	local spec = nil;
     --Make sure we can get spec; if not then try again in 5 seconds
-    local spec = GetSpecialization();
+	if CustomBuffs.gameVersion == 0 then --No spec lookup in classic
+    	local spec = GetSpecialization();
+	end
     if spec then
         local role = select(5, GetSpecializationInfo(GetSpecialization()));
-    else
+    elseif CustomBuffs.gameVersion == 0 then
         C_Timer.After(5, function()
             CustomBuffs:updatePlayerSpec();
         end);
@@ -1706,8 +1799,9 @@ local function handleCLEU()
 	end
     if (event == "SPELL_CAST_SUCCESS") and CustomBuffs.NONAURAS[spellID] or CustomBuffs.NONAURAS[spellName] then
 		local record = (CustomBuffs.NONAURAS[spellID] or CustomBuffs.NONAURAS[spellName]);
-		if not record.type or record.type ~= "summon" then
-			local noSum = record.noSum;
+		if (not record.type or record.type ~= "summon") then
+			if (CustomBuffs.db.profile.cooldownFlash or not record.isFlash) then
+				local noSum = record.noSum;
 
 				if not noSum or not checkForSummon(noSum) then
         			if CustomBuffs.units[casterGUID] then
@@ -1735,7 +1829,7 @@ local function handleCLEU()
 
         			end
 				end
-
+			end
 		end
     end
 
@@ -1811,40 +1905,85 @@ end
 CustomBuffs.playerClass = select(2, UnitClass("player"));
 CustomBuffs.canMassDispel = (CustomBuffs.playerClass == "PRIEST");
 
-if (CustomBuffs.playerClass == "PALADIN") or (CustomBuffs.playerClass == "MONK") then
-    --Class can dispel poisons and diseases but not curses
-    CustomBuffs.canDispelCurse = false;
-    CustomBuffs.canDispelPoison = true;
-    CustomBuffs.canDispelDisease = true;
+if CustomBuffs.gameVersion == 0 then
+	if (CustomBuffs.playerClass == "PALADIN") or (CustomBuffs.playerClass == "MONK") then
+    	--Class can dispel poisons and diseases but not curses
+    	CustomBuffs.canDispelCurse = false;
+    	CustomBuffs.canDispelPoison = true;
+    	CustomBuffs.canDispelDisease = true;
 
-elseif (CustomBuffs.playerClass == "MAGE") or (CustomBuffs.playerClass == "SHAMAN") then
-    --Class can dispel curses but not poisons or diseases
-    CustomBuffs.canDispelCurse = true;
-    CustomBuffs.canDispelPoison = false;
-    CustomBuffs.canDispelDisease = false;
+	elseif (CustomBuffs.playerClass == "MAGE") or (CustomBuffs.playerClass == "SHAMAN") then
+    	--Class can dispel curses but not poisons or diseases
+    	CustomBuffs.canDispelCurse = true;
+    	CustomBuffs.canDispelPoison = false;
+    	CustomBuffs.canDispelDisease = false;
 
-elseif CustomBuffs.playerClass == "DRUID" then
+	elseif CustomBuffs.playerClass == "DRUID" then
     --Class can dispel poisons and curses but not disease
-    CustomBuffs.canDispelCurse = true;
-    CustomBuffs.canDispelPoison = true;
-    CustomBuffs.canDispelDisease = false;
+    	CustomBuffs.canDispelCurse = true;
+    	CustomBuffs.canDispelPoison = true;
+    	CustomBuffs.canDispelDisease = false;
 
-elseif CustomBuffs.playerClass == "PRIEST" then
-    --Class can dispel diseases but not curses or poisons
-    CustomBuffs.canDispelCurse = false;
-    CustomBuffs.canDispelPoison = false;
-    CustomBuffs.canDispelDisease = true;
+	elseif CustomBuffs.playerClass == "PRIEST" then
+    	--Class can dispel diseases but not curses or poisons
+    	CustomBuffs.canDispelCurse = false;
+    	CustomBuffs.canDispelPoison = false;
+    	CustomBuffs.canDispelDisease = true;
 
-else --[[(CustomBuffs.playerClass == "DEATHKNIGHT") or (CustomBuffs.playerClass == "HUNTER") or (CustomBuffs.playerClass == "ROGUE") or
-    (CustomBuffs.playerClass == "DEMONHUNTER") or (CustomBuffs.playerClass == "WARRIOR") or (CustomBuffs.playerClass == "WARLOCK") then ]]
+	else --[[(CustomBuffs.playerClass == "DEATHKNIGHT") or (CustomBuffs.playerClass == "HUNTER") or (CustomBuffs.playerClass == "ROGUE") or
+    	(CustomBuffs.playerClass == "DEMONHUNTER") or (CustomBuffs.playerClass == "WARRIOR") or (CustomBuffs.playerClass == "WARLOCK") then ]]
 
-    --Either class was not recognized or class cannot dispel curse, poison or disease
-    CustomBuffs.canDispelCurse = false;
-    CustomBuffs.canDispelPoison = false;
-    CustomBuffs.canDispelDisease = false;
+    	--Either class was not recognized or class cannot dispel curse, poison or disease
+    	CustomBuffs.canDispelCurse = false;
+    	CustomBuffs.canDispelPoison = false;
+    	CustomBuffs.canDispelDisease = false;
+	end
+else --Not live; manually set all dispels based on class
+	if (CustomBuffs.playerClass == "PALADIN") then
+    	--Class can dispel poisons and diseases but not curses
+    	CustomBuffs.canDispelCurse = false;
+    	CustomBuffs.canDispelPoison = true;
+    	CustomBuffs.canDispelDisease = true;
+		CustomBuffs.canDispelMagic = true;
+
+	elseif (CustomBuffs.playerClass == "MAGE") then
+    	--Class can dispel curses but not poisons or diseases
+    	CustomBuffs.canDispelCurse = true;
+    	CustomBuffs.canDispelPoison = false;
+    	CustomBuffs.canDispelDisease = false;
+		CustomBuffs.canDispelMagic = false;
+
+	elseif (CustomBuffs.playerClass == "SHAMAN") then
+
+		CustomBuffs.canDispelCurse = false;
+    	CustomBuffs.canDispelPoison = true;
+    	CustomBuffs.canDispelDisease = true;
+		CustomBuffs.canDispelMagic = false;
+
+	elseif CustomBuffs.playerClass == "DRUID" then
+    --Class can dispel poisons and curses but not disease
+    	CustomBuffs.canDispelCurse = true;
+    	CustomBuffs.canDispelPoison = true;
+    	CustomBuffs.canDispelDisease = false;
+		CustomBuffs.canDispelMagic = false;
+
+	elseif CustomBuffs.playerClass == "PRIEST" then
+    	--Class can dispel diseases but not curses or poisons
+    	CustomBuffs.canDispelCurse = false;
+    	CustomBuffs.canDispelPoison = false;
+    	CustomBuffs.canDispelDisease = true;
+		CustomBuffs.canDispelMagic = true;
+
+	else --[[(CustomBuffs.playerClass == "DEATHKNIGHT") or (CustomBuffs.playerClass == "HUNTER") or (CustomBuffs.playerClass == "ROGUE") or
+    	(CustomBuffs.playerClass == "DEMONHUNTER") or (CustomBuffs.playerClass == "WARRIOR") or (CustomBuffs.playerClass == "WARLOCK") then ]]
+
+    	--Either class was not recognized or class cannot dispel curse, poison or disease
+    	CustomBuffs.canDispelCurse = false;
+    	CustomBuffs.canDispelPoison = false;
+    	CustomBuffs.canDispelDisease = false;
+		CustomBuffs.canDispelMagic = false;
+	end
 end
-
-
 --Use spec based information to set CustomBuffs.canDispelMagic
 CustomBuffs:updatePlayerSpec();
 
