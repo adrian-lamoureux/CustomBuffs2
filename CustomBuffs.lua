@@ -60,6 +60,9 @@ CustomBuffs.CustomBuffsFrame = CustomBuffs.CustomBuffsFrame or CreateFrame("Fram
 CustomBuffs.units = CustomBuffs.units or {};
 
 CustomBuffs.verbose = CustomBuffs.verbose or false;
+CustomBuffs.announceSums = CustomBuffs.announceSums or false;
+CustomBuffs.announceSpells = CustomBuffs.announceSpells or false;
+
 
 --Set up values for dispel types; used to quickly
 --determine whether a spell is dispellable by the player class;
@@ -252,7 +255,10 @@ local function checkForSummon(spellID)
 end
 
 local function handleSummon(spellID, spellName, casterGUID, destGUID)
-	if CustomBuffs.verbose then print("Summon: ", spellID, " : ", spellName); end
+	if CustomBuffs.announceSums then
+		local link = GetSpellLink(spellID);
+		print("Summon: ", spellID, " : ", link);
+	end
 	if ((CustomBuffs.NONAURAS[spellID] and CustomBuffs.NONAURAS[spellID].type and CustomBuffs.NONAURAS[spellID].type == "summon") or (CustomBuffs.NONAURAS[spellName] and CustomBuffs.NONAURAS[spellName].type and CustomBuffs.NONAURAS[spellName].type == "summon" )) then
 		if CustomBuffs.units[casterGUID] then
 			--local realID = select(14, CombatLogGetCurrentEventInfo());
@@ -748,8 +754,9 @@ local BCC_CDS = {
     --Aura Sources:         non player (formerly to prevent duplicates for player casted versions)
     --Aura Type:            buff
     --Standard Priority Level:
-local EStandard = {["sbPrio"] = 4, ["sdPrio"] = nil, ["bdPrio"] = nil, ["tbPrio"] = nil};
-local ELow = {["sbPrio"] = 5, ["sdPrio"] = nil, ["bdPrio"] = nil, ["tbPrio"] = nil};
+local EStandard = {sbPrio = 4, sdPrio = nil, bdPrio = nil, tbPrio = nil};
+local ELow = {sbPrio = 5, sdPrio = nil, bdPrio = nil, tbPrio = nil};
+local EPStandard = {sbPrio = 5, sdPrio = nil, bdPrio = nil, tbPrio = nil, player = true}; --Only show if source is player
 CustomBuffs.EXTERNALS = {
     --Major Externals
     ["Ironbark"] =                  	EStandard,
@@ -775,23 +782,16 @@ CustomBuffs.EXTERNALS = {
     ["Tricks of the Trade"] =       	EStandard,
     ["Rallying Cry"] =              	EStandard,
     ["Anti-Magic Zone"] =           	EStandard,
+	["Power Word: Shield"] = 			EStandard,
 
     ["Stoneform"] =                 	EStandard,
     ["Fireblood"] =                 	EStandard,
 
 
-    [344388] =                      	EStandard, --Huntsman trinket
-    [344384] =                      	EStandard, --Huntsman trinket target
-    ["Tuft of Smoldering Plumage"] = 	Estandard,
-
-    ["Fleshcraft"] =                	EStandard,
-	["Soulshape"] =                		EStandard,
-	["Potion of the Hidden Spirit"] = 	EStandard,
-
     ["Gladiator's Emblem"] =        	EStandard,
 
     --Minor Externals worth tracking
-    ["Enveloping Mist"] =           	ELow,
+    ["Enveloping Mist"] =           	EStandard,
 
 
     --Show party/raid member's stealth status in buffs
@@ -804,6 +804,42 @@ CustomBuffs.EXTERNALS = {
 	["Refreshment"] =           		EStandard,
 	["Invisibility"] =           		EStandard,
 	["Dimensional Shifter"] =           EStandard,
+
+	["Cultivation"] =               	EPStandard,
+    ["Spring Blossoms"] =           	EPStandard,
+    [290754] =                      	EPStandard, --Lifebloom from early spring honor talent
+    ["Glimmer of Light"] =          	EPStandard,
+    ["Ancestral Vigor"] =           	EPStandard,
+    ["Anti-Magic Zone"] =           	EPStandard,
+    ["Blessing of Sacrifice"] =     	EPStandard,
+
+    --BFA procs
+    ["Luminous Jellyweed"] =        	EPStandard,
+    ["Costal Surge"] =              	EPStandard,
+    ["Concentrated Mending"] =      	EPStandard,
+    ["Touch of the Voodoo"] =       	EPStandard,
+    ["Egg on Your Face"] =          	EPStandard,
+    ["Coastal Surge"] =             	EPStandard,
+    ["Quickening"] =                	EPStandard,
+    ["Ancient Flame"] =             	EPStandard,
+    ["Grove Tending"] =             	EPStandard,
+    ["Blessed Portents"] =          	EPStandard,
+
+    [344227] =                      	EStandard, --Consumptive Infusion
+
+    ["Fleshcraft"] =                	EStandard,
+	["Soulshape"] =                		EStandard,
+
+    ["Stoneform"] =                 	EStandard,
+    ["Fireblood"] =                 	EStandard,
+
+    ["Gladiator's Emblem"] =        	EStandard,
+
+    [344388] =                      	EStandard, --Huntsman trinket
+    [344384] =                      	EStandard, --Huntsman trinket target
+    ["Tuft of Smoldering Plumage"] = 	EStandard,
+	["Potion of the Hidden Spirit"] = 	EStandard,
+
 
     --Previous expansion effects
     --["Vampiric Aura"] =             EStandard
@@ -848,6 +884,19 @@ local BCC_EXTERNALS = {
     --Show party/raid member's stealth status in buffs
     ["Vanish"] =                    EStandard,
 
+	["Cultivation"] =               EPStandard,
+    ["Spring Blossoms"] =           EPStandard,
+    [290754] =                      EPStandard, --Lifebloom from early spring honor talent
+    ["Glimmer of Light"] =          EPStandard,
+    ["Ancestral Vigor"] =           EPStandard,
+    ["Anti-Magic Zone"] =           EPStandard,
+    ["Blessing of Sacrifice"] =     EPStandard,
+
+	["Healing Way"] =     			EPStandard,
+	["Ancestral Fortitude"] =     	EStandard,
+
+    ["Gladiator's Emblem"] =        EStandard,
+
 	["Food"] =              		EStandard,
     ["Drink"] =           			EStandard,
 
@@ -856,78 +905,6 @@ local BCC_EXTERNALS = {
 
 };
 
-
---Extra raid buffs show untracked buffs from the player on anyone in the standard buff location
-    --Display Location:     standard buff
-    --Aura Sources:         player
-    --Aura Type:            buff
-    --Standard Priority Level:
-local ERBStandard = {["sbPrio"] = 5, ["sdPrio"] = nil, ["bdPrio"] = nil, ["tbPrio"] = nil};
-CustomBuffs.EXTRA_RAID_BUFFS = {
-    ["Cultivation"] =               	ERBStandard,
-    ["Spring Blossoms"] =           	ERBStandard,
-    [290754] =                      	ERBStandard, --Lifebloom from early spring honor talent
-    ["Glimmer of Light"] =          	ERBStandard,
-    ["Ancestral Vigor"] =           	ERBStandard,
-    ["Anti-Magic Zone"] =           	ERBStandard,
-    ["Blessing of Sacrifice"] =     	ERBStandard,
-
-    --BFA procs
-    ["Luminous Jellyweed"] =        	ERBStandard,
-    ["Costal Surge"] =              	ERBStandard,
-    ["Concentrated Mending"] =      	ERBStandard,
-    ["Touch of the Voodoo"] =       	ERBStandard,
-    ["Egg on Your Face"] =          	ERBStandard,
-    ["Coastal Surge"] =             	ERBStandard,
-    ["Quickening"] =                	ERBStandard,
-    ["Ancient Flame"] =             	ERBStandard,
-    ["Grove Tending"] =             	ERBStandard,
-    ["Blessed Portents"] =          	ERBStandard,
-
-    [344227] =                      	ERBStandard, --Consumptive Infusion
-
-    ["Fleshcraft"] =                	ERBStandard,
-	["Soulshape"] =                		ERBStandard,
-
-    ["Stoneform"] =                 	ERBStandard,
-    ["Fireblood"] =                 	ERBStandard,
-
-    ["Gladiator's Emblem"] =        	ERBStandard,
-
-    [344388] =                      	ERBStandard, --Huntsman trinket
-    [344384] =                      	ERBStandard, --Huntsman trinket target
-    ["Tuft of Smoldering Plumage"] = 	ERBStandard,
-	["Potion of the Hidden Spirit"] = 	ERBStandard,
-
-	["Food"] =              			ERBStandard,
-    ["Drink"] =           				ERBStandard,
-	["Refreshment"] =           		ERBStandard,
-	["Invisibility"] =           		ERBStandard,
-	["Dimensional Shifter"] =           ERBStandard,
-};
-
-
-local BCC_EXTRA_RAID_BUFFS = {
-    ["Cultivation"] =               ERBStandard,
-    ["Spring Blossoms"] =           ERBStandard,
-    [290754] =                      ERBStandard, --Lifebloom from early spring honor talent
-    ["Glimmer of Light"] =          ERBStandard,
-    ["Ancestral Vigor"] =           ERBStandard,
-    ["Anti-Magic Zone"] =           ERBStandard,
-    ["Blessing of Sacrifice"] =     ERBStandard,
-
-	["Healing Way"] =     			ERBStandard,
-	["Ancestral Fortitude"] =     	ERBStandard,
-
-    ["Gladiator's Emblem"] =        ERBStandard,
-
-    [344388] =                      ERBStandard, --Huntsman trinket
-    [344384] =                      ERBStandard, --Huntsman trinket target
-    ["Tuft of Smoldering Plumage"]= ERBStandard,
-
-	["Food"] =              		ERBStandard,
-    ["Drink"] =           			ERBStandard,
-};
 
 --Throughput CDs show important CDs cast by the unit in a special set of throughput buff frames
     --Display Location:     throughtput frames
@@ -1541,7 +1518,6 @@ if CustomBuffs.gameVersion == 2 then
 	CustomBuffs.INTERRUPTS = BCC_INTERRUPTS;
 	CustomBuffs.CDS = BCC_CDS;
 	CustomBuffs.EXTERNALS = BCC_EXTERNALS;
-	CustomBuffs.EXTRA_RAID_BUFFS = BCC_EXTRA_RAID_BUFFS;
 	CustomBuffs.THROUGHPUT_CDS = BCC_THROUGHPUT_CDS;
 	CustomBuffs.EXTERNAL_THROUGHPUT_CDS = BCC_EXTERNAL_THROUGHPUT_CDS;
 	CustomBuffs.CC = BCC_CC;
@@ -1798,36 +1774,41 @@ local function handleCLEU()
 	if (event == "SPELL_SUMMON") then
 		handleSummon(spellID, spellName, casterGUID, destGUID);
 	end
-    if (event == "SPELL_CAST_SUCCESS") and CustomBuffs.NONAURAS[spellID] or CustomBuffs.NONAURAS[spellName] then
-		local record = (CustomBuffs.NONAURAS[spellID] or CustomBuffs.NONAURAS[spellName]);
-		if (not record.type or record.type ~= "summon") then
-			if (CustomBuffs.db.profile.cooldownFlash or not record.isFlash) then
-				local noSum = record.noSum;
+    if (event == "SPELL_CAST_SUCCESS") then
+		if CustomBuffs.announceSpells then
+			local link = GetSpellLink(spellID);
+			print("Spell: ", spellID, " : ", link);
+		end
+		if CustomBuffs.NONAURAS[spellID] or CustomBuffs.NONAURAS[spellName] then
+			local record = (CustomBuffs.NONAURAS[spellID] or CustomBuffs.NONAURAS[spellName]);
+			if (not record.type or record.type ~= "summon") then
+				if (CustomBuffs.db.profile.cooldownFlash or not record.isFlash) then
+					local noSum = record.noSum;
 
-				if not noSum or not checkForSummon(noSum) then
-        			if CustomBuffs.units[casterGUID] then
-						--print("Found Cast Success");
-            			local duration = record.duration;
-            			--local _, class = UnitClass(unit)
-            			CustomBuffs.units[casterGUID].nauras = CustomBuffs.units[casterGUID].nauras or {};
-						CustomBuffs.units[casterGUID].nauras[spellID] = CustomBuffs.units[casterGUID].nauras[spellID] or {};
-            			CustomBuffs.units[casterGUID].nauras[spellID].expires = GetTime() + duration;
-						CustomBuffs.units[casterGUID].nauras[spellID].spellID = spellID;
-            			CustomBuffs.units[casterGUID].nauras[spellID].duration = duration;
-        				CustomBuffs.units[casterGUID].nauras[spellID].spellName = spellName;
-        				--self.units[destGUID].spellID = spell.parent and spell.parent or spellId
+					if not noSum or not checkForSummon(noSum) then
+        				if CustomBuffs.units[casterGUID] then
+							--print("Found Cast Success");
+            				local duration = record.duration;
+            				--local _, class = UnitClass(unit)
+            				CustomBuffs.units[casterGUID].nauras = CustomBuffs.units[casterGUID].nauras or {};
+							CustomBuffs.units[casterGUID].nauras[spellID] = CustomBuffs.units[casterGUID].nauras[spellID] or {};
+            				CustomBuffs.units[casterGUID].nauras[spellID].expires = GetTime() + duration;
+							CustomBuffs.units[casterGUID].nauras[spellID].spellID = spellID;
+            				CustomBuffs.units[casterGUID].nauras[spellID].duration = duration;
+        					CustomBuffs.units[casterGUID].nauras[spellID].spellName = spellName;
+        					--self.units[destGUID].spellID = spell.parent and spell.parent or spellId
 
-        				ForceUpdateFrame(CustomBuffs.units[casterGUID].frameNum);
-            			-- Make sure we clear it after the duration
-            			C_Timer.After(duration + CustomBuffs.UPDATE_DELAY_TOLERANCE, function()
-                			if CustomBuffs.units[casterGUID] and CustomBuffs.units[casterGUID].nauras and CustomBuffs.units[casterGUID].nauras[spellID] then
-                				CustomBuffs.units[casterGUID].nauras[spellID] = nil;
-                				ForceUpdateFrame(CustomBuffs.units[casterGUID].frameNum);
-            				end
-        				end);
+        					ForceUpdateFrame(CustomBuffs.units[casterGUID].frameNum);
+            				-- Make sure we clear it after the duration
+            				C_Timer.After(duration + CustomBuffs.UPDATE_DELAY_TOLERANCE, function()
+                				if CustomBuffs.units[casterGUID] and CustomBuffs.units[casterGUID].nauras and CustomBuffs.units[casterGUID].nauras[spellID] then
+                					CustomBuffs.units[casterGUID].nauras[spellID] = nil;
+                					ForceUpdateFrame(CustomBuffs.units[casterGUID].frameNum);
+            					end
+        					end);
 
 
-
+						end
         			end
 				end
 			end
@@ -2519,22 +2500,17 @@ function CustomBuffs:UpdateAuras(frame)
                     ["sbPrio"] = auraData.sbPrio,
                     ["auraData"] = {icon, count, expirationTime, duration}
                 });
-            elseif (CustomBuffs.EXTERNALS[name] or CustomBuffs.EXTERNALS[spellID]) and unitCaster ~= "player" and unitCaster ~= "pet" then
+            elseif (CustomBuffs.EXTERNALS[name] or CustomBuffs.EXTERNALS[spellID]) --[[and unitCaster ~= "player" and unitCaster ~= "pet"]] then
                 --Add to buffs
                 local auraData = CustomBuffs.EXTERNALS[name] or CustomBuffs.EXTERNALS[spellID];
-                tinsert(buffs, {
-                    ["index"] = index,
-                    ["sbPrio"] = auraData.sbPrio,
-                    ["auraData"] = {icon, count, expirationTime, duration}
-                });
-            elseif (CustomBuffs.EXTRA_RAID_BUFFS[name] or CustomBuffs.EXTRA_RAID_BUFFS[spellID]) and (unitCaster == "player" or unitCaster == "pet") then
-                --Add to buffs
-                local auraData = CustomBuffs.EXTRA_RAID_BUFFS[name] or CustomBuffs.EXTRA_RAID_BUFFS[spellID];
-                tinsert(buffs, {
-                    ["index"] = index,
-                    ["sbPrio"] = auraData.sbPrio,
-                    ["auraData"] = {icon, count, expirationTime, duration}
-                });
+				local casterIsPlayer = unitCaster == "player" or unitCaster == "pet";
+				if not ((auraData.noPlayer and casterIsPlayer) or (auraData.player and not casterIsPlayer)) then
+                	tinsert(buffs, {
+                    	["index"] = index,
+                    	["sbPrio"] = auraData.sbPrio,
+                    	["auraData"] = {icon, count, expirationTime, duration}
+                	});
+				end
             elseif shouldDisplayBuff(name, icon, count, debuffType, duration, expirationTime, unitCaster, nil, nil, spellID, canApplyAura, isBossAura) then
                 --Add to buffs
                 tinsert(buffs, {
@@ -3396,6 +3372,22 @@ function CustomBuffs:OnEnable()
 		elseif options == "verbose" then
 			CustomBuffs.verbose = not CustomBuffs.verbose;
 			print("CustomBuffs verbose mode", CustomBuffs.verbose and " enabled" or " disabled");
+		elseif options == "announce" then
+			if CustomBuffs.announceSums and CustomBuffs.announceSpells then
+				CustomBuffs.announceSums = false;
+				CustomBuffs.announceSpells = false;
+			elseif not CustomBuffs.announceSums and not CustomBuffs.announceSpells then
+				CustomBuffs.announceSums = true;
+				CustomBuffs.announceSpells = true;
+			end
+			print("CustomBuffs announce spells", CustomBuffs.announceSpells and "enabled" or "disabled");
+			print("CustomBuffs announce summons", CustomBuffs.announceSums and "enabled" or "disabled");
+		elseif options == "announce sums" then
+			CustomBuffs.announceSums = not CustomBuffs.announceSums;
+			print("CustomBuffs announce summons", CustomBuffs.announceSums and "enabled" or "disabled");
+		elseif options == "announce spells" then
+			CustomBuffs.announceSpells = not CustomBuffs.announceSpells;
+			print("CustomBuffs announce spells", CustomBuffs.announceSpells and "enabled" or "disabled");
 		elseif options == "test sums" then
 			print("Printing CustomBuffs.trackedSummons table...");
 			for k, v in pairs(CustomBuffs.trackedSummons) do
