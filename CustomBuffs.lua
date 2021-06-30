@@ -486,7 +486,7 @@ CustomBuffs.NONAURAS = {
 	--MONK
 
 	--DH
-
+	[323639] =	CDFlash, --The Hunt
 	--PALADIN
 
 	--WARRIOR
@@ -839,6 +839,7 @@ CustomBuffs.EXTERNALS = {
     [344384] =                      	EStandard, --Huntsman trinket target
     ["Tuft of Smoldering Plumage"] = 	EStandard,
 	["Potion of the Hidden Spirit"] = 	EStandard,
+	["Nitro Boosts"] = 					EStandard,
 
 
     --Previous expansion effects
