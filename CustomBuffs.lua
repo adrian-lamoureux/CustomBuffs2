@@ -376,7 +376,7 @@ CustomBuffs.NONAURAS = {
     [108280] = { duration = 12, tbPrio = 1, type = "summon" }, 	--Healing Tide (Assumes leveling perk for +2 seconds)
     [16191] =  { duration = 8,  tbPrio = 2, type = "summon" }, 	--Mana Tide
     [188592] = { duration = 47.1, tbPrio = 1, type = "summon" },	--Regular Fire Elemental
-	[198067] = { duration = 47.1, tbPrio = 1, noSum = 188592 },		--Fire Elemental Pet
+	[198067] = { duration = 41.7, tbPrio = 1, noSum = 188592 },		--Fire Elemental Pet
 	[188616] = { duration = 60, tbPrio = 2, type = "summon" }, 		--Earth Elemental
 	[198103] = { duration = 60, tbPrio = 1, noSum = 188616}, 		--Earth Elemental Pet
 	[157299] = { duration = 47.1, tbPrio = 1, type = "summon" }, 		--Storm Elemental
