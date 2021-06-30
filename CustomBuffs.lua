@@ -376,7 +376,7 @@ CustomBuffs.NONAURAS = {
     [108280] = { duration = 12, tbPrio = 1, type = "summon" }, 	--Healing Tide (Assumes leveling perk for +2 seconds)
     [16191] =  { duration = 8,  tbPrio = 2, type = "summon" }, 	--Mana Tide
     [188592] = { duration = 47.1, tbPrio = 1, type = "summon" },	--Regular Fire Elemental
-	[188291] = { duration = 47.1, tbPrio = 1, noSum = 188592 },		--Fire Elemental Pet
+	[198067] = { duration = 47.1, tbPrio = 1, noSum = 188592 },		--Fire Elemental Pet
 	[188616] = { duration = 60, tbPrio = 2, type = "summon" }, 		--Earth Elemental
 	[198103] = { duration = 60, tbPrio = 1, noSum = 188616}, 		--Earth Elemental Pet
 	[157299] = { duration = 47.1, tbPrio = 1, type = "summon" }, 		--Storm Elemental
@@ -399,6 +399,8 @@ CustomBuffs.NONAURAS = {
     --MAGE
     [198149] = { duration = 10, tbPrio = 1 }, --Frozen Orb PvP Talent
     [84714] = { duration = 10, tbPrio = 1 }, --Frozen Orb
+	[342130] = { duration = 12, tbPrio = 7, type = "summon" }, --Rune of Power Auto Cast
+	[116011] = { duration = 12, tbPrio = 7, type = "summon" }, --Rune of Power Real
 
     --PRIEST
 
@@ -426,8 +428,10 @@ CustomBuffs.NONAURAS = {
 
 	--COOLDOWN FLASHES
 	--Show short flash on frame when a player activates an ability or item
-	[336126] = CDFlash, --Show 0.5 second flash on frame when someone uses a pvp trinket
-
+	[336126] = 	CDFlash, --Show 0.5 second flash on frame when someone uses a pvp trinket
+	[42292] = 	CDFlash, --Old pvp trinket
+	[171267] = 	CDFlash, --Health Potion Shadowlands
+	[6262] = 	CDFlash, --Healthstone
 	--Interrupts
 	[1766] =   	CDFlash, -- Kick (Rogue)
     [2139] =   	CDFlash, -- Counterspell (Mage)
@@ -450,11 +454,18 @@ CustomBuffs.NONAURAS = {
 	--SHAMAN
 	[326059] = 	CDFlash, --Primordial Wave
 	[98008]  = 	CDFlash, --Spirit Link
+	[192058] = 	CDFlash, --Cap Totem
+	[320674] = 	CDFlash, --Chain Harvest
+	[8143] = 	CDFlash, --Tremor
+	[197995] = 	CDFlash, --Wellspring
+
 
 	--LOCK
-
+	[6789] = 	CDFlash, --Coil
 	--DRUID
-
+	[102793] = 	CDFlash, --Vortex
+	[77761] = 	CDFlash, --Stampeding Roar
+	[6795] =	CDFlash, --Growl
 
 	--MAGE
 
@@ -739,53 +750,58 @@ local EStandard = {["sbPrio"] = 4, ["sdPrio"] = nil, ["bdPrio"] = nil, ["tbPrio"
 local ELow = {["sbPrio"] = 5, ["sdPrio"] = nil, ["bdPrio"] = nil, ["tbPrio"] = nil};
 CustomBuffs.EXTERNALS = {
     --Major Externals
-    ["Ironbark"] =                  EStandard,
-    ["Life Cocoon"] =               EStandard,
-    ["Blessing of Protection"] =    EStandard,
-    ["Blessing of Sacrifice"] =     EStandard,
-    ["Blessing of Spellwarding"] =  EStandard,
-    ["Pain Suppression"] =          EStandard,
-    ["Guardian Spirit"] =           EStandard,
-    ["Roar of Sacrifice"] =         EStandard,
-    ["Innervate"] =                 EStandard,
-    ["Cenarion Ward"] =             EStandard,
-    ["Safeguard"] =                 EStandard,
-    ["Vigilance"] =                 EStandard,
-    ["Earth Shield"] =              EStandard,
-    ["Tiger's Lust"] =              EStandard,
-    ["Beacon of Virtue"] =          EStandard,
-    ["Beacon of Faith"] =           EStandard,
-    ["Beacon of Light"] =           EStandard,
-    ["Lifebloom"] =                 EStandard,
-    ["Spirit Mend"] =               EStandard,
-    ["Misdirection"] =              EStandard,
-    ["Tricks of the Trade"] =       EStandard,
-    ["Rallying Cry"] =              EStandard,
-    ["Anti-Magic Zone"] =           EStandard,
+    ["Ironbark"] =                  	EStandard,
+    ["Life Cocoon"] =               	EStandard,
+    ["Blessing of Protection"] =    	EStandard,
+    ["Blessing of Sacrifice"] =     	EStandard,
+    ["Blessing of Spellwarding"] =  	EStandard,
+    ["Pain Suppression"] =          	EStandard,
+    ["Guardian Spirit"] =           	EStandard,
+    ["Roar of Sacrifice"] =         	EStandard,
+    ["Innervate"] =                 	EStandard,
+    ["Cenarion Ward"] =             	EStandard,
+    ["Safeguard"] =                 	EStandard,
+    ["Vigilance"] =                 	EStandard,
+    ["Earth Shield"] =              	EStandard,
+    ["Tiger's Lust"] =              	EStandard,
+    ["Beacon of Virtue"] =          	EStandard,
+    ["Beacon of Faith"] =           	EStandard,
+    ["Beacon of Light"] =           	EStandard,
+    ["Lifebloom"] =                 	EStandard,
+    ["Spirit Mend"] =               	EStandard,
+    ["Misdirection"] =              	EStandard,
+    ["Tricks of the Trade"] =       	EStandard,
+    ["Rallying Cry"] =              	EStandard,
+    ["Anti-Magic Zone"] =           	EStandard,
 
-    ["Stoneform"] =                 EStandard,
-    ["Fireblood"] =                 EStandard,
+    ["Stoneform"] =                 	EStandard,
+    ["Fireblood"] =                 	EStandard,
 
 
-    [344388] =                      EStandard, --Huntsman trinket
-    [344384] =                      EStandard, --Huntsman trinket target
-    ["Tuft of Smoldering Plumage"]= Estandard,
+    [344388] =                      	EStandard, --Huntsman trinket
+    [344384] =                      	EStandard, --Huntsman trinket target
+    ["Tuft of Smoldering Plumage"] = 	Estandard,
 
-    ["Fleshcraft"] =                EStandard,
+    ["Fleshcraft"] =                	EStandard,
+	["Soulshape"] =                		EStandard,
+	["Potion of the Hidden Spirit"] = 	EStandard,
 
-    ["Gladiator's Emblem"] =        EStandard,
+    ["Gladiator's Emblem"] =        	EStandard,
 
     --Minor Externals worth tracking
-    ["Enveloping Mist"] =           ELow,
+    ["Enveloping Mist"] =           	ELow,
 
 
     --Show party/raid member's stealth status in buffs
-    ["Stealth"] =                   EStandard,
-    ["Vanish"] =                    EStandard,
-    ["Prowl"] =                     EStandard,
+    ["Stealth"] =                   	EStandard,
+    ["Vanish"] =                    	EStandard,
+    ["Prowl"] =                     	EStandard,
 
-	["Food"] =              		EStandard,
-    ["Drink"] =           			EStandard,
+	["Food"] =              			EStandard,
+    ["Drink"] =           				EStandard,
+	["Refreshment"] =           		EStandard,
+	["Invisibility"] =           		EStandard,
+	["Dimensional Shifter"] =           EStandard,
 
     --Previous expansion effects
     --["Vampiric Aura"] =             EStandard
@@ -846,41 +862,46 @@ local BCC_EXTERNALS = {
     --Standard Priority Level:
 local ERBStandard = {["sbPrio"] = 5, ["sdPrio"] = nil, ["bdPrio"] = nil, ["tbPrio"] = nil};
 CustomBuffs.EXTRA_RAID_BUFFS = {
-    ["Cultivation"] =               ERBStandard,
-    ["Spring Blossoms"] =           ERBStandard,
-    [290754] =                      ERBStandard, --Lifebloom from early spring honor talent
-    ["Glimmer of Light"] =          ERBStandard,
-    ["Ancestral Vigor"] =           ERBStandard,
-    ["Anti-Magic Zone"] =           ERBStandard,
-    ["Blessing of Sacrifice"] =     ERBStandard,
+    ["Cultivation"] =               	ERBStandard,
+    ["Spring Blossoms"] =           	ERBStandard,
+    [290754] =                      	ERBStandard, --Lifebloom from early spring honor talent
+    ["Glimmer of Light"] =          	ERBStandard,
+    ["Ancestral Vigor"] =           	ERBStandard,
+    ["Anti-Magic Zone"] =           	ERBStandard,
+    ["Blessing of Sacrifice"] =     	ERBStandard,
 
     --BFA procs
-    ["Luminous Jellyweed"] =        ERBStandard,
-    ["Costal Surge"] =              ERBStandard,
-    ["Concentrated Mending"] =      ERBStandard,
-    ["Touch of the Voodoo"] =       ERBStandard,
-    ["Egg on Your Face"] =          ERBStandard,
-    ["Coastal Surge"] =             ERBStandard,
-    ["Quickening"] =                ERBStandard,
-    ["Ancient Flame"] =             ERBStandard,
-    ["Grove Tending"] =             ERBStandard,
-    ["Blessed Portents"] =          ERBStandard,
+    ["Luminous Jellyweed"] =        	ERBStandard,
+    ["Costal Surge"] =              	ERBStandard,
+    ["Concentrated Mending"] =      	ERBStandard,
+    ["Touch of the Voodoo"] =       	ERBStandard,
+    ["Egg on Your Face"] =          	ERBStandard,
+    ["Coastal Surge"] =             	ERBStandard,
+    ["Quickening"] =                	ERBStandard,
+    ["Ancient Flame"] =             	ERBStandard,
+    ["Grove Tending"] =             	ERBStandard,
+    ["Blessed Portents"] =          	ERBStandard,
 
-    [344227] =                      ERBStandard, --Consumptive Infusion
+    [344227] =                      	ERBStandard, --Consumptive Infusion
 
-    ["Fleshcraft"] =                ERBStandard,
+    ["Fleshcraft"] =                	ERBStandard,
+	["Soulshape"] =                		ERBStandard,
 
-    ["Stoneform"] =                 ERBStandard,
-    ["Fireblood"] =                 ERBStandard,
+    ["Stoneform"] =                 	ERBStandard,
+    ["Fireblood"] =                 	ERBStandard,
 
-    ["Gladiator's Emblem"] =        ERBStandard,
+    ["Gladiator's Emblem"] =        	ERBStandard,
 
-    [344388] =                      ERBStandard, --Huntsman trinket
-    [344384] =                      ERBStandard, --Huntsman trinket target
-    ["Tuft of Smoldering Plumage"]= ERBStandard,
+    [344388] =                      	ERBStandard, --Huntsman trinket
+    [344384] =                      	ERBStandard, --Huntsman trinket target
+    ["Tuft of Smoldering Plumage"] = 	ERBStandard,
+	["Potion of the Hidden Spirit"] = 	ERBStandard,
 
-	["Food"] =              		ERBStandard,
-    ["Drink"] =           			ERBStandard,
+	["Food"] =              			ERBStandard,
+    ["Drink"] =           				ERBStandard,
+	["Refreshment"] =           		ERBStandard,
+	["Invisibility"] =           		ERBStandard,
+	["Dimensional Shifter"] =           ERBStandard,
 };
 
 
@@ -895,26 +916,6 @@ local BCC_EXTRA_RAID_BUFFS = {
 
 	["Healing Way"] =     			ERBStandard,
 	["Ancestral Fortitude"] =     	ERBStandard,
-
-
-    --BFA procs
-    ["Luminous Jellyweed"] =        ERBStandard,
-    ["Costal Surge"] =              ERBStandard,
-    ["Concentrated Mending"] =      ERBStandard,
-    ["Touch of the Voodoo"] =       ERBStandard,
-    ["Egg on Your Face"] =          ERBStandard,
-    ["Coastal Surge"] =             ERBStandard,
-    ["Quickening"] =                ERBStandard,
-    ["Ancient Flame"] =             ERBStandard,
-    ["Grove Tending"] =             ERBStandard,
-    ["Blessed Portents"] =          ERBStandard,
-
-    [344227] =                      ERBStandard, --Consumptive Infusion
-
-    ["Fleshcraft"] =                ERBStandard,
-
-    ["Stoneform"] =                 ERBStandard,
-    ["Fireblood"] =                 ERBStandard,
 
     ["Gladiator's Emblem"] =        ERBStandard,
 
@@ -963,7 +964,6 @@ CustomBuffs.THROUGHPUT_CDS = {
         ["Icy Veins"] =                         TCDStandard,
         ["Combustion"] =                        TCDStandard,
         ["Arcane Power"] =                      TCDStandard,
-        ["Rune of Power"] =                     TCDStandard
 
     } ,
     [ 10 ] = { --monk
@@ -1055,7 +1055,6 @@ local BCC_THROUGHPUT_CDS = {
         ["Icy Veins"] =                         TCDStandard,
         ["Combustion"] =                        TCDStandard,
         ["Arcane Power"] =                      TCDStandard,
-        ["Rune of Power"] =                     TCDStandard
 
     } ,
     [ 2 ] = { --paladin
