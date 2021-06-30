@@ -333,8 +333,9 @@ CustomBuffs.INTERRUPTS = {
     ["Solar Beam"] = { duration = 5 },
 
     --Non player interrupts BETA FEATURE
-    ["Quake"]               = { duration = 5 }, --240448
-    ["Deafening Crash"]     = { duration = 2 },
+    ["Quake"] = 				{ duration = 5 }, --240448
+    ["Deafening Crash"] = 		{ duration = 2 },
+	[296523] =			 		{ duration = 3 },
 };
 
 local BCC_INTERRUPTS = {

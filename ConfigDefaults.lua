@@ -9,7 +9,7 @@ function CustomBuffs:Defaults()
 	local defaults = {};
 
 	defaults.global = {
-		["unknownInterrupts"] = {value = 00002},
+		["unknownInterrupts"] = {},
 	};
 	defaults.profile = {
 		cooldownFlash = true,
