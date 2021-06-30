@@ -379,8 +379,8 @@ CustomBuffs.NONAURAS = {
 	[198067] = { duration = 41.7, tbPrio = 1, noSum = 188592 },		--Fire Elemental Pet
 	[188616] = { duration = 60, tbPrio = 2, type = "summon" }, 		--Earth Elemental
 	[198103] = { duration = 60, tbPrio = 1, noSum = 188616}, 		--Earth Elemental Pet
-	[157299] = { duration = 47.1, tbPrio = 1, type = "summon" }, 		--Storm Elemental
-    [192249] = { duration = 47.1, tbPrio = 1}, 						--Storm Elemental Pet
+	[157299] = { duration = 41.7, tbPrio = 1, type = "summon" }, 		--Storm Elemental
+    [192249] = { duration = 41.7, tbPrio = 1}, 						--Storm Elemental Pet
     [51533] =  { duration = 15, tbPrio = 1}, 						--Feral Spirit
 	[5394] =   { duration = 15, tbPrio = 1, type = "summon" },
 	[157153] = { duration = 15, tbPrio = 20, sbPrio = nil, type = "summon" }, --Cloudburst
