@@ -12,6 +12,7 @@ function CustomBuffs:Defaults()
 		["unknownInterrupts"] = {},
 	};
 	defaults.profile = {
+		alwaysShowFrames = false,
 		cooldownFlash = true,
 		frameScale = 1,
 		buffScale = 1,

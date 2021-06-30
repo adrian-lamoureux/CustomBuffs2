@@ -189,6 +189,16 @@ local function vprint(...)
 	end
 end
 
+function CustomBuffs:loadFrames()
+	CompactRaidFrameContainer_OnLoad(CompactRaidFrameContainer);
+	CompactRaidFrameContainer_SetGroupMode(CompactRaidFrameContainer, "flush");
+	CompactRaidFrameContainer_SetFlowSortFunction(CompactRaidFrameContainer, CRFSort_Role);
+	CompactRaidFrameContainer_AddGroups(CompactRaidFrameContainer, 1);
+	CompactRaidFrameContainer_LayoutFrames(CompactRaidFrameContainer);
+	CompactRaidFrameContainer_UpdateDisplayedUnits(CompactRaidFrameContainer);
+	CompactRaidFrameManager:Show();
+	CompactRaidFrameContainer:Show();
+end
 function CustomBuffs:sync()
 	print("sending int data...");
 	if self.db.global.unknownInterrupts then
@@ -459,7 +469,7 @@ CustomBuffs.NONAURAS = {
     [57994] =  	CDFlash, -- Wind Shear (Shaman)
     [91802] =  	CDFlash, -- Shambling Rush (Death Knight)
     [96231] =  	CDFlash, -- Rebuke (Paladin)
-    [106839] = 	CDFlash, -- Skull Bash (Feral)
+    [93985] = 	CDFlash, -- Skull Bash (Feral)
     [115781] = 	CDFlash, -- Optical Blast (Warlock)
     [116705] = 	CDFlash, -- Spear Hand Strike (Monk)
     [132409] = 	CDFlash, -- Spell Lock (Warlock)
@@ -3360,8 +3370,15 @@ end
 
 function CustomBuffs:OnDisable() end
 
+function CustomBuffs:loaded()
+	self:UpdateConfig();
+	CustomBuffs:sync();
+
+end
+
 function CustomBuffs:OnEnable()
 	self:SecureHook("CompactUnitFrame_UpdateAuras", function(frame) self:UpdateAuras(frame); end);
+	self:RegisterEvent("PLAYER_ENTERING_WORLD", "loaded");
 	self:RegisterComm("CBSync", "OnCommReceived");
 
 
@@ -3380,9 +3397,7 @@ function CustomBuffs:OnEnable()
             LoadAddOn("Blizzard_WeeklyRewards");
             WeeklyRewardsFrame:Show();
         elseif options == "test" then
-            CustomBuffs.debugMode = not CustomBuffs.debugMode;
-            DebugUpdate();
-
+			CustomBuffs:loadFrames();
 		elseif options == "sync" then
 			CustomBuffs:sync();
 		elseif options == "ints" then
@@ -3450,7 +3465,7 @@ function CustomBuffs:Init()
 	self.dialog:AddToBlizOptions("CustomBuffs", "CustomBuffs");
     self.dialog:AddToBlizOptions("CustomBuffs Profiles", "Profiles", "CustomBuffs");
 
-	CustomBuffs:sync();
+
 end
 
 function CustomBuffs:UpdateConfig()
@@ -3479,6 +3494,10 @@ function CustomBuffs:UpdateConfig()
     tbSize = self.db.profile.throughputBuffScale;
     bdSize = self.db.profile.bossDebuffScale;
 
+	if self.db.profile.alwaysShowFrames then
+		CustomBuffs:loadFrames();
+	end
+
     for index, frame in ipairs(_G.CompactRaidFrameContainer.flowFrames) do
         --index 1 is a string for some reason so we skip it
         if index ~= 1 and frame and frame.debuffFrames then
@@ -3489,6 +3508,9 @@ function CustomBuffs:UpdateConfig()
     self:UpdateRaidIcons();
 
     handleRosterUpdate();
+
+
+
     --Clear cached names in case updated settings change displayed names
     twipe(NameCache);
 end

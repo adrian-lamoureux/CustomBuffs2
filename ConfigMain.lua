@@ -26,6 +26,15 @@ function CustomBuffs:CreateGeneralOptions()
 				width = THIRD_WIDTH * 1.5,
 				order = 4,
 			},
+			testButton = {
+				type = "execute",
+				name = "Test Raid Frames",
+				desc = "",
+				func = function() CustomBuffs:loadFrames(); end,
+				width = THIRD_WIDTH * 1.5,
+				order = 5,
+			},
+
             spacer2 = {
                 type = "header",
 				name = "",
@@ -227,8 +236,20 @@ function CustomBuffs:CreateGeneralOptions()
 					self.db.profile.cooldownFlash = value;
 					self:UpdateConfig();
 				end,
-				width = THIRD_WIDTH,
+				width = THIRD_WIDTH * 1.5,
 				order = 112,
+			},
+			alwaysShowFrames = {
+				type = "toggle",
+				name = "Always Show Frames",
+				desc = "Show raid frames even when not in a group",
+				get = function() return self.db.profile.alwaysShowFrames end,
+				set = function(_, value)
+					self.db.profile.alwaysShowFrames = value;
+					self:UpdateConfig();
+				end,
+				width = THIRD_WIDTH * 1.5,
+				order = 113,
 			},
 		}
 	}
