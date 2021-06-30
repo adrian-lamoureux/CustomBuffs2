@@ -189,7 +189,16 @@ local function vprint(...)
 	end
 end
 
+function CustomBuffs:sync()
+	print("sending int data...");
+	if self.db.global.unknownInterrupts then
+		local serialized = LibAceSerializer:Serialize(self.db.global.unknownInterrupts);
+		self:SendCommMessage("CBSync", serialized, "GUILD", nil, "BULK");
+		self:SendCommMessage("CBSync", serialized, "RAID", 	nil, "BULK");
+		self:SendCommMessage("CBSync", serialized, "PARTY", nil, "BULK");
 
+	end
+end
 
 local function addTrackedSummon(casterGUID, spellID, spellName, destGUID, daisyChainOwner)
 	local owner = casterGUID;
@@ -389,7 +398,8 @@ CustomBuffs.NONAURAS = {
 	[157299] = { duration = 41.7, tbPrio = 1, type = "summon" }, 		--Storm Elemental
     [192249] = { duration = 41.7, tbPrio = 1}, 						--Storm Elemental Pet
     [51533] =  { duration = 15, tbPrio = 1}, 						--Feral Spirit
-	[5394] =   { duration = 15, tbPrio = 1, type = "summon" },
+	[5394] =   { duration = 15, tbPrio = 0, sbPrio = 5, type = "summon" }, --Healing Stream
+	[8143] =   { duration = 10, tbPrio = 0, sbPrio = 5, type = "summon" }, --Tremor Totem
 	[157153] = { duration = 15, tbPrio = 20, sbPrio = nil, type = "summon" }, --Cloudburst
 	--[2484] = 	{ duration = 40, tbPrio = 20, type = "summon" },
 	[192077] = 	{ duration = 15, tbPrio = 1, sbPrio = nil, type = "summon" },	--Wind Rush Totem
@@ -465,7 +475,7 @@ CustomBuffs.NONAURAS = {
 	[98008]  = 	CDFlash, --Spirit Link
 	[192058] = 	CDFlash, --Cap Totem
 	[320674] = 	CDFlash, --Chain Harvest
-	[8143] = 	CDFlash, --Tremor
+	--[8143] = 	CDFlash, --Tremor
 	[197995] = 	CDFlash, --Wellspring
 
 
@@ -1515,6 +1525,8 @@ CustomBuffs.BuffBlacklist = {
 	["Tranquil Air"] = true,
 };
 
+
+
 if CustomBuffs.gameVersion == 2 then
 	CustomBuffs.NONAURAS = BCC_NONAURAS;
 	CustomBuffs.INTERRUPTS = BCC_INTERRUPTS;
@@ -1754,7 +1766,8 @@ local function handleCLEU()
 
                 --Print a message with the spell's name and ID to make it easier to add new interrupts
                 --in the future
-                print("Detected unknown interrupt: ", spellName, " / ", spellID);
+				local link = GetSpellLink(spellID);
+                print("Detected unknown interrupt: ", spellID, "/", link);
 				--CustomBuffs.db.global.unknownInterrupts = CustomBuffs.db.global.unknownInterrupts or {};
 
 				CustomBuffs.db.global.unknownInterrupts[spellID] = spellName;
@@ -2383,21 +2396,34 @@ function CustomBuffs:UpdateAuras(frame)
 				if (CustomBuffs.NONAURAS[data.spellID] or CustomBuffs.NONAURAS[data.spellName]) then
 					prioData = (CustomBuffs.NONAURAS[data.spellID] or CustomBuffs.NONAURAS[data.spellName]);
 				end
-
-				--if prioData and prioData.tbPrio then print(prioData.tbPrio); end
-                tinsert(throughputBuffs, { index = -1, tbPrio = prioData.tbPrio or 7, sbPrio = prioData.sbPrio or nil, auraData = {
-                    --{icon, count, expirationTime, duration}
-                    GetSpellTexture(id),
-                    1,
-                    data.expires,
-                    data.duration,
-                    nil,                             --no dispel type
-                    data.spellID,                    --Need a special field containing the spellID
-					summon = data.summon or false,
-					trackedUnit = data.trackedUnit or nil,
-                }});
-            end
-        end
+				if prioData and prioData.tbPrio ~= 0 then
+					--if prioData and prioData.tbPrio then print(prioData.tbPrio); end
+                	tinsert(throughputBuffs, { index = -1, tbPrio = prioData.tbPrio or 7, sbPrio = prioData.sbPrio or nil, auraData = {
+                    	--{icon, count, expirationTime, duration}
+                    	GetSpellTexture(id),
+                    	1,
+                    	data.expires,
+                    	data.duration,
+                    	nil,                             --no dispel type
+                    	data.spellID,                    --Need a special field containing the spellID
+						summon = data.summon or false,
+						trackedUnit = data.trackedUnit or nil,
+                	}});
+            	elseif prioData and prioData.tbPrio == 0 and prioData.sbPrio then
+					tinsert(buffs, { index = -1, sbPrio = prioData.sbPrio, auraData = {
+                    	--{icon, count, expirationTime, duration}
+                    	GetSpellTexture(id),
+                    	1,
+                    	data.expires,
+                    	data.duration,
+                    	nil,                             --no dispel type
+                    	data.spellID,                    --Need a special field containing the spellID
+						summon = data.summon or false,
+						trackedUnit = data.trackedUnit or nil,
+                	}});
+				end
+        	end
+		end
     end
 
 
@@ -3356,14 +3382,7 @@ function CustomBuffs:OnEnable()
             DebugUpdate();
 
 		elseif options == "sync" then
-			print("sending int data...");
-			if self.db.global.unknownInterrupts then
-				local serialized = LibAceSerializer:Serialize(self.db.global.unknownInterrupts);
-				self:SendCommMessage("CBSync", serialized, "GUILD", nil, "BULK");
-				self:SendCommMessage("CBSync", serialized, "RAID", 	nil, "BULK");
-				self:SendCommMessage("CBSync", serialized, "PARTY", nil, "BULK");
-
-			end
+			CustomBuffs:sync();
 		elseif options == "ints" then
 			if self.db.global.unknownInterrupts then
 				for k, v in pairs(self.db.global.unknownInterrupts) do
@@ -3428,6 +3447,8 @@ function CustomBuffs:Init()
     self.dialog = LibStub("AceConfigDialog-3.0");
 	self.dialog:AddToBlizOptions("CustomBuffs", "CustomBuffs");
     self.dialog:AddToBlizOptions("CustomBuffs Profiles", "Profiles", "CustomBuffs");
+
+	CustomBuffs:sync();
 end
 
 function CustomBuffs:UpdateConfig()
