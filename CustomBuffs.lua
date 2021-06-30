@@ -453,6 +453,8 @@ CustomBuffs.NONAURAS = {
 
 	--SHAMAN
 	[326059] = 	CDFlash, --Primordial Wave
+	[328923] = 	CDFlash, --Fae Transfusion
+	[328930] = 	CDFlash, --Fae Transfusion
 	[98008]  = 	CDFlash, --Spirit Link
 	[192058] = 	CDFlash, --Cap Totem
 	[320674] = 	CDFlash, --Chain Harvest
