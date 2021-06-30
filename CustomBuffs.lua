@@ -2321,9 +2321,10 @@ local function updateAura(auraFrame, index, auraData)
         --end
     end
 
-    if ( (expirationTime and expirationTime ~= 0) or (auraData and auraData.summon and auraData.trackedSummon and not CustomBuffs.trackedSummons[auraData.trackedSummon])) then
+    if (expirationTime and expirationTime ~= 0) then
         local startTime = expirationTime - duration;
         setCooldownFrame(auraFrame.cooldown, startTime, duration, true);
+		auraFrame.cooldown:SetAlpha(0.4);
     else
         clearCooldownFrame(auraFrame.cooldown);
     end
