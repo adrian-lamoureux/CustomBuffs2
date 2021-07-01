@@ -168,8 +168,8 @@ end --= CompactUnitFrame_UtilShouldDisplayBuff;
 
 
 local function ForceUpdateFrame(fNum)
-    --local name = GetUnitName(_G["CompactRaidFrame"..fNum].unit, false);
-    --print("Forcing frame update for frame "..fNum.." for unit "..name);
+    local name = GetUnitName(_G["CompactRaidFrame"..fNum].unit, false);
+    if CustomBuffs.verbose then print("Forcing frame update for frame "..fNum.." for unit "..name); end
     CustomBuffs:UpdateAuras(_G["CompactRaidFrame"..fNum]);
 end
 
@@ -189,16 +189,7 @@ local function vprint(...)
 	end
 end
 
-function CustomBuffs:loadFrames()
-	CompactRaidFrameContainer_OnLoad(CompactRaidFrameContainer);
-	CompactRaidFrameContainer_SetGroupMode(CompactRaidFrameContainer, "flush");
-	CompactRaidFrameContainer_SetFlowSortFunction(CompactRaidFrameContainer, CRFSort_Role);
-	CompactRaidFrameContainer_AddGroups(CompactRaidFrameContainer, 1);
-	CompactRaidFrameContainer_LayoutFrames(CompactRaidFrameContainer);
-	CompactRaidFrameContainer_UpdateDisplayedUnits(CompactRaidFrameContainer);
-	CompactRaidFrameManager:Show();
-	CompactRaidFrameContainer:Show();
-end
+
 function CustomBuffs:sync()
 	print("sending int data...");
 	if self.db.global.unknownInterrupts then
@@ -410,7 +401,7 @@ CustomBuffs.NONAURAS = {
     [51533] =  { duration = 15, tbPrio = 1}, 						--Feral Spirit
 	[5394] =   { duration = 15, tbPrio = 0, sbPrio = 5, type = "summon" }, --Healing Stream
 	[8143] =   { duration = 10, tbPrio = 0, sbPrio = 5, type = "summon" }, --Tremor Totem
-	[204306] =   { duration = 3, tbPrio = 0, sbPrio = 5, type = "summon" }, --Grounding
+	[204306] =  { duration = 3, tbPrio = 0, sbPrio = 5, type = "summon" }, --Grounding
 	[157153] = { duration = 15, tbPrio = 20, sbPrio = nil, type = "summon" }, --Cloudburst
 	--[2484] = 	{ duration = 40, tbPrio = 20, type = "summon" },
 	[192077] = 	{ duration = 15, tbPrio = 1, sbPrio = nil, type = "summon" },	--Wind Rush Totem
@@ -1716,6 +1707,20 @@ local function handleRosterUpdate()
     CustomBuffs:UpdateCastBars();
 end
 
+function CustomBuffs:loadFrames()
+	if not CompactRaidFrame1 then --Don't spam create new raid frames; causes a huge mess
+		CompactRaidFrameContainer_OnLoad(CompactRaidFrameContainer);
+		CompactRaidFrameContainer_SetGroupMode(CompactRaidFrameContainer, "flush");
+		CompactRaidFrameContainer_SetFlowSortFunction(CompactRaidFrameContainer, CRFSort_Role);
+		CompactRaidFrameContainer_AddUnitFrame(CompactRaidFrameContainer, "player", "raid");
+	end
+	CompactRaidFrameContainer_LayoutFrames(CompactRaidFrameContainer);
+	--CompactRaidFrameContainer_UpdateDisplayedUnits(CompactRaidFrameContainer);
+	CompactRaidFrameManager:Show();
+	CompactRaidFrameContainer:Show();
+	handleRosterUpdate();
+end
+
 --Check combat log events for interrupts
 local function handleCLEU()
 
@@ -2321,10 +2326,10 @@ local function updateAura(auraFrame, index, auraData)
         --end
     end
 
-    if (expirationTime and expirationTime ~= 0) then
+    if ((expirationTime and expirationTime ~= 0) or (auraData and auraData.summon and auraData.trackedSummon and not CustomBuffs.trackedSummons[auraData.trackedSummon])) then
         local startTime = expirationTime - duration;
         setCooldownFrame(auraFrame.cooldown, startTime, duration, true);
-		auraFrame.cooldown:SetAlpha(0.4);
+		--auraFrame.cooldown:SetAlpha(0.4);
     else
         clearCooldownFrame(auraFrame.cooldown);
     end
