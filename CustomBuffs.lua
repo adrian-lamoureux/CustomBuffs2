@@ -261,7 +261,9 @@ local function removeTrackedSummon(summonGUID)
 			twipe(CustomBuffs.trackedSummons[summonGUID]);
 			CustomBuffs.trackedSummons[summonGUID].invalid = true;
 			CustomBuffs.trackedSummons[summonGUID] = nil;
-			CustomBuffs.units[ownerGUID].nauras[spellID] = nil;
+			if CustomBuffs.units[ownerGUID] and CustomBuffs.units[ownerGUID].nauras and CustomBuffs.units[ownerGUID].nauras[spellID] then
+				CustomBuffs.units[ownerGUID].nauras[spellID] = nil;
+			end
 			ForceUpdateFrame(CustomBuffs.units[ownerGUID].frameNum);
 		end
 	end
@@ -1754,6 +1756,47 @@ local function handleCLEU()
 	CustomBuffs.trackedSummons = CustomBuffs.trackedSummons or {};
 	wipeTrackedSummon = wipeTrackedSummon or {};
 
+	if (event == "SPELL_CAST_SUCCESS") then
+		if CustomBuffs.announceSpells then
+			local link = GetSpellLink(spellID);
+			print("Spell: ", spellID, " : ", link);
+		end
+		if CustomBuffs.NONAURAS[spellID] or CustomBuffs.NONAURAS[spellName] then
+			local record = (CustomBuffs.NONAURAS[spellID] or CustomBuffs.NONAURAS[spellName]);
+			if (not record.type or record.type ~= "summon") then
+				if (CustomBuffs.db.profile.cooldownFlash or not record.isFlash) then
+					local noSum = record.noSum;
+
+					if not noSum or not checkForSummon(noSum) then
+        				if CustomBuffs.units[casterGUID] then
+							--print("Found Cast Success");
+            				local duration = record.duration;
+            				--local _, class = UnitClass(unit)
+            				CustomBuffs.units[casterGUID].nauras = CustomBuffs.units[casterGUID].nauras or {};
+							CustomBuffs.units[casterGUID].nauras[spellID] = CustomBuffs.units[casterGUID].nauras[spellID] or {};
+            				CustomBuffs.units[casterGUID].nauras[spellID].expires = GetTime() + duration;
+							CustomBuffs.units[casterGUID].nauras[spellID].spellID = spellID;
+            				CustomBuffs.units[casterGUID].nauras[spellID].duration = duration;
+        					CustomBuffs.units[casterGUID].nauras[spellID].spellName = spellName;
+        					--self.units[destGUID].spellID = spell.parent and spell.parent or spellId
+
+        					ForceUpdateFrame(CustomBuffs.units[casterGUID].frameNum);
+            				-- Make sure we clear it after the duration
+            				C_Timer.After(duration + CustomBuffs.UPDATE_DELAY_TOLERANCE, function()
+                				if CustomBuffs.units[casterGUID] and CustomBuffs.units[casterGUID].nauras and CustomBuffs.units[casterGUID].nauras[spellID] then
+                					CustomBuffs.units[casterGUID].nauras[spellID] = nil;
+                					ForceUpdateFrame(CustomBuffs.units[casterGUID].frameNum);
+            					end
+        					end);
+
+
+						end
+        			end
+				end
+			end
+		end
+    end
+
     -- SPELL_INTERRUPT doesn't fire for some channeled spells; if the spell isn't a known interrupt we're done
     if (event == "SPELL_INTERRUPT" or event == "SPELL_CAST_SUCCESS") then
         if (CustomBuffs.INTERRUPTS[spellName] or CustomBuffs.INTERRUPTS[spellID]) then
@@ -1823,54 +1866,31 @@ local function handleCLEU()
 
             end
         end
-    end
-	if (event == "SPELL_INSTAKILL" or event == "UNIT_DIED" or event == "UNIT_DISSIPATES" or event == "UNIT_DESTROYED") then
+	elseif (event == "SPELL_INSTAKILL" or event == "UNIT_DIED" or event == "UNIT_DISSIPATES" or event == "UNIT_DESTROYED") then
 			--print("unit died");
 			removeTrackedSummon(destGUID);
-	end
-	if (event == "SPELL_SUMMON") then
+			if (GetNumGroupMembers() > 0) then
+		        if CustomBuffs.units[destGUID] then
+		            if UnitHealth(CustomBuffs.units[destGUID].unit) <= 1 then
+		                if CustomBuffs.units[destGUID] then
+		                    if CustomBuffs.units[destGUID].int then
+		                        twipe(CustomBuffs.units[destGUID].int);
+		                        CustomBuffs.units[destGUID].int = nil;
+		                    end
+		                    if CustomBuffs.units[destGUID].nauras then
+		                        twipe(CustomBuffs.units[destGUID].nauras);
+		                        CustomBuffs.units[destGUID].nauras = nil;
+		                    end
+		                    ForceUpdateFrame(CustomBuffs.units[destGUID].frameNum);
+		                end
+		            end
+		        end
+		   	end
+	elseif (event == "SPELL_SUMMON") then
 		handleSummon(spellID, spellName, casterGUID, destGUID);
 	end
-    if (event == "SPELL_CAST_SUCCESS") then
-		if CustomBuffs.announceSpells then
-			local link = GetSpellLink(spellID);
-			print("Spell: ", spellID, " : ", link);
-		end
-		if CustomBuffs.NONAURAS[spellID] or CustomBuffs.NONAURAS[spellName] then
-			local record = (CustomBuffs.NONAURAS[spellID] or CustomBuffs.NONAURAS[spellName]);
-			if (not record.type or record.type ~= "summon") then
-				if (CustomBuffs.db.profile.cooldownFlash or not record.isFlash) then
-					local noSum = record.noSum;
+end
 
-					if not noSum or not checkForSummon(noSum) then
-        				if CustomBuffs.units[casterGUID] then
-							--print("Found Cast Success");
-            				local duration = record.duration;
-            				--local _, class = UnitClass(unit)
-            				CustomBuffs.units[casterGUID].nauras = CustomBuffs.units[casterGUID].nauras or {};
-							CustomBuffs.units[casterGUID].nauras[spellID] = CustomBuffs.units[casterGUID].nauras[spellID] or {};
-            				CustomBuffs.units[casterGUID].nauras[spellID].expires = GetTime() + duration;
-							CustomBuffs.units[casterGUID].nauras[spellID].spellID = spellID;
-            				CustomBuffs.units[casterGUID].nauras[spellID].duration = duration;
-        					CustomBuffs.units[casterGUID].nauras[spellID].spellName = spellName;
-        					--self.units[destGUID].spellID = spell.parent and spell.parent or spellId
-
-        					ForceUpdateFrame(CustomBuffs.units[casterGUID].frameNum);
-            				-- Make sure we clear it after the duration
-            				C_Timer.After(duration + CustomBuffs.UPDATE_DELAY_TOLERANCE, function()
-                				if CustomBuffs.units[casterGUID] and CustomBuffs.units[casterGUID].nauras and CustomBuffs.units[casterGUID].nauras[spellID] then
-                					CustomBuffs.units[casterGUID].nauras[spellID] = nil;
-                					ForceUpdateFrame(CustomBuffs.units[casterGUID].frameNum);
-            					end
-        					end);
-
-
-						end
-        			end
-				end
-			end
-		end
-    end
 
     --[[ Adding tracking for PvP Trinkets here
     if (event == "SPELL_CAST_SUCCESS") and
@@ -1879,25 +1899,6 @@ local function handleCLEU()
 
     end
     --]]
-
-    if event == "UNIT_DIED" and (GetNumGroupMembers() > 0) then
-            if CustomBuffs.units[destGUID] then
-                if UnitHealth(CustomBuffs.units[destGUID].unit) <= 1 then
-                    if CustomBuffs.units[destGUID] then
-                        if CustomBuffs.units[destGUID].int then
-                            twipe(CustomBuffs.units[destGUID].int);
-                            CustomBuffs.units[destGUID].int = nil;
-                        end
-                        if CustomBuffs.units[destGUID].nauras then
-                            twipe(CustomBuffs.units[destGUID].nauras);
-                            CustomBuffs.units[destGUID].nauras = nil;
-                        end
-                        ForceUpdateFrame(CustomBuffs.units[destGUID].frameNum);
-                    end
-                end
-            end
-    	end
-	end
 
 --[[
 local oldRTU = CompactRaidFrameContainer_ReadyToUpdate;
