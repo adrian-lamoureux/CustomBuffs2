@@ -31,8 +31,19 @@ function CustomBuffs:CreateGeneralOptions()
 				name = "Test Raid Frames",
 				desc = "",
 				func = function() CustomBuffs:loadFrames(); end,
-				width = THIRD_WIDTH * 1.5,
+				width = THIRD_WIDTH * 0.75,
 				order = 5,
+			},
+			lockButton = {
+				type = "toggle",
+				name = "Lock Frame Position",
+				desc = "toggle raid frame mover",
+				get = function() return CustomBuffs.locked end,
+				set = function(_, value)
+					self:unlockFrames();
+				end,
+				width = THIRD_WIDTH * 0.75,
+				order = 6,
 			},
 
             spacer2 = {

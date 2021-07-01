@@ -62,6 +62,7 @@ CustomBuffs.units = CustomBuffs.units or {};
 CustomBuffs.verbose = CustomBuffs.verbose or false;
 CustomBuffs.announceSums = CustomBuffs.announceSums or false;
 CustomBuffs.announceSpells = CustomBuffs.announceSpells or false;
+CustomBuffs.locked = CustomBuffs.locked or true;
 
 
 --Set up values for dispel types; used to quickly
@@ -171,6 +172,16 @@ local function ForceUpdateFrame(fNum)
     local name = GetUnitName(_G["CompactRaidFrame"..fNum].unit, false);
     if CustomBuffs.verbose then print("Forcing frame update for frame "..fNum.." for unit "..name); end
     CustomBuffs:UpdateAuras(_G["CompactRaidFrame"..fNum]);
+end
+
+local function ForceUpdateFrames()
+	for index, frame in ipairs(_G.CompactRaidFrameContainer.flowFrames) do
+        --index 1 is a string for some reason so we skip it
+        if frame and frame.debuffFrames then
+			if CustomBuffs.verbose then print("Forcing frame update for frame "..frame); end
+		    CustomBuffs:UpdateAuras(frame);
+		end
+    end
 end
 
 CustomBuffs.trackedSummons = CustomBuffs.trackedSummons or {};
@@ -1709,6 +1720,7 @@ end
 
 function CustomBuffs:loadFrames()
 	if not CompactRaidFrame1 then --Don't spam create new raid frames; causes a huge mess
+		CompactRaidFrameManager_OnLoad(CompactRaidFrameManager);
 		CompactRaidFrameContainer_OnLoad(CompactRaidFrameContainer);
 		CompactRaidFrameContainer_SetGroupMode(CompactRaidFrameContainer, "flush");
 		CompactRaidFrameContainer_SetFlowSortFunction(CompactRaidFrameContainer, CRFSort_Role);
@@ -1719,6 +1731,20 @@ function CustomBuffs:loadFrames()
 	CompactRaidFrameManager:Show();
 	CompactRaidFrameContainer:Show();
 	handleRosterUpdate();
+end
+
+function CustomBuffs:unlockFrames()
+	CompactRaidFrameManager_ResizeFrame_Reanchor(CompactRaidFrameManager);
+	CompactRaidFrameManager_UpdateContainerBounds(CompactRaidFrameManager);
+	if not CustomBuffs.locked then
+		CustomBuffs.locked = true;
+		if CustomBuffs.verbose then print("locking raid frames"); end
+		CompactRaidFrameManager_LockContainer(CompactRaidFrameManager);
+	else
+		CustomBuffs.locked = false;
+		if CustomBuffs.verbose then print("unlocking raid frames"); end
+		CompactRaidFrameManager_UnlockContainer(CompactRaidFrameManager);
+	end
 end
 
 --Check combat log events for interrupts
@@ -3403,6 +3429,8 @@ function CustomBuffs:OnEnable()
             WeeklyRewardsFrame:Show();
         elseif options == "test" then
 			CustomBuffs:loadFrames();
+		elseif options == "lock" then
+			CustomBuffs:unlockFrames();
 		elseif options == "sync" then
 			CustomBuffs:sync();
 		elseif options == "ints" then
@@ -3505,12 +3533,7 @@ function CustomBuffs:UpdateConfig()
 		self:RegisterEvent("GROUP_ROSTER_UPDATE", "loadFrames");
 	end
 
-    for index, frame in ipairs(_G.CompactRaidFrameContainer.flowFrames) do
-        --index 1 is a string for some reason so we skip it
-        if index ~= 1 and frame and frame.debuffFrames then
-            frame.auraNeedResize = true;
-        end
-    end
+    ForceUpdateFrames();
 
     self:UpdateRaidIcons();
 
