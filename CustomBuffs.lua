@@ -176,10 +176,10 @@ end
 
 local function ForceUpdateFrames()
 	for index, frame in ipairs(_G.CompactRaidFrameContainer.flowFrames) do
-        --index 1 is a string for some reason so we skip it
-        if frame and frame.debuffFrames then
-			if CustomBuffs.verbose then print("Forcing frame update for frame "..frame); end
-		    CustomBuffs:UpdateAuras(frame);
+		if frame and frame.debuffFrames then
+			if CustomBuffs.verbose then print("Forcing frame update for frame", frame); end
+			frame.auraNeedResize = true;
+			CustomBuffs:UpdateAuras(frame);
 		end
     end
 end
