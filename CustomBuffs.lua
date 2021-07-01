@@ -169,8 +169,8 @@ end --= CompactUnitFrame_UtilShouldDisplayBuff;
 
 
 local function ForceUpdateFrame(fNum)
-    local name = GetUnitName(_G["CompactRaidFrame"..fNum].unit, false);
-    if CustomBuffs.verbose then print("Forcing frame update for frame "..fNum.." for unit "..name); end
+    local name = CustomBuffs:CleanName(UnitGUID(_G["CompactRaidFrame"..fNum].unit), _G["CompactRaidFrame"..fNum]);
+    if CustomBuffs.verbose then print("Forcing frame update for frame", fNum, "for unit", name); end
     CustomBuffs:UpdateAuras(_G["CompactRaidFrame"..fNum]);
 end
 
@@ -212,6 +212,41 @@ function CustomBuffs:sync()
 	end
 end
 
+
+local function UpdateUnits()
+	if CustomBuffs.verbose then print("Updating unit table..."); end
+	CustomBuffs.units = CustomBuffs.units or {};
+    for _, table in pairs(CustomBuffs.units) do
+        table.invalid = true;
+    end
+	local numUnits = #CompactRaidFrameContainer.units;
+	if numUnits < 2 then numUnits = 40; end
+    for i=1, numUnits do
+        local frame = _G["CompactRaidFrame"..i];
+        if frame and frame.unit then
+        	local unit = _G["CompactRaidFrame"..i].unit;
+        	local guid = UnitGUID(unit);
+        	if guid then
+            	if CustomBuffs.verbose then
+					local name = CustomBuffs:CleanName(UnitGUID(unit), frame);
+					print("Adding unit for frame number", i ,"", name);
+				end
+            	CustomBuffs.units[guid] = CustomBuffs.units[guid] or {};
+            	CustomBuffs.units[guid].invalid = nil;
+            	CustomBuffs.units[guid].frameNum = i;
+            	CustomBuffs.units[guid].unit = unit;
+        	end
+		end
+    end
+
+    for i, table in pairs(CustomBuffs.units) do
+        if table.invalid then
+            twipe(CustomBuffs.units[i]);
+            CustomBuffs.units[i] = nil;
+        end
+    end
+end
+
 local function addTrackedSummon(casterGUID, spellID, spellName, destGUID, daisyChainOwner)
 	local owner = casterGUID;
 
@@ -230,6 +265,11 @@ local function addTrackedSummon(casterGUID, spellID, spellName, destGUID, daisyC
 	CustomBuffs.trackedSummons[destGUID] = {owner, spellID = spellID, owner = owner};
 
 	--local _, class = UnitClass(unit)
+
+	if CustomBuffs.verbose then
+		local link = GetSpellLink(spellID);
+		print("Adding fake aura:", spellID, "/", link);
+	end
 
 	CustomBuffs.units[casterGUID].nauras = CustomBuffs.units[casterGUID].nauras or {};
 	CustomBuffs.units[casterGUID].nauras[spellID] = CustomBuffs.units[casterGUID].nauras[spellID] or {};
@@ -255,7 +295,7 @@ end
 local function removeTrackedSummon(summonGUID)
 	if CustomBuffs.trackedSummons and CustomBuffs.trackedSummons[summonGUID] and not CustomBuffs.trackedSummons[summonGUID].invalid and CustomBuffs.trackedSummons[summonGUID][1] then
 	local ownerGUID = CustomBuffs.trackedSummons[summonGUID][1] or summonGUID;
-	if CustomBuffs.verbose then print("tracked summon ", summonGUID, " died, owner was ", ownerGUID); end
+	if CustomBuffs.verbose then print("Removing dead summon:", summonGUID, "from owner", ownerGUID); end
 		if CustomBuffs.trackedSummons[summonGUID] and CustomBuffs.trackedSummons[summonGUID].spellID then
 			local spellID = CustomBuffs.trackedSummons[summonGUID].spellID;
 			twipe(CustomBuffs.trackedSummons[summonGUID]);
@@ -410,11 +450,11 @@ CustomBuffs.NONAURAS = {
 	[188616] = { duration = 60, tbPrio = 2, type = "summon" }, 		--Earth Elemental
 	[198103] = { duration = 60, tbPrio = 1, noSum = 188616}, 		--Earth Elemental Pet
 	[157299] = { duration = 41.7, tbPrio = 1, type = "summon" }, 		--Storm Elemental
-    [192249] = { duration = 41.7, tbPrio = 1}, 						--Storm Elemental Pet
+    [192249] = { duration = 41.7, tbPrio = 1, noSum = 157299}, 						--Storm Elemental Pet
     [51533] =  { duration = 15, tbPrio = 1}, 						--Feral Spirit
 	[5394] =   { duration = 15, tbPrio = 0, sbPrio = 5, type = "summon" }, --Healing Stream
 	[8143] =   { duration = 10, tbPrio = 0, sbPrio = 5, type = "summon" }, --Tremor Totem
-	[204306] =  { duration = 3, tbPrio = 0, sbPrio = 5, type = "summon" }, --Grounding
+	[204336] =  { duration = 3, tbPrio = 0, sbPrio = 5, type = "summon" }, --Grounding
 	[157153] = { duration = 15, tbPrio = 20, sbPrio = nil, type = "summon" }, --Cloudburst
 	--[2484] = 	{ duration = 40, tbPrio = 20, type = "summon" },
 	[192077] = 	{ duration = 15, tbPrio = 1, sbPrio = nil, type = "summon" },	--Wind Rush Totem
@@ -492,6 +532,8 @@ CustomBuffs.NONAURAS = {
 	[320674] = 	CDFlash, --Chain Harvest
 	--[8143] = 	CDFlash, --Tremor
 	[197995] = 	CDFlash, --Wellspring
+	[51886] = 	CDFlash, --Resto Dispel
+	[370] = 	CDFlash, --Purge
 
 
 	--LOCK
@@ -687,6 +729,7 @@ CustomBuffs.CDS = {
         ["Astral Shift"] =              CDStandard,
         ["Shamanistic Rage"] =          CDStandard,
 		["Water Shield"] =				CDStandard,
+		["Lightning Shield"] =				CDStandard,
         ["Harden Skin"] =               CDStandard
     } ,
     [ 9 ] = { --Warlock
@@ -866,6 +909,7 @@ CustomBuffs.EXTERNALS = {
     ["Tuft of Smoldering Plumage"] = 	EStandard,
 	["Potion of the Hidden Spirit"] = 	EStandard,
 	["Nitro Boosts"] = 					EStandard,
+	["Goblin Glider"] = 				EStandard,
 
 
     --Previous expansion effects
@@ -1682,30 +1726,7 @@ local function handleRosterUpdate()
     end
 
     --Update table of group members
-    CustomBuffs.units = CustomBuffs.units or {};
-    for _, table in pairs(CustomBuffs.units) do
-        table.invalid = true;
-    end
-    for i=1, #CompactRaidFrameContainer.units do
-        local frame = _G["CompactRaidFrame"..i];
-        if not frame or not frame.unit then break; end
-        local unit = _G["CompactRaidFrame"..i].unit;
-        local guid = UnitGUID(unit);
-        if guid then
-            --print("Frame number "..i.." id "..unit);
-            CustomBuffs.units[guid] = CustomBuffs.units[guid] or {};
-            CustomBuffs.units[guid].invalid = nil;
-            CustomBuffs.units[guid].frameNum = i;
-            CustomBuffs.units[guid].unit = unit;
-        end
-    end
-
-    for i, table in pairs(CustomBuffs.units) do
-        if table.invalid then
-            twipe(CustomBuffs.units[i]);
-            CustomBuffs.units[i] = nil;
-        end
-    end
+    UpdateUnits();
 
 	for index, frame in ipairs(_G.CompactRaidFrameContainer.flowFrames) do
 		--index 1 is a string for some reason so we skip it
@@ -1723,6 +1744,7 @@ end
 function CustomBuffs:loadFrames()
 	if not CompactRaidFrame1 then --Don't spam create new raid frames; causes a huge mess
 		CompactRaidFrameManager_OnLoad(CompactRaidFrameManager);
+		--CompactRaidFrameManagerDisplayFrameProfileSelector_Initialize();
 		CompactRaidFrameContainer_OnLoad(CompactRaidFrameContainer);
 		CompactRaidFrameContainer_SetGroupMode(CompactRaidFrameContainer, "flush");
 		CompactRaidFrameContainer_SetFlowSortFunction(CompactRaidFrameContainer, CRFSort_Role);
@@ -1771,6 +1793,11 @@ local function handleCLEU()
         				if CustomBuffs.units[casterGUID] then
 							--print("Found Cast Success");
             				local duration = record.duration;
+
+							if CustomBuffs.verbose then
+								local link = GetSpellLink(spellID);
+				                print("Adding fake aura:", spellID, "/", link);
+							end
             				--local _, class = UnitClass(unit)
             				CustomBuffs.units[casterGUID].nauras = CustomBuffs.units[casterGUID].nauras or {};
 							CustomBuffs.units[casterGUID].nauras[spellID] = CustomBuffs.units[casterGUID].nauras[spellID] or {};
@@ -3448,7 +3475,7 @@ function CustomBuffs:OnEnable()
 			print("CustomBuffs verbose mode", CustomBuffs.verbose and "enabled" or "disabled");
 		elseif options == "recover" then
 			print("Attempting to recover from broken state.");
-			handleRosterUpdate();
+			UpdateUnits();
 		elseif options == "announce" then
 			if CustomBuffs.announceSums and CustomBuffs.announceSpells then
 				CustomBuffs.announceSums = false;
