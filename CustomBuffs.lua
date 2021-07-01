@@ -3404,8 +3404,10 @@ end
 function CustomBuffs:OnDisable() end
 
 function CustomBuffs:loaded()
-	self:UpdateConfig();
-	CustomBuffs:sync();
+	--if not InCombatLockdown() then
+		self:UpdateConfig();
+		CustomBuffs:sync();
+	--end
 
 end
 
@@ -3443,7 +3445,10 @@ function CustomBuffs:OnEnable()
 			end
 		elseif options == "verbose" then
 			CustomBuffs.verbose = not CustomBuffs.verbose;
-			print("CustomBuffs verbose mode", CustomBuffs.verbose and " enabled" or " disabled");
+			print("CustomBuffs verbose mode", CustomBuffs.verbose and "enabled" or "disabled");
+		elseif options == "recover" then
+			print("Attempting to recover from broken state.");
+			handleRosterUpdate();
 		elseif options == "announce" then
 			if CustomBuffs.announceSums and CustomBuffs.announceSpells then
 				CustomBuffs.announceSums = false;
