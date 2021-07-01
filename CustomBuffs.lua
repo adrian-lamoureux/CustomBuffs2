@@ -1715,7 +1715,7 @@ function CustomBuffs:loadFrames()
 		CompactRaidFrameContainer_AddUnitFrame(CompactRaidFrameContainer, "player", "raid");
 	end
 	CompactRaidFrameContainer_LayoutFrames(CompactRaidFrameContainer);
-	--CompactRaidFrameContainer_UpdateDisplayedUnits(CompactRaidFrameContainer);
+	CompactRaidFrameContainer_UpdateDisplayedUnits(CompactRaidFrameContainer);
 	CompactRaidFrameManager:Show();
 	CompactRaidFrameContainer:Show();
 	handleRosterUpdate();
@@ -3502,6 +3502,7 @@ function CustomBuffs:UpdateConfig()
 
 	if self.db.profile.alwaysShowFrames then
 		CustomBuffs:loadFrames();
+		self:RegisterEvent("GROUP_ROSTER_UPDATE", "loadFrames");
 	end
 
     for index, frame in ipairs(_G.CompactRaidFrameContainer.flowFrames) do
@@ -3514,8 +3515,6 @@ function CustomBuffs:UpdateConfig()
     self:UpdateRaidIcons();
 
     handleRosterUpdate();
-
-
 
     --Clear cached names in case updated settings change displayed names
     twipe(NameCache);
