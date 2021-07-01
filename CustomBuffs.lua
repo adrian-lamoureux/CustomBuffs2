@@ -3384,7 +3384,6 @@ end
 
 function CustomBuffs:OnEnable()
 	self:SecureHook("CompactUnitFrame_UpdateAuras", function(frame) self:UpdateAuras(frame); end);
-	self:RegisterEvent("PLAYER_ENTERING_WORLD", "loaded");
 	self:RegisterComm("CBSync", "OnCommReceived");
 
 
@@ -3502,6 +3501,7 @@ function CustomBuffs:UpdateConfig()
 
 	if self.db.profile.alwaysShowFrames then
 		CustomBuffs:loadFrames();
+		self:RegisterEvent("PLAYER_ENTERING_WORLD", "loadFrames");
 		self:RegisterEvent("GROUP_ROSTER_UPDATE", "loadFrames");
 	end
 
