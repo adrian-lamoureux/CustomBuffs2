@@ -89,247 +89,6 @@ CustomBuffs.UPDATE_DELAY_TOLERANCE = CustomBuffs.UPDATE_DELAY_TOLERANCE or 0.01;
 
 CustomBuffs.debugMode = CustomBuffs.debugMode or false;
 
-
---[[
-local needsUpdateVisible = {};
---local oldUpdateVisible = CompactUnitFrame_UpdateVisible;
-CompactUnitFrame_UpdateVisible = function(frame)
-    if frame:IsForbidden() then
-        needsUpdateVisible[frame] = true;
-        return;
-    end
-	if ( UnitExists(frame.unit) or UnitExists(frame.displayedUnit) ) then
-		if ( not frame.unitExists ) then
-			frame.newUnit = true;
-		end
-		frame.unitExists = true;
-		frame:Show();
-	else
-		CompactUnitFrame_ClearWidgetSet(frame);
-		frame:Hide();
-		frame.unitExists = false;
-	end
-end
---]]
-
---Create locals for speed
-
-local tinsert = tinsert;
-local tsort = table.sort;
-local twipe = table.wipe;
-
-local setMaxDebuffs = CompactUnitFrame_SetMaxDebuffs;
-local setMaxBuffs = CompactUnitFrame_SetMaxBuffs;
-local setCooldownFrame = CooldownFrame_Set;
-local clearCooldownFrame = CooldownFrame_Clear;
-
-local UnitGUID = UnitGUID;
-local CompactUnitFrame_UpdateAuras = CompactUnitFrame_UpdateAuras;
-
-local dbSize = 1;
-local bSize = 1;
-local tbSize = 1.2;
-local bdSize = 1.5;
-
-local NameCache = {};
-
---Copies of blizz functions
-
-local CompactUnitFrame_Util_IsPriorityDebuff = CompactUnitFrame_Util_IsPriorityDebuff;
-local function isPrioDebuff(...)
-    if CustomBuffs.gameVersion == 0 then
-        return CompactUnitFrame_Util_IsPriorityDebuff(...);
-    else
-        return false;
-    end
-end
-local function shouldDisplayDebuff(...)
-	local name, icon, count, debuffType, duration, expirationTime, unitCaster, canStealOrPurge, _, spellId, canApplyAura, isBossAura = ...;
-	local hasCustom, alwaysShowMine, showForMySpec = SpellGetVisibilityInfo(spellId, UnitAffectingCombat("player") and "RAID_INCOMBAT" or "RAID_OUTOFCOMBAT");
-	if ( hasCustom ) then
-		return showForMySpec or (alwaysShowMine and (unitCaster == "player" or unitCaster == "pet" or unitCaster == "vehicle") );	--Would only be "mine" in the case of something like forbearance.
-	else
-		return true;
-	end
-end --= CompactUnitFrame_Util_ShouldDisplayDebuff;
-local  function shouldDisplayBuff(...)
-	local name, icon, count, debuffType, duration, expirationTime, unitCaster, canStealOrPurge, _, spellId, canApplyAura = ...;
-
-	if(CustomBuffs.BuffBlacklist[name] or CustomBuffs.BuffBlacklist[spellId]) then
-		return false;
-	end
-
-	local hasCustom, alwaysShowMine, showForMySpec = SpellGetVisibilityInfo(spellId, UnitAffectingCombat("player") and "RAID_INCOMBAT" or "RAID_OUTOFCOMBAT");
-	if ( hasCustom ) then
-		return showForMySpec or (alwaysShowMine and (unitCaster == "player" or unitCaster == "pet" or unitCaster == "vehicle"));
-	else
-		return (unitCaster == "player" or unitCaster == "pet" or unitCaster == "vehicle") and canApplyAura and not SpellIsSelfBuff(spellId);
-	end
-end --= CompactUnitFrame_UtilShouldDisplayBuff;
-
-
-local function ForceUpdateFrame(fNum)
-    local name = CustomBuffs:CleanName(UnitGUID(_G["CompactRaidFrame"..fNum].unit), _G["CompactRaidFrame"..fNum]);
-    if CustomBuffs.verbose then print("Forcing frame update for frame", fNum, "for unit", name); end
-    CustomBuffs:UpdateAuras(_G["CompactRaidFrame"..fNum]);
-end
-
-local function ForceUpdateFrames()
-	for index, frame in ipairs(_G.CompactRaidFrameContainer.flowFrames) do
-		if frame and frame.debuffFrames then
-			if CustomBuffs.verbose then print("Forcing frame update for frame", frame); end
-			frame.auraNeedResize = true;
-			CustomBuffs:UpdateAuras(frame);
-		end
-    end
-end
-
-CustomBuffs.trackedSummons = CustomBuffs.trackedSummons or {};
-CustomBuffs.trackedOwners = CustomBuffs.trackedOwners or {};
-
-
-local function vprint(...)
-	if CustomBuffs.verbose then
-		local txt = "";
-		for _, text in ipairs(...) do
-			if text then
-				txt = txt..text;
-			end
-		end
-		print(txt);
-	end
-end
-
-
-function CustomBuffs:sync()
-	print("sending int data...");
-	if self.db.global.unknownInterrupts then
-		local serialized = LibAceSerializer:Serialize(self.db.global.unknownInterrupts);
-		self:SendCommMessage("CBSync", serialized, "GUILD", nil, "BULK");
-		self:SendCommMessage("CBSync", serialized, "RAID", 	nil, "BULK");
-		self:SendCommMessage("CBSync", serialized, "PARTY", nil, "BULK");
-
-	end
-end
-
-
-local function UpdateUnits()
-	if CustomBuffs.verbose then print("Updating unit table..."); end
-	CustomBuffs.units = CustomBuffs.units or {};
-    for _, table in pairs(CustomBuffs.units) do
-        table.invalid = true;
-    end
-	local numUnits = #CompactRaidFrameContainer.units;
-	if numUnits < 2 then numUnits = 40; end
-    for i=1, numUnits do
-        local frame = _G["CompactRaidFrame"..i];
-        if frame and frame.unit then
-        	local unit = _G["CompactRaidFrame"..i].unit;
-        	local guid = UnitGUID(unit);
-        	if guid then
-            	if CustomBuffs.verbose then
-					local name = CustomBuffs:CleanName(UnitGUID(unit), frame);
-					print("Adding unit for frame number", i ,"", name);
-				end
-            	CustomBuffs.units[guid] = CustomBuffs.units[guid] or {};
-            	CustomBuffs.units[guid].invalid = nil;
-            	CustomBuffs.units[guid].frameNum = i;
-            	CustomBuffs.units[guid].unit = unit;
-        	end
-		end
-    end
-
-    for i, table in pairs(CustomBuffs.units) do
-        if table.invalid then
-            twipe(CustomBuffs.units[i]);
-            CustomBuffs.units[i] = nil;
-        end
-    end
-end
-
-local function addTrackedSummon(casterGUID, spellID, spellName, destGUID, daisyChainOwner)
-	local owner = casterGUID;
-
-	if daisyChainOwner then
-		if (CustomBuffs.NONAURAS[spellID] or CustomBuffs.NONAURAS[spellName]).owner then
-			CustomBuffs.trackedOwners[spellID] = {destGUID, casterGUID = casterGUID};
-		elseif CustomBuffs.trackedOwners[spellID] and CustomBuffs.trackedOwners[spellID].casterGUID == casterGUID then
-			owner = CustomBuffs.trackedOwners[spellID].casterGUID;
-		end
-	end
-
-
-	if CustomBuffs.verbose then print("Added summon: ", destGUID, " from owner ", owner); end
-
-	local duration = (CustomBuffs.NONAURAS[spellID] or CustomBuffs.NONAURAS[spellName]).duration;
-	CustomBuffs.trackedSummons[destGUID] = {owner, spellID = spellID, owner = owner};
-
-	--local _, class = UnitClass(unit)
-
-	if CustomBuffs.verbose then
-		local link = GetSpellLink(spellID);
-		print("Adding fake aura:", spellID, "/", link);
-	end
-
-	CustomBuffs.units[casterGUID].nauras = CustomBuffs.units[casterGUID].nauras or {};
-	CustomBuffs.units[casterGUID].nauras[spellID] = CustomBuffs.units[casterGUID].nauras[spellID] or {};
-	CustomBuffs.units[casterGUID].nauras[spellID].expires = GetTime() + duration;
-	CustomBuffs.units[casterGUID].nauras[spellID].spellID = spellID;
-	CustomBuffs.units[casterGUID].nauras[spellID].duration = duration;
-	CustomBuffs.units[casterGUID].nauras[spellID].spellName = spellName;
-	CustomBuffs.units[casterGUID].nauras[spellID].summon = true;
-	CustomBuffs.units[casterGUID].nauras[spellID].trackedUnit = destGUID;
-
-	ForceUpdateFrame(CustomBuffs.units[casterGUID].frameNum);
-
-	-- Make sure we clear it after the duration
-	C_Timer.After(duration + CustomBuffs.UPDATE_DELAY_TOLERANCE, function()
-		if CustomBuffs.units[casterGUID] and CustomBuffs.units[casterGUID].nauras and CustomBuffs.units[casterGUID].nauras[spellID] then
-			CustomBuffs.units[casterGUID].nauras[spellID] = nil;
-			ForceUpdateFrame(CustomBuffs.units[casterGUID].frameNum);
-		end
-	end);
-
-end
-
-local function removeTrackedSummon(summonGUID)
-	if CustomBuffs.trackedSummons and CustomBuffs.trackedSummons[summonGUID] and not CustomBuffs.trackedSummons[summonGUID].invalid and CustomBuffs.trackedSummons[summonGUID][1] then
-	local ownerGUID = CustomBuffs.trackedSummons[summonGUID][1] or summonGUID;
-	if CustomBuffs.verbose then print("Removing dead summon:", summonGUID, "from owner", ownerGUID); end
-		if CustomBuffs.trackedSummons[summonGUID] and CustomBuffs.trackedSummons[summonGUID].spellID then
-			local spellID = CustomBuffs.trackedSummons[summonGUID].spellID;
-			twipe(CustomBuffs.trackedSummons[summonGUID]);
-			CustomBuffs.trackedSummons[summonGUID].invalid = true;
-			CustomBuffs.trackedSummons[summonGUID] = nil;
-			if CustomBuffs.units[ownerGUID] and CustomBuffs.units[ownerGUID].nauras and CustomBuffs.units[ownerGUID].nauras[spellID] then
-				CustomBuffs.units[ownerGUID].nauras[spellID] = nil;
-			end
-			ForceUpdateFrame(CustomBuffs.units[ownerGUID].frameNum);
-		end
-	end
-end
-
-local function checkForSummon(spellID)
-	for k, v in pairs(CustomBuffs.trackedSummons) do
-		if v and not v.invalid then
-			if v.spellID and v.spellID == spellID then return true; end
-		end
-	end
-end
-
-local function handleSummon(spellID, spellName, casterGUID, destGUID)
-	if CustomBuffs.announceSums then
-		local link = GetSpellLink(spellID);
-		print("Summon: ", spellID, " : ", link);
-	end
-	if ((CustomBuffs.NONAURAS[spellID] and CustomBuffs.NONAURAS[spellID].type and CustomBuffs.NONAURAS[spellID].type == "summon") or (CustomBuffs.NONAURAS[spellName] and CustomBuffs.NONAURAS[spellName].type and CustomBuffs.NONAURAS[spellName].type == "summon" )) then
-		if CustomBuffs.units[casterGUID] then
-			--local realID = select(14, CombatLogGetCurrentEventInfo());
-			addTrackedSummon(casterGUID, spellID, spellName, destGUID, (CustomBuffs.NONAURAS[spellID] or CustomBuffs.NONAURAS[spellName]).chain or false);
-		end
-	end
-end
-
 ----------------------
 ----    Tables    ----
 ----------------------
@@ -374,7 +133,7 @@ Priority level for throughput frames:
 --]]
 
 --Table of interrupts and their durations from BigDebuffs
-CustomBuffs.INTERRUPTS = {
+local INTERRUPTS = {
     [1766] =   		{ duration = 5 }, -- Kick (Rogue)
     [2139] =   		{ duration = 6 }, -- Counterspell (Mage)
     [6552] =   		{ duration = 4 }, -- Pummel (Warrior)
@@ -441,7 +200,7 @@ local BCC_INTERRUPTS = {
 --Template table for CD flashes
 local CDFlash = { duration = 1, tbPrio = -2, isFlash = true };
 
-CustomBuffs.NONAURAS = {
+local NONAURAS = {
     --SHAMAN
     [108280] = { duration = 12, tbPrio = 1, type = "summon" }, 	--Healing Tide (Assumes leveling perk for +2 seconds)
     [16191] =  { duration = 8,  tbPrio = 2, type = "summon" }, 	--Mana Tide
@@ -453,6 +212,7 @@ CustomBuffs.NONAURAS = {
     [192249] = { duration = 41.7, tbPrio = 1, noSum = 157299}, 						--Storm Elemental Pet
     [51533] =  { duration = 15, tbPrio = 1}, 						--Feral Spirit
 	[5394] =   { duration = 15, tbPrio = 0, sbPrio = 5, type = "summon" }, --Healing Stream
+	--[73920] =   { duration = 10, tbPrio = 0, sbPrio = 5}, --Healing Rain
 	[8143] =   { duration = 10, tbPrio = 0, sbPrio = 5, type = "summon" }, --Tremor Totem
 	[204336] =  { duration = 3, tbPrio = 0, sbPrio = 5, type = "summon" }, --Grounding
 	[157153] = { duration = 15, tbPrio = 20, sbPrio = nil, type = "summon" }, --Cloudburst
@@ -529,6 +289,7 @@ CustomBuffs.NONAURAS = {
 	[328930] = 	CDFlash, --Fae Transfusion
 	[98008]  = 	CDFlash, --Spirit Link
 	[192058] = 	CDFlash, --Cap Totem
+	[51485] = 	CDFlash, --Earthgrab Totem
 	[320674] = 	CDFlash, --Chain Harvest
 	--[8143] = 	CDFlash, --Tremor
 	[197995] = 	CDFlash, --Wellspring
@@ -663,8 +424,11 @@ local BCC_NONAURAS = {
     --Aura Type:            buff
     --Standard Priority Level:
 local CDStandard = {["sbPrio"] = 4, ["sdPrio"] = nil, ["bdPrio"] = nil, ["tbPrio"] = nil};
-CustomBuffs.CDS = {
-    [ 6 ] = { --Death Knight
+local EStandard = {sbPrio = 4, sdPrio = nil, bdPrio = nil, tbPrio = nil};
+local ELow = {sbPrio = 5, sdPrio = nil, bdPrio = nil, tbPrio = nil};
+local EPStandard = {sbPrio = 5, sdPrio = nil, bdPrio = nil, tbPrio = nil, player = true}; --Only show if source is player
+local BUFFS = {
+		--Death Knight
         ["Icebound Fortitude"] =        CDStandard,
         ["Anti-Magic Shell"] =          CDStandard,
         ["Vampiric Blood"] =            CDStandard,
@@ -674,33 +438,33 @@ CustomBuffs.CDS = {
         ["Hemostasis"] =                CDStandard,
         ["Rune Tap"] =                  CDStandard,
         ["Lichborne"] =                 CDStandard,
-        ["Swarming Mist"] =             CDStandard
-    } ,
-    [ 11 ] = { --Druid
+        ["Swarming Mist"] =             CDStandard,
+
+		--Druid
         ["Survival Instincts"] =        CDStandard,
         ["Barkskin"] =                  CDStandard,
         ["Ironfur"] =                   CDStandard,
-        ["Frenzied Regeneration"] =     CDStandard
-    } ,
-    [ 3 ] = { --Hunter
+        ["Frenzied Regeneration"] =     CDStandard,
+
+		--Hunter
         ["Aspect of the Turtle"] =      CDStandard,
-        ["Survival of the Fittest"] =   CDStandard
-    } ,
-    [ 8 ] = { --Mage
+        ["Survival of the Fittest"] =   CDStandard,
+
+		--Mage
         ["Ice Block"] =                 CDStandard,
         ["Evanesce"] =                  CDStandard,
         ["Greater Invisibility"] =      CDStandard,
         ["Alter Time"] =                CDStandard,
-        ["Temporal Shield"] =           CDStandard
-    } ,
-    [ 10 ] = { --Monk
+        ["Temporal Shield"] =           CDStandard,
+
+		--Monk
         ["Zen Meditation"] =            CDStandard,
         ["Diffuse Magic"] =             CDStandard,
         ["Dampen Harm"] =               CDStandard,
         ["Touch of Karma"] =            CDStandard,
-        ["Fortifying Brew"] =           CDStandard
-    } ,
-    [ 2 ] = { --Paladin
+        ["Fortifying Brew"] =           CDStandard,
+
+		--Paladin
         ["Divine Shield"] =             CDStandard,
         ["Divine Protection"] =         CDStandard,
         ["Ardent Defender"] =           CDStandard,
@@ -710,66 +474,150 @@ CustomBuffs.CDS = {
         ["Guardian of Ancient Kings"] = CDStandard,
         --["Seraphim"] =                  CDStandard, moved to throughput cds
         ["Guardian of the Fortress"] =  CDStandard,
-        ["Shield of the Righteous"] =   CDStandard
-    } ,
-    [ 5 ] = { --Priest
+        ["Shield of the Righteous"] =   CDStandard,
+
+		--Priest
         ["Dispersion"] =                CDStandard,
         ["Fade"] =                      CDStandard,
-        ["Greater Fade"] =              CDStandard
-    } ,
-    [ 4 ] = { --Rogue
+        ["Greater Fade"] =              CDStandard,
+
+		--Rogue
         ["Evasion"] =                   CDStandard,
         ["Cloak of Shadows"] =          CDStandard,
         ["Feint"] =                     CDStandard,
         ["Readiness"] =                 CDStandard,
         ["Riposte"] =                   CDStandard,
-        ["Crimson Vial"] =              CDStandard
-    } ,
-    [ 7 ] = { --Shaman
+        ["Crimson Vial"] =              CDStandard,
+
+		--Shaman
         ["Astral Shift"] =              CDStandard,
         ["Shamanistic Rage"] =          CDStandard,
 		["Water Shield"] =				CDStandard,
-		["Lightning Shield"] =				CDStandard,
-        ["Harden Skin"] =               CDStandard
-    } ,
-    [ 9 ] = { --Warlock
+		["Lightning Shield"] =			CDStandard,
+        ["Harden Skin"] =               CDStandard,
+
+		--Warlock
         ["Unending Resolve"] =          CDStandard,
         ["Dark Pact"] =                 CDStandard,
-        ["Nether Ward"] =               CDStandard
-    } ,
-    [ 1 ] = { --Warrior
+        ["Nether Ward"] =               CDStandard,
+
+		--Warrior
         ["Shield Wall"] =               CDStandard,
         ["Spell Reflection"] =          CDStandard,
         ["Shield Block"] =              CDStandard,
         ["Last Stand"] =                CDStandard,
         ["Die By The Sword"] =          CDStandard,
-        ["Defensive Stance"] =          CDStandard
-    },
-    [ 12 ] = { --Demon Hunter
+        ["Defensive Stance"] =          CDStandard,
+
+		--Demon Hunter
         ["Netherwalk"] =                CDStandard,
         ["Blur"] =                      CDStandard,
         ["Darkness"] =                  CDStandard,
         ["Demon Spikes"] =              CDStandard,
-        ["Soul Fragments"] =            CDStandard
-    }
+        ["Soul Fragments"] =            CDStandard,
+
+
+		--Major Externals
+	    ["Ironbark"] =                  	EStandard,
+	    ["Life Cocoon"] =               	EStandard,
+	    ["Blessing of Protection"] =    	EStandard,
+	    ["Blessing of Sacrifice"] =     	EStandard,
+	    ["Blessing of Spellwarding"] =  	EStandard,
+	    ["Pain Suppression"] =          	EStandard,
+	    ["Guardian Spirit"] =           	EStandard,
+	    ["Roar of Sacrifice"] =         	EStandard,
+	    ["Innervate"] =                 	EStandard,
+	    ["Cenarion Ward"] =             	EStandard,
+	    ["Safeguard"] =                 	EStandard,
+	    ["Vigilance"] =                 	EStandard,
+	    ["Earth Shield"] =              	EStandard,
+	    ["Tiger's Lust"] =              	EStandard,
+	    ["Beacon of Virtue"] =          	EStandard,
+	    ["Beacon of Faith"] =           	EStandard,
+	    ["Beacon of Light"] =           	EStandard,
+	    ["Lifebloom"] =                 	EStandard,
+	    ["Spirit Mend"] =               	EStandard,
+	    ["Misdirection"] =              	EStandard,
+	    ["Tricks of the Trade"] =       	EStandard,
+	    ["Rallying Cry"] =              	EStandard,
+	    ["Anti-Magic Zone"] =           	EStandard,
+		["Power Word: Shield"] = 			EStandard,
+
+	    ["Stoneform"] =                 	EStandard,
+	    ["Fireblood"] =                 	EStandard,
+
+
+	    ["Gladiator's Emblem"] =        	EStandard,
+
+	    --Minor Externals worth tracking
+	    ["Enveloping Mist"] =           	EStandard,
+
+
+	    --Show party/raid member's stealth status in buffs
+	    ["Stealth"] =                   	EStandard,
+	    ["Vanish"] =                    	EStandard,
+	    ["Prowl"] =                     	EStandard,
+
+		["Food"] =              			EStandard,
+	    ["Drink"] =           				EStandard,
+		["Refreshment"] =           		EStandard,
+		["Invisibility"] =           		EStandard,
+		["Dimensional Shifter"] =           EStandard,
+
+		["Cultivation"] =               	EPStandard,
+	    ["Spring Blossoms"] =           	EPStandard,
+	    [290754] =                      	EPStandard, --Lifebloom from early spring honor talent
+	    ["Glimmer of Light"] =          	EPStandard,
+	    ["Ancestral Vigor"] =           	EPStandard,
+	    ["Anti-Magic Zone"] =           	EPStandard,
+	    ["Blessing of Sacrifice"] =     	EPStandard,
+
+	    --BFA procs
+	    ["Luminous Jellyweed"] =        	EPStandard,
+	    ["Costal Surge"] =              	EPStandard,
+	    ["Concentrated Mending"] =      	EPStandard,
+	    ["Touch of the Voodoo"] =       	EPStandard,
+	    ["Egg on Your Face"] =          	EPStandard,
+	    ["Coastal Surge"] =             	EPStandard,
+	    ["Quickening"] =                	EPStandard,
+	    ["Ancient Flame"] =             	EPStandard,
+	    ["Grove Tending"] =             	EPStandard,
+	    ["Blessed Portents"] =          	EPStandard,
+
+	    [344227] =                      	EStandard, --Consumptive Infusion
+
+	    ["Fleshcraft"] =                	EStandard,
+		["Soulshape"] =                		EStandard,
+
+	    ["Stoneform"] =                 	EStandard,
+	    ["Fireblood"] =                 	EStandard,
+
+	    ["Gladiator's Emblem"] =        	EStandard,
+
+	    [344388] =                      	EStandard, --Huntsman trinket
+	    [344384] =                      	EStandard, --Huntsman trinket target
+	    ["Tuft of Smoldering Plumage"] = 	EStandard,
+		["Potion of the Hidden Spirit"] = 	EStandard,
+		["Nitro Boosts"] = 					EStandard,
+		["Goblin Glider"] = 				EStandard,
 };
 
 
-local BCC_CDS = {
-    [ 11 ] = { --Druid
+local BCC_BUFFS = {
+		--Druid
         ["Barkskin"] =                  CDStandard,
 		["Enrage"] =                  	CDStandard,
         ["Frenzied Regeneration"] =     CDStandard,
 		["Dash"] = 						CDStandard,
 		["Prowl"] = 					CDStandard,
-    } ,
-    [ 3 ] = { --Hunter
+
+		--Hunter
         ["Deterrence"] =      			CDStandard,
-    } ,
-    [ 8 ] = { --Mage
+
+		--Mage
         ["Ice Block"] =                 CDStandard,
-    } ,
-    [ 2 ] = { --Paladin
+
+		--Paladin
         ["Divine Shield"] =             CDStandard,
         ["Divine Protection"] =         CDStandard,
         ["Ardent Defender"] =           CDStandard,
@@ -778,14 +626,14 @@ local BCC_CDS = {
         ["Shield of Vengeance"] =       CDStandard,
         ["Guardian of Ancient Kings"] = CDStandard,
         ["Guardian of the fortress"] =  CDStandard,
-        ["Shield of the Righteous"] =   CDStandard
-    } ,
-    [ 5 ] = { --Priest
+        ["Shield of the Righteous"] =   CDStandard,
+
+		--Priest
         ["Dispersion"] =                CDStandard,
         ["Fade"] =                      CDStandard,
-        ["Greater Fade"] =              CDStandard
-    } ,
-    [ 4 ] = { --Rogue
+        ["Greater Fade"] =              CDStandard,
+
+		--Rogue
         ["Evasion"] =                   CDStandard,
         ["Cloak of Shadows"] =          CDStandard,
         ["Feint"] =                     CDStandard,
@@ -794,187 +642,80 @@ local BCC_CDS = {
         ["Crimson Vial"] =              CDStandard,
 		["Stealth"] =              		CDStandard,
 		["Vanish"] =              		CDStandard,
-    } ,
-    [ 7 ] = { --Shaman
+
+		--Shaman
         ["Astral Shift"] =              CDStandard,
 		["Water Shield"] =              CDStandard,
         ["Shamanistic Rage"] =          CDStandard,
-        ["Harden Skin"] =               CDStandard
-    } ,
-    [ 9 ] = { --Warlock
+        ["Harden Skin"] =               CDStandard,
+
+		--Warlock
         ["Unending Resolve"] =          CDStandard,
         ["Dark Pact"] =                 CDStandard,
-        ["Nether Ward"] =               CDStandard
-    } ,
-    [ 1 ] = { --Warrior
+        ["Nether Ward"] =               CDStandard,
+
+		--Warrior
         ["Shield Wall"] =               CDStandard,
         ["Spell Reflection"] =          CDStandard,
         ["Shield Block"] =              CDStandard,
         ["Last Stand"] =                CDStandard,
         ["Die By The Sword"] =          CDStandard,
-        ["Defensive Stance"] =          CDStandard
-    }
-};
+        ["Defensive Stance"] =          CDStandard,
+
+		--Major Externals
+	    ["Ironbark"] =                  EStandard,
+	    ["Life Cocoon"] =               EStandard,
+	    ["Blessing of Protection"] =    EStandard,
+	    ["Blessing of Sacrifice"] =     EStandard,
+	    ["Blessing of Spellwarding"] =  EStandard,
+	    ["Pain Suppression"] =          EStandard,
+	    ["Guardian Spirit"] =           EStandard,
+	    ["Roar of Sacrifice"] =         EStandard,
+	    ["Innervate"] =                 EStandard,
+	    ["Cenarion Ward"] =             EStandard,
+	    ["Safeguard"] =                 EStandard,
+	    ["Vigilance"] =                 EStandard,
+	    ["Earth Shield"] =              EStandard,
+	    ["Tiger's Lust"] =              EStandard,
+	    ["Beacon of Virtue"] =          EStandard,
+	    ["Beacon of Faith"] =           EStandard,
+	    ["Beacon of Light"] =           EStandard,
+	    ["Lifebloom"] =                 EStandard,
+	    ["Spirit Mend"] =               EStandard,
+	    ["Misdirection"] =              EStandard,
+	    ["Tricks of the Trade"] =       EStandard,
+	    ["Rallying Cry"] =              EStandard,
+	    ["Anti-Magic Zone"] =           EStandard,
+
+	    ["Stoneform"] =                 EStandard,
+	    ["Fireblood"] =                 EStandard,
 
 
-
---Externals show important buffs applied by units other than the player in the standard buff location
-    --Display Location:     standard buff
-    --Aura Sources:         non player (formerly to prevent duplicates for player casted versions)
-    --Aura Type:            buff
-    --Standard Priority Level:
-local EStandard = {sbPrio = 4, sdPrio = nil, bdPrio = nil, tbPrio = nil};
-local ELow = {sbPrio = 5, sdPrio = nil, bdPrio = nil, tbPrio = nil};
-local EPStandard = {sbPrio = 5, sdPrio = nil, bdPrio = nil, tbPrio = nil, player = true}; --Only show if source is player
-CustomBuffs.EXTERNALS = {
-    --Major Externals
-    ["Ironbark"] =                  	EStandard,
-    ["Life Cocoon"] =               	EStandard,
-    ["Blessing of Protection"] =    	EStandard,
-    ["Blessing of Sacrifice"] =     	EStandard,
-    ["Blessing of Spellwarding"] =  	EStandard,
-    ["Pain Suppression"] =          	EStandard,
-    ["Guardian Spirit"] =           	EStandard,
-    ["Roar of Sacrifice"] =         	EStandard,
-    ["Innervate"] =                 	EStandard,
-    ["Cenarion Ward"] =             	EStandard,
-    ["Safeguard"] =                 	EStandard,
-    ["Vigilance"] =                 	EStandard,
-    ["Earth Shield"] =              	EStandard,
-    ["Tiger's Lust"] =              	EStandard,
-    ["Beacon of Virtue"] =          	EStandard,
-    ["Beacon of Faith"] =           	EStandard,
-    ["Beacon of Light"] =           	EStandard,
-    ["Lifebloom"] =                 	EStandard,
-    ["Spirit Mend"] =               	EStandard,
-    ["Misdirection"] =              	EStandard,
-    ["Tricks of the Trade"] =       	EStandard,
-    ["Rallying Cry"] =              	EStandard,
-    ["Anti-Magic Zone"] =           	EStandard,
-	["Power Word: Shield"] = 			EStandard,
-
-    ["Stoneform"] =                 	EStandard,
-    ["Fireblood"] =                 	EStandard,
+	    --Minor Externals worth tracking
+	    ["Enveloping Mist"] =           ELow,
 
 
-    ["Gladiator's Emblem"] =        	EStandard,
+	    --Show party/raid member's stealth status in buffs
+	    ["Vanish"] =                    EStandard,
 
-    --Minor Externals worth tracking
-    ["Enveloping Mist"] =           	EStandard,
+		["Cultivation"] =               EPStandard,
+	    ["Spring Blossoms"] =           EPStandard,
+	    [290754] =                      EPStandard, --Lifebloom from early spring honor talent
+	    ["Glimmer of Light"] =          EPStandard,
+	    ["Ancestral Vigor"] =           EPStandard,
+	    ["Anti-Magic Zone"] =           EPStandard,
+	    ["Blessing of Sacrifice"] =     EPStandard,
 
+		["Healing Way"] =     			EPStandard,
+		["Ancestral Fortitude"] =     	EStandard,
 
-    --Show party/raid member's stealth status in buffs
-    ["Stealth"] =                   	EStandard,
-    ["Vanish"] =                    	EStandard,
-    ["Prowl"] =                     	EStandard,
+	    ["Gladiator's Emblem"] =        EStandard,
 
-	["Food"] =              			EStandard,
-    ["Drink"] =           				EStandard,
-	["Refreshment"] =           		EStandard,
-	["Invisibility"] =           		EStandard,
-	["Dimensional Shifter"] =           EStandard,
-
-	["Cultivation"] =               	EPStandard,
-    ["Spring Blossoms"] =           	EPStandard,
-    [290754] =                      	EPStandard, --Lifebloom from early spring honor talent
-    ["Glimmer of Light"] =          	EPStandard,
-    ["Ancestral Vigor"] =           	EPStandard,
-    ["Anti-Magic Zone"] =           	EPStandard,
-    ["Blessing of Sacrifice"] =     	EPStandard,
-
-    --BFA procs
-    ["Luminous Jellyweed"] =        	EPStandard,
-    ["Costal Surge"] =              	EPStandard,
-    ["Concentrated Mending"] =      	EPStandard,
-    ["Touch of the Voodoo"] =       	EPStandard,
-    ["Egg on Your Face"] =          	EPStandard,
-    ["Coastal Surge"] =             	EPStandard,
-    ["Quickening"] =                	EPStandard,
-    ["Ancient Flame"] =             	EPStandard,
-    ["Grove Tending"] =             	EPStandard,
-    ["Blessed Portents"] =          	EPStandard,
-
-    [344227] =                      	EStandard, --Consumptive Infusion
-
-    ["Fleshcraft"] =                	EStandard,
-	["Soulshape"] =                		EStandard,
-
-    ["Stoneform"] =                 	EStandard,
-    ["Fireblood"] =                 	EStandard,
-
-    ["Gladiator's Emblem"] =        	EStandard,
-
-    [344388] =                      	EStandard, --Huntsman trinket
-    [344384] =                      	EStandard, --Huntsman trinket target
-    ["Tuft of Smoldering Plumage"] = 	EStandard,
-	["Potion of the Hidden Spirit"] = 	EStandard,
-	["Nitro Boosts"] = 					EStandard,
-	["Goblin Glider"] = 				EStandard,
-
-
-    --Previous expansion effects
-    --["Vampiric Aura"] =             EStandard
+		["Food"] =              		EStandard,
+	    ["Drink"] =           			EStandard,
 
 };
 
-
-local BCC_EXTERNALS = {
-    --Major Externals
-    ["Ironbark"] =                  EStandard,
-    ["Life Cocoon"] =               EStandard,
-    ["Blessing of Protection"] =    EStandard,
-    ["Blessing of Sacrifice"] =     EStandard,
-    ["Blessing of Spellwarding"] =  EStandard,
-    ["Pain Suppression"] =          EStandard,
-    ["Guardian Spirit"] =           EStandard,
-    ["Roar of Sacrifice"] =         EStandard,
-    ["Innervate"] =                 EStandard,
-    ["Cenarion Ward"] =             EStandard,
-    ["Safeguard"] =                 EStandard,
-    ["Vigilance"] =                 EStandard,
-    ["Earth Shield"] =              EStandard,
-    ["Tiger's Lust"] =              EStandard,
-    ["Beacon of Virtue"] =          EStandard,
-    ["Beacon of Faith"] =           EStandard,
-    ["Beacon of Light"] =           EStandard,
-    ["Lifebloom"] =                 EStandard,
-    ["Spirit Mend"] =               EStandard,
-    ["Misdirection"] =              EStandard,
-    ["Tricks of the Trade"] =       EStandard,
-    ["Rallying Cry"] =              EStandard,
-    ["Anti-Magic Zone"] =           EStandard,
-
-    ["Stoneform"] =                 EStandard,
-    ["Fireblood"] =                 EStandard,
-
-
-    --Minor Externals worth tracking
-    ["Enveloping Mist"] =           ELow,
-
-
-    --Show party/raid member's stealth status in buffs
-    ["Vanish"] =                    EStandard,
-
-	["Cultivation"] =               EPStandard,
-    ["Spring Blossoms"] =           EPStandard,
-    [290754] =                      EPStandard, --Lifebloom from early spring honor talent
-    ["Glimmer of Light"] =          EPStandard,
-    ["Ancestral Vigor"] =           EPStandard,
-    ["Anti-Magic Zone"] =           EPStandard,
-    ["Blessing of Sacrifice"] =     EPStandard,
-
-	["Healing Way"] =     			EPStandard,
-	["Ancestral Fortitude"] =     	EStandard,
-
-    ["Gladiator's Emblem"] =        EStandard,
-
-	["Food"] =              		EStandard,
-    ["Drink"] =           			EStandard,
-
-    --Previous expansion effects
-    --["Vampiric Aura"] =             EStandard
-
-};
 
 
 --Throughput CDs show important CDs cast by the unit in a special set of throughput buff frames
@@ -984,234 +725,218 @@ local BCC_EXTERNALS = {
     --Standard Priority Level:
 local TCDStandard = {["sbPrio"] = 3, ["sdPrio"] = nil, ["bdPrio"] = nil, ["tbPrio"] = 2};
 local TCDLow      = {["sbPrio"] = 6, ["sdPrio"] = nil, ["bdPrio"] = nil, ["tbPrio"] = 3};
-CustomBuffs.THROUGHPUT_CDS = {
-    [ 6 ] = { -- dk
-        ["Pillar of Frost"] =                   TCDStandard,
-        ["Unholy Frenzy"] =                     TCDStandard,
-        ["Empower Rune Weapon"] =               TCDStandard
-    } ,
-    [ 11 ] = { --druid
-        ["Incarnation: Tree of Life"] =         TCDStandard,
-        ["Incarnation: King of the Jungle"] =   TCDStandard,
-        ["Berserk"] =                           TCDStandard,
-        ["Incarnation: Guardian of Ursoc"] =    TCDStandard,
-        ["Incarnation: Chosen of Elune"] =      TCDStandard,
-        ["Celestial Alignment"] =               TCDStandard,
-        ["Essence of G'Hanir"] =                TCDStandard,
-        ["Tiger's Fury"] =                      TCDStandard,
-        ["Heart of the Wild"] =                 TCDStandard,
-        ["Flourish"] =                          TCDStandard,
-
-    } ,
-    [ 3 ] = { -- hunter
-        ["Aspect of the Wild"] =                TCDStandard,
-        ["Aspect of the Eagle"] =               TCDStandard,
-        ["Bestial Wrath"] =                     TCDStandard,
-        ["Trueshot"] =                          TCDStandard,
-        ["Volley"] =                            TCDStandard
-    } ,
-    [ 8 ] = { --mage
-        ["Icy Veins"] =                         TCDStandard,
-        ["Combustion"] =                        TCDStandard,
-        ["Arcane Power"] =                      TCDStandard,
-
-    } ,
-    [ 10 ] = { --monk
-        ["Way of the Crane"] =                  TCDStandard,
-        ["Storm, Earth, and Fire"] =            TCDStandard,
-        ["Serenity"] =                          TCDStandard,
-        ["Thunder Focus Tea"] =                 TCDStandard
-    } ,
-    [ 2 ] = { --paladin
-        ["Avenging Wrath"] =                    TCDStandard,
-        ["Avenging Crusader"] =                 TCDStandard,
-        ["Holy Avenger"] =                      TCDStandard,
-        ["Crusade"] =                           TCDStandard,
-        ["Seraphim"] =                          TCDStandard
-        --Testing displaying their active aura here; maybe move
-        --["Concentration Aura"] =                TCDLow,
-        --["Retribution Aura"] =                  TCDLow,
-        --["Crusader Aura"] =                     TCDLow,
-        --["Devotion Aura"] =                     TCDLow
-    } ,
-    [ 5 ] = { --priest
-        ["Archangel"] =                         TCDStandard,
-        ["Dark Archangel"] =                    TCDStandard,
-        ["Rapture"] =                           TCDStandard,
-        ["Apotheosis"] =                        TCDStandard,
-        --["Divinity"] = true,
-        ["Voidform"] =                          TCDStandard,
-        ["Surrender to Madness"] =              TCDStandard,
-        [109964] =                              TCDStandard, --Spirit Shell
-        ["Shadow Covenant"] =                   TCDStandard
-    } ,
-    [ 4 ] = { --rogue
-        ["Shadow Blades"] =                     TCDStandard,
-        ["Shadow Dance"] =                      TCDStandard,
-        ["Shadowy Duel"] =                      TCDStandard,
-        ["Adrenaline Rush"] =                   TCDStandard,
-        ["Blade Flurry"] =                      TCDStandard,
-        ["Killing Spree"] =                     TCDStandard
-    } ,
-    [ 7 ] = { --shaman
-        ["Ascendance"] =                        TCDStandard,
-        ["Ancestral Guidance"] =                TCDStandard,
-        ["Stormkeeper"] =                       TCDStandard,
-        ["Icefury"] =                           TCDStandard,
-        ["Doom Winds"] =                        TCDStandard
-    } ,
-    [ 9 ] = { --lock
-        ["Soul Harvest"] =                      TCDStandard,
-        ["Dark Soul: Instability"] =            TCDStandard,
-        ["Dark Soul: Misery"] =                 TCDStandard,
-        ["Nether Portal"] =                     TCDStandard
-    } ,
-    [ 1 ] = { --warrior
-        ["Battle Cry"] =                        TCDStandard,
-        ["Avatar"] =                            TCDStandard,
-        ["Bladestorm"] =                        TCDStandard,
-        ["Bloodbath"] =                         TCDStandard
-
-    },
-    [ 12 ] = { --dh
-        ["Metamorphosis"] =                     TCDStandard,
-        ["Nemesis"] =                           TCDStandard,
-        ["Furious Gaze"] =                      TCDLow
-    }
-};
-
-local BCC_THROUGHPUT_CDS = {
-    [ 11 ] = { --druid
-        ["Incarnation: Tree of Life"] =         TCDStandard,
-        ["Incarnation: King of the Jungle"] =   TCDStandard,
-        ["Berserk"] =                           TCDStandard,
-        ["Incarnation: Guardian of Ursoc"] =    TCDStandard,
-        ["Incarnation: Chosen of Elune"] =      TCDStandard,
-        ["Celestial Alignment"] =               TCDStandard,
-        ["Essence of G'Hanir"] =                TCDStandard,
-        ["Tiger's Fury"] =                      TCDStandard,
-        ["Heart of the Wild"] =                 TCDStandard,
-        ["Flourish"] =                          TCDStandard,
-
-    } ,
-    [ 3 ] = { -- hunter
-        ["Aspect of the Wild"] =                TCDStandard,
-        ["Aspect of the Eagle"] =               TCDStandard,
-        ["Bestial Wrath"] =                     TCDStandard,
-        ["Trueshot"] =                          TCDStandard,
-        ["Volley"] =                            TCDStandard
-    } ,
-    [ 8 ] = { --mage
-        ["Icy Veins"] =                         TCDStandard,
-        ["Combustion"] =                        TCDStandard,
-        ["Arcane Power"] =                      TCDStandard,
-
-    } ,
-    [ 2 ] = { --paladin
-        ["Avenging Wrath"] =                    TCDStandard,
-        ["Avenging Crusader"] =                 TCDStandard,
-        ["Holy Avenger"] =                      TCDStandard,
-        ["Crusade"] =                           TCDStandard,
-        ["Seraphim"] =                          TCDStandard
-        --Testing displaying their active aura here; maybe move
-        --["Concentration Aura"] =                TCDLow,
-        --["Retribution Aura"] =                  TCDLow,
-        --["Crusader Aura"] =                     TCDLow,
-        --["Devotion Aura"] =                     TCDLow
-    } ,
-    [ 5 ] = { --priest
-        ["Archangel"] =                         TCDStandard,
-        ["Dark Archangel"] =                    TCDStandard,
-        ["Rapture"] =                           TCDStandard,
-        ["Apotheosis"] =                        TCDStandard,
-        --["Divinity"] = true,
-        ["Voidform"] =                          TCDStandard,
-        ["Surrender to Madness"] =              TCDStandard,
-        [109964] =                              TCDStandard, --Spirit Shell
-        ["Shadow Covenant"] =                   TCDStandard
-    } ,
-    [ 4 ] = { --rogue
-        ["Shadow Blades"] =                     TCDStandard,
-        ["Shadow Dance"] =                      TCDStandard,
-        ["Shadowy Duel"] =                      TCDStandard,
-        ["Adrenaline Rush"] =                   TCDStandard,
-        ["Blade Flurry"] =                      TCDStandard,
-        ["Killing Spree"] =                     TCDStandard
-    } ,
-    [ 7 ] = { --shaman
-        ["Ascendance"] =                        TCDStandard,
-        ["Ancestral Guidance"] =                TCDStandard,
-        ["Stormkeeper"] =                       TCDStandard,
-        ["Icefury"] =                           TCDStandard,
-        ["Doom Winds"] =                        TCDStandard
-    } ,
-    [ 9 ] = { --lock
-        ["Soul Harvest"] =                      TCDStandard,
-        ["Dark Soul: Instability"] =            TCDStandard,
-        ["Dark Soul: Misery"] =                 TCDStandard,
-        ["Nether Portal"] =                     TCDStandard
-    } ,
-    [ 1 ] = { --warrior
-        ["Battle Cry"] =                        TCDStandard,
-        ["Avatar"] =                            TCDStandard,
-        ["Bladestorm"] =                        TCDStandard,
-        ["Bloodbath"] =                         TCDStandard
-
-    }
-};
-
-
---External Throughput CDs show important CDs cast by anyone in a special set of throughput buff frames
-    --Display Location:     throughtput frames
-    --Aura Sources:         any
-    --Aura Type:            buff
-    --Standard Priority Level:
 local ETCDStandard          = {["sbPrio"] = 3, ["sdPrio"] = nil, ["bdPrio"] = nil, ["tbPrio"] = 3};
 local ETCDLow               = {["sbPrio"] = 3, ["sdPrio"] = nil, ["bdPrio"] = nil, ["tbPrio"] = 4};
 local ETCDNoFallthrough     = {["sbPrio"] = nil, ["sdPrio"] = nil, ["bdPrio"] = nil, ["tbPrio"] = 4};
 local ETCDPrioNoFallthrough = {["sbPrio"] = nil, ["sdPrio"] = nil, ["bdPrio"] = nil, ["tbPrio"] = 1};
-CustomBuffs.EXTERNAL_THROUGHPUT_CDS = {
-    ["Dark Archangel"] =                ETCDStandard,
-    ["Power Infusion"] =                ETCDStandard,
-    ["Blood Fury"] =                    ETCDStandard,
-    ["Berserking"] =                    ETCDStandard,
-    ["Skyfury Totem"] =                 ETCDStandard,
+local THROUGHPUT_BUFFS = {
+		--DK
+        ["Pillar of Frost"] =                   TCDStandard,
+        ["Unholy Frenzy"] =                     TCDStandard,
+        ["Empower Rune Weapon"] =               TCDStandard,
 
-    --TRINKET STUFF
-    ["Gladiator's Badge"] =             ETCDNoFallthrough,
-    ["Gladiator's Insignia"] =          ETCDNoFallthrough,
-    ["Inscrutable Quantum Device"] =    ETCDNoFallthrough,
-    ["Anima Infusion"] =                ETCDNoFallthrough,
-    ["Anima Font"] =                    ETCDNoFallthrough,
-    ["Unbound Changling"] =             ETCDNoFallthrough,
-    [345805] =                          ETCDNoFallthrough, --Soulletting Ruby
+		--Druid
+        ["Incarnation: Tree of Life"] =         TCDStandard,
+        ["Incarnation: King of the Jungle"] =   TCDStandard,
+        ["Berserk"] =                           TCDStandard,
+        ["Incarnation: Guardian of Ursoc"] =    TCDStandard,
+        ["Incarnation: Chosen of Elune"] =      TCDStandard,
+        ["Celestial Alignment"] =               TCDStandard,
+        ["Essence of G'Hanir"] =                TCDStandard,
+        ["Tiger's Fury"] =                      TCDStandard,
+        ["Heart of the Wild"] =                 TCDStandard,
+        ["Flourish"] =                          TCDStandard,
 
-    --Other Stuff
-    ["Earthen Wall"] =                  ETCDPrioNoFallthrough,
+ 		--Hunter
+        ["Aspect of the Wild"] =                TCDStandard,
+        ["Aspect of the Eagle"] =               TCDStandard,
+        ["Bestial Wrath"] =                     TCDStandard,
+        ["Trueshot"] =                          TCDStandard,
+        ["Volley"] =                            TCDStandard,
 
-    --Dungeon Stuff
+		--Mage
+        ["Icy Veins"] =                         TCDStandard,
+        ["Combustion"] =                        TCDStandard,
+        ["Arcane Power"] =                      TCDStandard,
 
-    --Spires of Ascension
-    ["Bless Weapon"] =                  ETCDLow,
-    ["Infuse Weapon"] =                 ETCDLow,
-    ["Imbue Weapon"] =                  ETCDLow,
+    	--Monk
+        ["Way of the Crane"] =                  TCDStandard,
+        ["Storm, Earth, and Fire"] =            TCDStandard,
+        ["Serenity"] =                          TCDStandard,
+        ["Thunder Focus Tea"] =                 TCDStandard,
+
+		--Paladin
+        ["Avenging Wrath"] =                    TCDStandard,
+        ["Avenging Crusader"] =                 TCDStandard,
+        ["Holy Avenger"] =                      TCDStandard,
+        ["Crusade"] =                           TCDStandard,
+        ["Seraphim"] =                          TCDStandard,
+        --Testing displaying their active aura here; maybe move
+        --["Concentration Aura"] =                TCDLow,
+        --["Retribution Aura"] =                  TCDLow,
+        --["Crusader Aura"] =                     TCDLow,
+        --["Devotion Aura"] =                     TCDLow
+
+		--Priest
+        ["Archangel"] =                         TCDStandard,
+        ["Dark Archangel"] =                    TCDStandard,
+        ["Rapture"] =                           TCDStandard,
+        ["Apotheosis"] =                        TCDStandard,
+        ["Voidform"] =                          TCDStandard,
+        ["Surrender to Madness"] =              TCDStandard,
+        [109964] =                              TCDStandard, --Spirit Shell
+        ["Shadow Covenant"] =                   TCDStandard,
+
+		--Rogue
+        ["Shadow Blades"] =                     TCDStandard,
+        ["Shadow Dance"] =                      TCDStandard,
+        ["Shadowy Duel"] =                      TCDStandard,
+        ["Adrenaline Rush"] =                   TCDStandard,
+        ["Blade Flurry"] =                      TCDStandard,
+        ["Killing Spree"] =                     TCDStandard,
+
+		--Shaman
+        ["Ascendance"] =                        TCDStandard,
+        ["Ancestral Guidance"] =                TCDStandard,
+        ["Stormkeeper"] =                       TCDStandard,
+        ["Icefury"] =                           TCDStandard,
+        ["Doom Winds"] =                        TCDStandard,
+
+    	--Lock
+        ["Soul Harvest"] =                      TCDStandard,
+        ["Dark Soul: Instability"] =            TCDStandard,
+        ["Dark Soul: Misery"] =                 TCDStandard,
+        ["Nether Portal"] =                     TCDStandard,
+
+		--Warrior
+        ["Battle Cry"] =                        TCDStandard,
+        ["Avatar"] =                            TCDStandard,
+        ["Bladestorm"] =                        TCDStandard,
+        ["Bloodbath"] =                         TCDStandard,
+
+		--DH
+        ["Metamorphosis"] =                     TCDStandard,
+        ["Nemesis"] =                           TCDStandard,
+        ["Furious Gaze"] =                      TCDLow,
+
+		["Dark Archangel"] =               		ETCDStandard,
+	    ["Power Infusion"] =                	ETCDStandard,
+	    ["Blood Fury"] =                    	ETCDStandard,
+	    ["Berserking"] =                    	ETCDStandard,
+	    ["Skyfury Totem"] =                 	ETCDStandard,
+
+	    --TRINKET STUFF
+	    ["Gladiator's Badge"] =             	ETCDNoFallthrough,
+	    ["Gladiator's Insignia"] =          	ETCDNoFallthrough,
+	    ["Inscrutable Quantum Device"] =    	ETCDNoFallthrough,
+	    ["Anima Infusion"] =                	ETCDNoFallthrough,
+	    ["Anima Font"] =                    	ETCDNoFallthrough,
+	    ["Unbound Changling"] =             	ETCDNoFallthrough,
+	    [345805] =                          	ETCDNoFallthrough, --Soulletting Ruby
+
+	    --Other Stuff
+	    ["Earthen Wall"] =                  	ETCDPrioNoFallthrough,
+
+	    --Dungeon Stuff
+
+	    --Spires of Ascension
+	    ["Bless Weapon"] =                  	ETCDLow,
+	    ["Infuse Weapon"] =                 	ETCDLow,
+	    ["Imbue Weapon"] =                  	ETCDLow,
 };
 
-local BCC_EXTERNAL_THROUGHPUT_CDS = {
-    ["Dark Archangel"] =                ETCDStandard,
-    ["Power Infusion"] =                ETCDStandard,
-    ["Blood Fury"] =                    ETCDStandard,
-    ["Berserking"] =                    ETCDStandard,
-    ["Skyfury Totem"] =                 ETCDStandard,
-	--since these are party specific we show them in bc to see which groups are lusted in raid
-	["Bloodlust"] =                 	ETCDStandard,
-	["Drums of Battle"] =              	ETCDStandard,
+local BCC_THROUGHPUT_BUFFS = {
+		--Druid
+        ["Incarnation: Tree of Life"] =         TCDStandard,
+        ["Incarnation: King of the Jungle"] =   TCDStandard,
+        ["Berserk"] =                           TCDStandard,
+        ["Incarnation: Guardian of Ursoc"] =    TCDStandard,
+        ["Incarnation: Chosen of Elune"] =      TCDStandard,
+        ["Celestial Alignment"] =               TCDStandard,
+        ["Essence of G'Hanir"] =                TCDStandard,
+        ["Tiger's Fury"] =                      TCDStandard,
+        ["Heart of the Wild"] =                 TCDStandard,
+        ["Flourish"] =                          TCDStandard,
 
-	--Trinkets
-	["Haste"] =							ETCDLow,
-	["Spell Haste"] =					ETCDLow,
-	[35165] =							ETCDLow,
+		--Hunter
+        ["Aspect of the Wild"] =                TCDStandard,
+        ["Aspect of the Eagle"] =               TCDStandard,
+        ["Bestial Wrath"] =                     TCDStandard,
+        ["Trueshot"] =                          TCDStandard,
+        ["Volley"] =                            TCDStandard,
+
+		--Mage
+        ["Icy Veins"] =                         TCDStandard,
+        ["Combustion"] =                        TCDStandard,
+        ["Arcane Power"] =                      TCDStandard,
+
+		--Paladin
+        ["Avenging Wrath"] =                    TCDStandard,
+        ["Avenging Crusader"] =                 TCDStandard,
+        ["Holy Avenger"] =                      TCDStandard,
+        ["Crusade"] =                           TCDStandard,
+        ["Seraphim"] =                          TCDStandard,
+        --Testing displaying their active aura here; maybe move
+        --["Concentration Aura"] =                TCDLow,
+        --["Retribution Aura"] =                  TCDLow,
+        --["Crusader Aura"] =                     TCDLow,
+        --["Devotion Aura"] =                     TCDLow
+
+		--Priest
+        ["Archangel"] =                         TCDStandard,
+        ["Dark Archangel"] =                    TCDStandard,
+        ["Rapture"] =                           TCDStandard,
+        ["Apotheosis"] =                        TCDStandard,
+        --["Divinity"] = true,
+        ["Voidform"] =                          TCDStandard,
+        ["Surrender to Madness"] =              TCDStandard,
+        [109964] =                              TCDStandard, --Spirit Shell
+        ["Shadow Covenant"] =                   TCDStandard,
+
+		--Rogue
+        ["Shadow Blades"] =                     TCDStandard,
+        ["Shadow Dance"] =                      TCDStandard,
+        ["Shadowy Duel"] =                      TCDStandard,
+        ["Adrenaline Rush"] =                   TCDStandard,
+        ["Blade Flurry"] =                      TCDStandard,
+        ["Killing Spree"] =                     TCDStandard,
+
+		--Shaman
+        ["Ascendance"] =                        TCDStandard,
+        ["Ancestral Guidance"] =                TCDStandard,
+        ["Stormkeeper"] =                       TCDStandard,
+        ["Icefury"] =                           TCDStandard,
+        ["Doom Winds"] =                        TCDStandard,
+
+		--Lock
+        ["Soul Harvest"] =                      TCDStandard,
+        ["Dark Soul: Instability"] =            TCDStandard,
+        ["Dark Soul: Misery"] =                 TCDStandard,
+        ["Nether Portal"] =                     TCDStandard,
+
+		--Warrior
+        ["Battle Cry"] =                        TCDStandard,
+        ["Avatar"] =                            TCDStandard,
+        ["Bladestorm"] =                        TCDStandard,
+        ["Bloodbath"] =                         TCDStandard,
+
+		--Externals
+		["Dark Archangel"] =                	ETCDStandard,
+	    ["Power Infusion"] =                	ETCDStandard,
+	    ["Blood Fury"] =                    	ETCDStandard,
+	    ["Berserking"] =                    	ETCDStandard,
+	    ["Skyfury Totem"] =                 	ETCDStandard,
+		--since these are party specific we show them in bc to see which groups are lusted in raid
+		["Bloodlust"] =                 		ETCDStandard,
+		["Drums of Battle"] =              		ETCDStandard,
+
+		--Trinkets
+		["Haste"] =								ETCDLow,
+		["Spell Haste"] =						ETCDLow,
+		[35165] =								ETCDLow,
+
 };
+
 
 
 
@@ -1248,7 +973,7 @@ local DiseaseLow =      {["dispelType"] = "disease", ["sdPrio"] = 3, ["bdPrio"] 
 local PoisonStandard =  {["dispelType"] = "poison", ["sdPrio"] = 3, ["bdPrio"] = 4};
 local MDStandard =      {["dispelType"] = "massDispel", ["sdPrio"] = 3, ["bdPrio"] = 4};
 local PurgeStandard =   {["dispelType"] = "purge", ["sdPrio"] = 3, ["bdPrio"] = 4};
-CustomBuffs.CC = {
+local CC = {
 
     --------------------
     --   Dispelable   --
@@ -1587,14 +1312,255 @@ CustomBuffs.BuffBlacklist = {
 
 
 if CustomBuffs.gameVersion == 2 then
-	CustomBuffs.NONAURAS = BCC_NONAURAS;
-	CustomBuffs.INTERRUPTS = BCC_INTERRUPTS;
-	CustomBuffs.CDS = BCC_CDS;
-	CustomBuffs.EXTERNALS = BCC_EXTERNALS;
-	CustomBuffs.THROUGHPUT_CDS = BCC_THROUGHPUT_CDS;
-	CustomBuffs.EXTERNAL_THROUGHPUT_CDS = BCC_EXTERNAL_THROUGHPUT_CDS;
-	CustomBuffs.CC = BCC_CC;
+	NONAURAS = BCC_NONAURAS;
+	INTERRUPTS = BCC_INTERRUPTS;
+	BUFFS = BCC_BUFFS;
+	THROUGHPUT_BUFFS = BCC_THROUGHPUT_BUFFS;
+	CC = BCC_CC;
 end
+
+
+--[[
+local needsUpdateVisible = {};
+--local oldUpdateVisible = CompactUnitFrame_UpdateVisible;
+CompactUnitFrame_UpdateVisible = function(frame)
+    if frame:IsForbidden() then
+        needsUpdateVisible[frame] = true;
+        return;
+    end
+	if ( UnitExists(frame.unit) or UnitExists(frame.displayedUnit) ) then
+		if ( not frame.unitExists ) then
+			frame.newUnit = true;
+		end
+		frame.unitExists = true;
+		frame:Show();
+	else
+		CompactUnitFrame_ClearWidgetSet(frame);
+		frame:Hide();
+		frame.unitExists = false;
+	end
+end
+--]]
+
+--Create locals for speed
+
+local tinsert = tinsert;
+local tsort = table.sort;
+local twipe = table.wipe;
+
+local setMaxDebuffs = CompactUnitFrame_SetMaxDebuffs;
+local setMaxBuffs = CompactUnitFrame_SetMaxBuffs;
+local setCooldownFrame = CooldownFrame_Set;
+local clearCooldownFrame = CooldownFrame_Clear;
+
+local UnitGUID = UnitGUID;
+local CompactUnitFrame_UpdateAuras = CompactUnitFrame_UpdateAuras;
+
+local dbSize = 1;
+local bSize = 1;
+local tbSize = 1.2;
+local bdSize = 1.5;
+
+local NameCache = {};
+
+--Copies of blizz functions
+
+local CompactUnitFrame_Util_IsPriorityDebuff = CompactUnitFrame_Util_IsPriorityDebuff;
+local function isPrioDebuff(...)
+    if CustomBuffs.gameVersion == 0 then
+        return CompactUnitFrame_Util_IsPriorityDebuff(...);
+    else
+        return false;
+    end
+end
+local function shouldDisplayDebuff(...)
+	local name, icon, count, debuffType, duration, expirationTime, unitCaster, canStealOrPurge, _, spellId, canApplyAura, isBossAura = ...;
+	local hasCustom, alwaysShowMine, showForMySpec = SpellGetVisibilityInfo(spellId, UnitAffectingCombat("player") and "RAID_INCOMBAT" or "RAID_OUTOFCOMBAT");
+	if ( hasCustom ) then
+		return showForMySpec or (alwaysShowMine and (unitCaster == "player" or unitCaster == "pet" or unitCaster == "vehicle") );	--Would only be "mine" in the case of something like forbearance.
+	else
+		return true;
+	end
+end --= CompactUnitFrame_Util_ShouldDisplayDebuff;
+local  function shouldDisplayBuff(...)
+	local name, icon, count, debuffType, duration, expirationTime, unitCaster, canStealOrPurge, _, spellId, canApplyAura = ...;
+
+	if(CustomBuffs.BuffBlacklist[name] or CustomBuffs.BuffBlacklist[spellId]) then
+		return false;
+	end
+
+	local hasCustom, alwaysShowMine, showForMySpec = SpellGetVisibilityInfo(spellId, UnitAffectingCombat("player") and "RAID_INCOMBAT" or "RAID_OUTOFCOMBAT");
+	if ( hasCustom ) then
+		return showForMySpec or (alwaysShowMine and (unitCaster == "player" or unitCaster == "pet" or unitCaster == "vehicle"));
+	else
+		return (unitCaster == "player" or unitCaster == "pet" or unitCaster == "vehicle") and canApplyAura and not SpellIsSelfBuff(spellId);
+	end
+end --= CompactUnitFrame_UtilShouldDisplayBuff;
+
+
+local function ForceUpdateFrame(fNum)
+    local name = CustomBuffs:CleanName(UnitGUID(_G["CompactRaidFrame"..fNum].unit), _G["CompactRaidFrame"..fNum]);
+    if CustomBuffs.verbose then print("Forcing frame update for frame", fNum, "for unit", name); end
+    CustomBuffs:UpdateAuras(_G["CompactRaidFrame"..fNum]);
+end
+
+local function ForceUpdateFrames()
+	for index, frame in ipairs(_G.CompactRaidFrameContainer.flowFrames) do
+		if frame and frame.debuffFrames then
+			if CustomBuffs.verbose then print("Forcing frame update for frame", frame); end
+			frame.auraNeedResize = true;
+			CustomBuffs:UpdateAuras(frame);
+		end
+    end
+end
+
+CustomBuffs.trackedSummons = CustomBuffs.trackedSummons or {};
+CustomBuffs.trackedOwners = CustomBuffs.trackedOwners or {};
+
+
+local function vprint(...)
+	if CustomBuffs.verbose then
+		local txt = "";
+		for _, text in ipairs(...) do
+			if text then
+				txt = txt..text;
+			end
+		end
+		print(txt);
+	end
+end
+
+
+function CustomBuffs:sync()
+	print("sending int data...");
+	if self.db.global.unknownInterrupts then
+		local serialized = LibAceSerializer:Serialize(self.db.global.unknownInterrupts);
+		self:SendCommMessage("CBSync", serialized, "GUILD", nil, "BULK");
+		self:SendCommMessage("CBSync", serialized, "RAID", 	nil, "BULK");
+		self:SendCommMessage("CBSync", serialized, "PARTY", nil, "BULK");
+
+	end
+end
+
+
+local function UpdateUnits()
+	if CustomBuffs.verbose then print("Updating unit table..."); end
+	CustomBuffs.units = CustomBuffs.units or {};
+    for _, table in pairs(CustomBuffs.units) do
+        table.invalid = true;
+    end
+	local numUnits = #CompactRaidFrameContainer.units;
+	if numUnits < 2 then numUnits = 40; end
+    for i=1, numUnits do
+        local frame = _G["CompactRaidFrame"..i];
+        if frame and frame.unit then
+        	local unit = _G["CompactRaidFrame"..i].unit;
+        	local guid = UnitGUID(unit);
+        	if guid then
+            	if CustomBuffs.verbose then
+					local name = CustomBuffs:CleanName(UnitGUID(unit), frame);
+					print("Adding unit for frame number", i ,"", name);
+				end
+            	CustomBuffs.units[guid] = CustomBuffs.units[guid] or {};
+            	CustomBuffs.units[guid].invalid = nil;
+            	CustomBuffs.units[guid].frameNum = i;
+            	CustomBuffs.units[guid].unit = unit;
+        	end
+		end
+    end
+
+    for i, table in pairs(CustomBuffs.units) do
+        if table.invalid then
+            twipe(CustomBuffs.units[i]);
+            CustomBuffs.units[i] = nil;
+        end
+    end
+end
+
+local function addTrackedSummon(casterGUID, spellID, spellName, destGUID, daisyChainOwner)
+	local owner = casterGUID;
+
+	if daisyChainOwner then
+		if (NONAURAS[spellID] or NONAURAS[spellName]).owner then
+			CustomBuffs.trackedOwners[spellID] = {destGUID, casterGUID = casterGUID};
+		elseif CustomBuffs.trackedOwners[spellID] and CustomBuffs.trackedOwners[spellID].casterGUID == casterGUID then
+			owner = CustomBuffs.trackedOwners[spellID].casterGUID;
+		end
+	end
+
+
+	if CustomBuffs.verbose then print("Added summon: ", destGUID, " from owner ", owner); end
+
+	local duration = (NONAURAS[spellID] or NONAURAS[spellName]).duration;
+	CustomBuffs.trackedSummons[destGUID] = {owner, spellID = spellID, owner = owner};
+
+	--local _, class = UnitClass(unit)
+
+	if CustomBuffs.verbose then
+		local link = GetSpellLink(spellID);
+		print("Adding fake aura:", spellID, "/", link);
+	end
+
+	CustomBuffs.units[casterGUID].nauras = CustomBuffs.units[casterGUID].nauras or {};
+	CustomBuffs.units[casterGUID].nauras[spellID] = CustomBuffs.units[casterGUID].nauras[spellID] or {};
+	CustomBuffs.units[casterGUID].nauras[spellID].expires = GetTime() + duration;
+	CustomBuffs.units[casterGUID].nauras[spellID].spellID = spellID;
+	CustomBuffs.units[casterGUID].nauras[spellID].duration = duration;
+	CustomBuffs.units[casterGUID].nauras[spellID].spellName = spellName;
+	CustomBuffs.units[casterGUID].nauras[spellID].summon = true;
+	CustomBuffs.units[casterGUID].nauras[spellID].trackedUnit = destGUID;
+
+	ForceUpdateFrame(CustomBuffs.units[casterGUID].frameNum);
+
+	-- Make sure we clear it after the duration
+	C_Timer.After(duration + CustomBuffs.UPDATE_DELAY_TOLERANCE, function()
+		if CustomBuffs.units[casterGUID] and CustomBuffs.units[casterGUID].nauras and CustomBuffs.units[casterGUID].nauras[spellID] then
+			CustomBuffs.units[casterGUID].nauras[spellID] = nil;
+			ForceUpdateFrame(CustomBuffs.units[casterGUID].frameNum);
+		end
+	end);
+
+end
+
+local function removeTrackedSummon(summonGUID)
+	if CustomBuffs.trackedSummons and CustomBuffs.trackedSummons[summonGUID] and not CustomBuffs.trackedSummons[summonGUID].invalid and CustomBuffs.trackedSummons[summonGUID][1] then
+	local ownerGUID = CustomBuffs.trackedSummons[summonGUID][1] or summonGUID;
+	if CustomBuffs.verbose then print("Removing dead summon:", summonGUID, "from owner", ownerGUID); end
+		if CustomBuffs.trackedSummons[summonGUID] and CustomBuffs.trackedSummons[summonGUID].spellID then
+			local spellID = CustomBuffs.trackedSummons[summonGUID].spellID;
+			twipe(CustomBuffs.trackedSummons[summonGUID]);
+			CustomBuffs.trackedSummons[summonGUID].invalid = true;
+			CustomBuffs.trackedSummons[summonGUID] = nil;
+			if CustomBuffs.units[ownerGUID] and CustomBuffs.units[ownerGUID].nauras and CustomBuffs.units[ownerGUID].nauras[spellID] then
+				CustomBuffs.units[ownerGUID].nauras[spellID] = nil;
+			end
+			ForceUpdateFrame(CustomBuffs.units[ownerGUID].frameNum);
+		end
+	end
+end
+
+local function checkForSummon(spellID)
+	for k, v in pairs(CustomBuffs.trackedSummons) do
+		if v and not v.invalid then
+			if v.spellID and v.spellID == spellID then return true; end
+		end
+	end
+end
+
+local function handleSummon(spellID, spellName, casterGUID, destGUID)
+	if CustomBuffs.announceSums then
+		local link = GetSpellLink(spellID);
+		print("Summon: ", spellID, " : ", link);
+	end
+	if ((NONAURAS[spellID] and NONAURAS[spellID].type and NONAURAS[spellID].type == "summon") or (NONAURAS[spellName] and NONAURAS[spellName].type and NONAURAS[spellName].type == "summon" )) then
+		if CustomBuffs.units[casterGUID] then
+			--local realID = select(14, CombatLogGetCurrentEventInfo());
+			addTrackedSummon(casterGUID, spellID, spellName, destGUID, (NONAURAS[spellID] or NONAURAS[spellName]).chain or false);
+		end
+	end
+end
+
+
 
 ------- Setup -------
 --Helper function to determine if the dispel type of a debuff matches available dispels
@@ -1603,9 +1569,9 @@ local function canDispelDebuff(debuffInfo)
     return bit.band(CustomBuffs.dispelType,CustomBuffs.dispelValues[debuffInfo.dispelType]) ~= 0;
 end
 
---sets a flag on every element of CustomBuffs.CC indicating whether it is currently dispellable
+--sets a flag on every element of CC indicating whether it is currently dispellable
 local function precalcCanDispel()
-    for _, v in pairs(CustomBuffs.CC)  do
+    for _, v in pairs(CC)  do
         v.canDispel = canDispelDebuff(v);
     end
 end
@@ -1783,8 +1749,8 @@ local function handleCLEU()
 			local link = GetSpellLink(spellID);
 			print("Spell: ", spellID, " : ", link);
 		end
-		if CustomBuffs.NONAURAS[spellID] or CustomBuffs.NONAURAS[spellName] then
-			local record = (CustomBuffs.NONAURAS[spellID] or CustomBuffs.NONAURAS[spellName]);
+		if NONAURAS[spellID] or NONAURAS[spellName] then
+			local record = (NONAURAS[spellID] or NONAURAS[spellName]);
 			if (not record.type or record.type ~= "summon") then
 				if (CustomBuffs.db.profile.cooldownFlash or not record.isFlash) then
 					local noSum = record.noSum;
@@ -1826,7 +1792,7 @@ local function handleCLEU()
 
     -- SPELL_INTERRUPT doesn't fire for some channeled spells; if the spell isn't a known interrupt we're done
     if (event == "SPELL_INTERRUPT" or event == "SPELL_CAST_SUCCESS") then
-        if (CustomBuffs.INTERRUPTS[spellName] or CustomBuffs.INTERRUPTS[spellID]) then
+        if (INTERRUPTS[spellName] or INTERRUPTS[spellID]) then
         --Maybe needed if combat log events are returning spellIDs of 0
         --if spellID == 0 then spellID = lookupIDByName[spellName] end
 
@@ -1834,7 +1800,7 @@ local function handleCLEU()
             if CustomBuffs.units[destGUID] and (event ~= "SPELL_CAST_SUCCESS" or
                 (UnitChannelInfo and select(7, UnitChannelInfo(CustomBuffs.units[destGUID].unit)) == false))
             then
-                local duration = (CustomBuffs.INTERRUPTS[spellID] or CustomBuffs.INTERRUPTS[spellName]).duration;
+                local duration = (INTERRUPTS[spellID] or INTERRUPTS[spellName]).duration;
                 --local _, class = UnitClass(unit)
 
                 CustomBuffs.units[destGUID].int = CustomBuffs.units[destGUID].int or {};
@@ -1921,7 +1887,7 @@ end
 
     --[[ Adding tracking for PvP Trinkets here
     if (event == "SPELL_CAST_SUCCESS") and
-        (CustomBuffs.NONAURAS[spellID] or CustomBuffs.NONAURAS[spellName])
+        (NONAURAS[spellID] or NONAURAS[spellName])
     then
 
     end
@@ -2464,8 +2430,8 @@ function CustomBuffs:UpdateAuras(frame)
         if unit.nauras then
             for id, data in pairs(unit.nauras) do
 				local prioData = nil;
-				if (CustomBuffs.NONAURAS[data.spellID] or CustomBuffs.NONAURAS[data.spellName]) then
-					prioData = (CustomBuffs.NONAURAS[data.spellID] or CustomBuffs.NONAURAS[data.spellName]);
+				if (NONAURAS[data.spellID] or NONAURAS[data.spellName]) then
+					prioData = (NONAURAS[data.spellID] or NONAURAS[data.spellName]);
 				end
 				if prioData and prioData.tbPrio ~= 0 then
 					--if prioData and prioData.tbPrio then print(prioData.tbPrio); end
@@ -2517,9 +2483,9 @@ function CustomBuffs:UpdateAuras(frame)
                     ["auraData"] = {icon, count, expirationTime, duration, debuffType},
                     ["type"] = "debuff"
                 });
-            elseif (CustomBuffs.CC[name] or CustomBuffs.CC[spellID]) then
+            elseif (CC[name] or CC[spellID]) then
                 --Add to bossDebuffs; adjust priority if dispellable
-                local auraData = CustomBuffs.CC[name] or CustomBuffs.CC[spellID];
+                local auraData = CC[name] or CC[spellID];
                 local bdPrio, sdPrio = auraData.bdPrio, auraData.sdPrio;
 
                 if auraData.canDispel then
@@ -2559,7 +2525,7 @@ function CustomBuffs:UpdateAuras(frame)
     --Update Buffs
     for index = 1, 40 do
         local name, icon, count, debuffType, duration, expirationTime, unitCaster, _, _, spellID, canApplyAura, isBossAura = UnitBuff(frame.displayedUnit, index);
-        local _, _, displayedClass = UnitClass(frame.displayedUnit);
+        --local _, _, displayedClass = UnitClass(frame.displayedUnit);
         if name then
             if isBossAura then
                 --Debug
@@ -2573,43 +2539,23 @@ function CustomBuffs:UpdateAuras(frame)
                     ["sbPrio"] = 1,
                     ["auraData"] = {icon, count, expirationTime, duration, nil, nil, true}
                 });
-            elseif CustomBuffs.THROUGHPUT_CDS[displayedClass] and (CustomBuffs.THROUGHPUT_CDS[displayedClass][name] or CustomBuffs.THROUGHPUT_CDS[displayedClass][spellID]) then
+            elseif (THROUGHPUT_BUFFS[name] or THROUGHPUT_BUFFS[spellID]) then
                 --Add to throughputBuffs
-                local auraData = CustomBuffs.THROUGHPUT_CDS[displayedClass][name] or CustomBuffs.THROUGHPUT_CDS[displayedClass][spellID];
+                local auraData = THROUGHPUT_BUFFS[name] or THROUGHPUT_BUFFS[spellID];
                 tinsert(throughputBuffs, {
                     ["index"] = index,
                     ["tbPrio"] = auraData.tbPrio;
                     ["sbPrio"] = auraData.sbPrio,
                     ["auraData"] = {icon, count, expirationTime, duration}
                 });
-            elseif CustomBuffs.EXTERNAL_THROUGHPUT_CDS[name] or CustomBuffs.EXTERNAL_THROUGHPUT_CDS[spellID] then
-                --Add to throughputBuffs
-                local auraData = CustomBuffs.EXTERNAL_THROUGHPUT_CDS[name] or CustomBuffs.EXTERNAL_THROUGHPUT_CDS[spellID];
-                tinsert(throughputBuffs, {
-                    ["index"] = index,
-                    ["tbPrio"] = auraData.tbPrio;
-                    ["sbPrio"] = auraData.sbPrio,
-                    ["auraData"] = {icon, count, expirationTime, duration}
-                });
-            elseif (CustomBuffs.CDS[displayedClass] and (CustomBuffs.CDS[displayedClass][name] or CustomBuffs.CDS[displayedClass][spellID])) then
+            elseif (BUFFS[name] or BUFFS[spellID]) then
                 --Add to buffs
-                local auraData = CustomBuffs.CDS[displayedClass][name] or CustomBuffs.CDS[displayedClass][spellID];
+                local auraData = BUFFS[name] or BUFFS[spellID];
                 tinsert(buffs, {
                     ["index"] = index,
                     ["sbPrio"] = auraData.sbPrio,
                     ["auraData"] = {icon, count, expirationTime, duration}
                 });
-            elseif (CustomBuffs.EXTERNALS[name] or CustomBuffs.EXTERNALS[spellID]) --[[and unitCaster ~= "player" and unitCaster ~= "pet"]] then
-                --Add to buffs
-                local auraData = CustomBuffs.EXTERNALS[name] or CustomBuffs.EXTERNALS[spellID];
-				local casterIsPlayer = unitCaster == "player" or unitCaster == "pet";
-				if not ((auraData.noPlayer and casterIsPlayer) or (auraData.player and not casterIsPlayer)) then
-                	tinsert(buffs, {
-                    	["index"] = index,
-                    	["sbPrio"] = auraData.sbPrio,
-                    	["auraData"] = {icon, count, expirationTime, duration}
-                	});
-				end
             elseif shouldDisplayBuff(name, icon, count, debuffType, duration, expirationTime, unitCaster, nil, nil, spellID, canApplyAura, isBossAura) then
                 --Add to buffs
                 tinsert(buffs, {
@@ -2757,328 +2703,6 @@ function CustomBuffs:UpdateAuras(frame)
     twipe(debuffs);
 end --);
 
-
---------------------------------
--- Debug Aura Update function --
---------------------------------
-
-local function DebugUpdateFrame(frame)
-    if (not frame or not frame.displayedUnit or frame:IsForbidden() or not frame:IsShown() or not frame.debuffFrames or not frame:GetName():match("^Compact") or not frame.optionTable or not frame.optionTable.displayNonBossDebuffs) then return; end
-
-    --Handle pre calculation logic
-    if frame.optionTable.displayBuffs then frame.optionTable.displayBuffs = false; end                          --Tell buff frames to skip blizzard logic
-    if frame.optionTable.displayDebuffs then frame.optionTable.displayDebuffs = false; end                      --Tell debuff frames to skip blizzard logic
-    if frame.optionTable.displayDispelDebuffs then frame.optionTable.displayDispelDebuffs = false; end          --Prevent blizzard frames from showing dispel debuff frames
-    if frame.optionTable.displayNameWhenSelected then frame.optionTable.displayNameWhenSelected = false; end    --Don't show names when the frame is selected to prevent bossDebuff overlap
-
-    if frame.auraNeedResize or not frame.debuffsLoaded or not frame.bossDebuffs or not frame.throughputFrames then
-        setUpExtraDebuffFrames(frame);
-        setUpExtraBuffFrames(frame);
-        setUpThroughputFrames(frame);
-        setUpBossDebuffFrames(frame);
-        frame.auraNeedResize = false;
-    end
-
-    --If our custom aura frames have not yet loaded do nothing
-    if not frame.debuffsLoaded or not frame.bossDebuffs or not frame.throughputFrames then return; end
-
-    if frame.debuffNeedUpdate then
-        setUpExtraDebuffFrames(frame);
-    end
-    if frame.buffNeedUpdate then
-        setUpExtraBuffFrames(frame);
-    end
-
-    --Check for interrupts
-    local guid = UnitGUID(frame.displayedUnit);
-    if guid and CustomBuffs.units[guid] then
-        local unit = CustomBuffs.units[guid];
-        if unit.int and unit.int.expires and unit.int.expires > GetTime() then
-            --index of -1 for interrupts
-            tinsert(bossDebuffs, { ["index"] = -1, ["bdPrio"] = 1, ["auraData"] = {
-                --{icon, count, expirationTime, duration}
-                GetSpellTexture(unit.int.spellID),
-                1,
-                unit.int.expires,
-                unit.int.duration,
-                nil,                                --Interrupts do not have a dispel type
-                unit.int.spellID                    --Interrupts need a special field containing the spellID of the interrupt used
-                                                    --in order to construct a mouseover tooltip for their aura frames
-            }});
-        end
-        if unit.nauras then
-            for id, data in pairs(unit.nauras) do
-                tinsert(throughputBuffs, { ["index"] = -1, ["tbPrio"] = data.tbPrio or 1, ["sbPrio"] = data.sbPrio or 1, ["auraData"] = {
-                    --{icon, count, expirationTime, duration}
-                    GetSpellTexture(id),
-                    1,
-                    data.expires,
-                    data.duration,
-                    nil,                             --no dispel type
-                    data.spellID,                    --Need a special field containing the spellID
-					summon = data.summon or false,
-					trackedUnit = data.trackedUnit or nil,
-
-                }});
-            end
-        end
-    end
-
-
-    --Handle Debuffs
-    for index = 1, 40 do
-        local name, icon, count, debuffType, duration, expirationTime, unitCaster, _, _, spellID, canApplyAura, isBossAura = UnitDebuff(frame.displayedUnit, index);
-        if name then
-            if isBossAura then
-                --[[ Debug
-                if not debuffType then
-                    print("potential bug for :", name, ":");
-                end
-                -- end debug ]]
-
-                --Add to bossDebuffs
-                tinsert(bossDebuffs, {
-                    ["index"] = index,
-                    ["bdPrio"] = 2,
-                    ["sdPrio"] = 1,
-                    ["auraData"] = {icon, count, expirationTime, duration, debuffType},
-                    ["type"] = "debuff"
-                });
-            elseif (CustomBuffs.CC[name] or CustomBuffs.CC[spellID]) then
-                --Add to bossDebuffs; adjust priority if dispellable
-                local auraData = CustomBuffs.CC[name] or CustomBuffs.CC[spellID];
-                local bdPrio, sdPrio = auraData.bdPrio, auraData.sdPrio;
-
-                if auraData.canDispel then
-                    bdPrio = bdPrio - 1;
-                    sdPrio = sdPrio - 1;
-                end
-
-                tinsert(bossDebuffs, {
-                    ["index"] = index,
-                    ["bdPrio"] = bdPrio,
-                    ["sdPrio"] = sdPrio,
-                    ["auraData"] = {icon, count, expirationTime, duration, debuffType},
-                    ["type"] = "debuff"
-                });
-            elseif isPrioDebuff(name, icon, count, debuffType, duration, expirationTime, unitCaster, nil, nil, spellID) then
-                --Add to debuffs
-                tinsert(debuffs, {
-                    ["index"] = index,
-                    ["sdPrio"] = 4,
-                    ["auraData"] = {icon, count, expirationTime, duration, debuffType},
-                    ["type"] = "debuff"
-                });
-            elseif shouldDisplayDebuff(name, icon, count, debuffType, duration, expirationTime, unitCaster, nil, nil, spellID, canApplyAura, isBossAura) then
-                --Add to debuffs
-                tinsert(debuffs, {
-                    ["index"] = index,
-                    ["sdPrio"] = 5,
-                    ["auraData"] = {icon, count, expirationTime, duration, debuffType},
-                    ["type"] = "debuff"
-                });
-            end
-        else
-            break;
-        end
-    end
-
-    --Update Buffs
-    for index = 1, 40 do
-        local name, icon, count, debuffType, duration, expirationTime, unitCaster, _, _, spellID, canApplyAura, isBossAura = UnitBuff(frame.displayedUnit, index);
-        local _, _, displayedClass = UnitClass(frame.displayedUnit);
-        if name then
-            if isBossAura then
-                --Debug
-                --print("Found boss buff :", name, ":");
-                --end debug
-
-                --Add to bossDebuffs
-                tinsert(bossDebuffs, {
-                    ["index"] = index,
-                    ["bdPrio"] = 2,
-                    ["sbPrio"] = 1,
-                    ["auraData"] = {icon, count, expirationTime, duration, nil, nil, true}
-                });
-            elseif CustomBuffs.THROUGHPUT_CDS[displayedClass] and (CustomBuffs.THROUGHPUT_CDS[displayedClass][name] or CustomBuffs.THROUGHPUT_CDS[displayedClass][spellID]) then
-                --Add to throughputBuffs
-                local auraData = CustomBuffs.THROUGHPUT_CDS[displayedClass][name] or CustomBuffs.THROUGHPUT_CDS[displayedClass][spellID];
-                tinsert(throughputBuffs, {
-                    ["index"] = index,
-                    ["tbPrio"] = auraData.tbPrio;
-                    ["sbPrio"] = auraData.sbPrio,
-                    ["auraData"] = {icon, count, expirationTime, duration}
-                });
-            elseif CustomBuffs.EXTERNAL_THROUGHPUT_CDS[name] or CustomBuffs.EXTERNAL_THROUGHPUT_CDS[spellID] then
-                --Add to throughputBuffs
-                local auraData = CustomBuffs.EXTERNAL_THROUGHPUT_CDS[name] or CustomBuffs.EXTERNAL_THROUGHPUT_CDS[spellID];
-                tinsert(throughputBuffs, {
-                    ["index"] = index,
-                    ["tbPrio"] = auraData.tbPrio;
-                    ["sbPrio"] = auraData.sbPrio,
-                    ["auraData"] = {icon, count, expirationTime, duration}
-                });
-            elseif (CustomBuffs.CDS[displayedClass] and (CustomBuffs.CDS[displayedClass][name] or CustomBuffs.CDS[displayedClass][spellID])) then
-                --Add to buffs
-                local auraData = CustomBuffs.CDS[displayedClass][name] or CustomBuffs.CDS[displayedClass][spellID];
-                tinsert(buffs, {
-                    ["index"] = index,
-                    ["sbPrio"] = auraData.sbPrio,
-                    ["auraData"] = {icon, count, expirationTime, duration}
-                });
-            elseif (CustomBuffs.EXTERNALS[name] or CustomBuffs.EXTERNALS[spellID]) and unitCaster ~= "player" and unitCaster ~= "pet" then
-                --Add to buffs
-                local auraData = CustomBuffs.EXTERNALS[name] or CustomBuffs.EXTERNALS[spellID];
-                tinsert(buffs, {
-                    ["index"] = index,
-                    ["sbPrio"] = auraData.sbPrio,
-                    ["auraData"] = {icon, count, expirationTime, duration}
-                });
-            elseif (CustomBuffs.EXTRA_RAID_BUFFS[name] or CustomBuffs.EXTRA_RAID_BUFFS[spellID]) and (unitCaster == "player" or unitCaster == "pet") then
-                --Add to buffs
-                local auraData = CustomBuffs.EXTRA_RAID_BUFFS[name] or CustomBuffs.EXTRA_RAID_BUFFS[spellID];
-                tinsert(buffs, {
-                    ["index"] = index,
-                    ["sbPrio"] = auraData.sbPrio,
-                    ["auraData"] = {icon, count, expirationTime, duration}
-                });
-            elseif shouldDisplayBuff(name, icon, count, debuffType, duration, expirationTime, unitCaster, nil, nil, spellID, canApplyAura, isBossAura) then
-                --Add to buffs
-                tinsert(buffs, {
-                    ["index"] = index,
-                    ["sbPrio"] = 5,
-                    ["auraData"] = {icon, count, expirationTime, duration}
-                });
-            end
-        else
-            break;
-        end
-    end
-
-
-    --Assign auras to aura frames
-
-    --Sort bossDebuffs in priority order
-    tsort(bossDebuffs, function(a,b)
-        if not a or not b then return true; end
-        return a.bdPrio < b.bdPrio;
-    end);
-
-    --If there are more bossDebuffs than frames, copy extra auras into appropriate fallthrough locations
-    for i = 3, #bossDebuffs do
-        --Buffs fall through to buffs, debuffs fall through to debuffs
-        if bossDebuffs[i].type then
-            tinsert(debuffs, bossDebuffs[i]);
-        else
-            --[[ debug stuff
-            local name, _, _, _, _, _, _, _, _, _, _, _ = UnitBuff(frame.displayedUnit, bossDebuffs[i].index);
-            local name2, _, _, _, _, _, _, _, _, _, _, _ = UnitDebuff(frame.displayedUnit, bossDebuffs[i].index);
-            print("Boss buff ", name, " or ", name2, " falling through to buffs.");
-            -- end debug stuff ]]
-
-            tinsert(buffs, bossDebuffs[i]);
-        end
-    end
-
-    --Sort throughputBuffs in priority order
-    tsort(throughputBuffs, function(a,b)
-        if not a or not b then return true; end
-        return a.tbPrio < b.tbPrio;
-    end);
-
-    --If there are more throughputBuffs than frames, copy extra auras into appropriate fallthrough locations
-    for i = 3, #throughputBuffs do
-        tinsert(buffs, throughputBuffs[i]);
-    end
-
-    --Sort debuffs in priority order
-    tsort(debuffs, function(a,b)
-        if not a or not b then return true; end
-        return a.sdPrio < b.sdPrio;
-    end);
-
-    --Sort buffs in priority order
-    tsort(buffs, function(a,b)
-        if not a or not b then return true; end
-        return a.sbPrio < b.sbPrio;
-    end);
-
-    --Update all aura frames
-
-    --Boss Debuffs
-    local frameNum = 1;
-    while(frameNum <= 2 and bossDebuffs[frameNum]) do
-        updateAura(frame.bossDebuffs[frameNum], bossDebuffs[frameNum].index, bossDebuffs[frameNum].auraData);
-        frameNum = frameNum + 1;
-    end
-
-    --Throughput Frames
-    frameNum = 1;
-    while(frameNum <= 2 and throughputBuffs[frameNum]) do
-        updateAura(frame.throughputFrames[frameNum], throughputBuffs[frameNum].index, throughputBuffs[frameNum].auraData);
-        frameNum = frameNum + 1;
-    end
-
-    --Standard Debuffs
-    frameNum = 1;
-    while(frameNum <= frame.maxDebuffs and debuffs[frameNum]) do
-        updateAura(frame.debuffFrames[frameNum], debuffs[frameNum].index, debuffs[frameNum].auraData);
-        frameNum = frameNum + 1;
-    end
-
-    --Standard Buffs
-    frameNum = 1;
-    while(frameNum <= frame.maxBuffs and buffs[frameNum]) do
-        updateAura(frame.buffFrames[frameNum], buffs[frameNum].index, buffs[frameNum].auraData);
-        frameNum = frameNum + 1;
-    end
-
-
-
-
-    --Hide unused aura frames
-    for i = #debuffs + 1, frame.maxDebuffs do
-        local auraFrame = frame.debuffFrames[i];
-        --if auraFrame ~= frame.bossDebuffs[1] and auraFrame ~= frame.bossDebuffs[2] then auraFrame:Hide(); end
-        auraFrame:Hide();
-    end
-
-    for i = #bossDebuffs + 1, 2 do
-        frame.bossDebuffs[i]:Hide();
-    end
-
-    for i = #buffs + 1, frame.maxBuffs do
-        local auraFrame = frame.buffFrames[i];
-        --if auraFrame ~= frame.throughputFrames[1] and auraFrame ~= frame.throughputFrames[2] then auraFrame:Hide(); end
-        auraFrame:Hide();
-    end
-
-    for i = #throughputBuffs + 1, 2 do
-        frame.throughputFrames[i]:Hide();
-    end
-
-
-    --Hide the name text for frames with active bossDebuffs
-    if frame.bossDebuffs[1]:IsShown() then
-        frame.name:Hide();
-    else
-        frame.name:Show();
-        --When we call show it doesn't update the text of the name, which
-        --means that our SetName code doesn't run until the next update,
-        --so we call it manually to override the default blizzard names
-        if self.db.profile.cleanNames then
-            CustomBuffs:SetName(frame);
-        end
-    end
-
-    --Boss debuff location is variable, so we need to update their location every update
-    updateBossDebuffs(frame);
-
-    twipe(bossDebuffs);
-    twipe(throughputBuffs);
-    twipe(buffs);
-    twipe(debuffs);
-end --);
 
 --TODO: add actual functionality
 local function DebugUpdate()
