@@ -235,6 +235,8 @@ local NONAURAS = {
 	[116011] = { duration = 12, tbPrio = 7, type = "summon" }, --Rune of Power Real
 
     --PRIEST
+	[200174] = { duration = 15, tbPrio = 7, type = "summon" }, --Mindbender
+	[34433] = { duration = 15, tbPrio = 7, type = "summon" }, --Shadowfiend
 
     --HUNTER
     [131894] = { duration = 15, tbPrio = 1 }, --Murder of Crows
@@ -250,6 +252,7 @@ local NONAURAS = {
     [322118] = { duration = 25, tbPrio = 1, type = "summon" }, --Yu'lon
     [123904] = { duration = 24, tbPrio = 1, type = "summon" }, --Xuen
     [132578] = { duration = 25, tbPrio = 1, type = "summon" }, --Niuzao
+	--[115313] = { duration = 900, tbPrio = 0, sbPrio = 20, type = "summon" }, --Serpent Statue
 
     --DH
 
@@ -261,10 +264,7 @@ local NONAURAS = {
 
 	--COOLDOWN FLASHES
 	--Show short flash on frame when a player activates an ability or item
-	[336126] = 	CDFlash, --Show 0.5 second flash on frame when someone uses a pvp trinket
-	[42292] = 	CDFlash, --Old pvp trinket
-	[171267] = 	CDFlash, --Health Potion Shadowlands
-	[6262] = 	CDFlash, --Healthstone
+
 	--Interrupts
 	[1766] =   	CDFlash, -- Kick (Rogue)
     [2139] =   	CDFlash, -- Counterspell (Mage)
@@ -276,6 +276,7 @@ local NONAURAS = {
     [96231] =  	CDFlash, -- Rebuke (Paladin)
     [93985] = 	CDFlash, -- Skull Bash (Feral)
     [115781] = 	CDFlash, -- Optical Blast (Warlock)
+	[119910] = 	CDFlash, -- Spell Lock (Warlock)
     [116705] = 	CDFlash, -- Spear Hand Strike (Monk)
     [132409] = 	CDFlash, -- Spell Lock (Warlock)
     [147362] = 	CDFlash, -- Countershot (Hunter)
@@ -292,6 +293,10 @@ local NONAURAS = {
 	[192058] = 	CDFlash, --Cap Totem
 	[51485] = 	CDFlash, --Earthgrab Totem
 	[320674] = 	CDFlash, --Chain Harvest
+	[157375] = 	CDFlash, --Eye of the Storm
+	[157348] = 	CDFlash, --Call Lightning
+	[118345] = 	CDFlash, --Pulverize
+	[117588] = 	CDFlash, --Meteor
 	--[8143] = 	CDFlash, --Tremor
 	[197995] = 	CDFlash, --Wellspring
 	[51886] = 	CDFlash, --Resto Dispel
@@ -300,30 +305,144 @@ local NONAURAS = {
 
 	--LOCK
 	[6789] = 	CDFlash, --Coil
+	[30283] = 	CDFlash, --Shadowfury
+	[19505] = 	CDFlash, --Purge
+	[119905] = 	CDFlash, --Imp Dispel
+	[6358] = 	CDFlash, --Seduction
+	[119907] = 	CDFlash, --Voidwalker Last Stand
+	[17735] = 	CDFlash, --Voidwalker Taunt
+	[48020] = 	CDFlash, --Port
+
 	--DRUID
 	[102793] = 	CDFlash, --Vortex
 	[77761] = 	CDFlash, --Stampeding Roar
 	[6795] =	CDFlash, --Growl
+	[132158] =	CDFlash, --NS
+	[18562] =	CDFlash, --Swiftmend
+	[22570] =	CDFlash, --Maim
+	[5211] =	CDFlash, --Bash
+	[108238] =	CDFlash, --Renewal
+	[99] =		CDFlash, --Incap Roar
 
 	--MAGE
+	[314791] =	CDFlash, --Shifting Power
+	[153626] =	CDFlash, --Arcane Orb
+	[31661] =	CDFlash, --DB
+	[475] =		CDFlash, --Dispel
+	[55342] =	CDFlash, --Mirror Images
+	[30449] =	CDFlash, --Spellsteal
+	[122] =		CDFlash, --Frost Nova
+	[321507] =	CDFlash, --Touch of the Magi
 
 	--PRIEST
+	[323673] =	CDFlash, --Mind Games
+	[2050] =	CDFlash, --Serenity
+	[8122] =	CDFlash, --Psychic Scream
+	[34861] =	CDFlash, --Sanctify
+	[528] =		CDFlash, --Purge
+	[527] =		CDFlash, --Dispel Healer
+	[213634] =	CDFlash, --Dispel Non healer
+	[88625] =	CDFlash, --Chastise
+	[32375] =	CDFlash, --MD
+	[108968] =	CDFlash, --Life Swap
+	[15487] =	CDFlash, --Silence
+	[64044] =	CDFlash, --Psychic Horror
+	[341374] =	CDFlash, --Damnation
+	[73325] =	CDFlash, --LoF
+	[62618] =	CDFlash, --Barrier
+	[64843] =	CDFlash, --Divine Hymn
+	[64901] =	CDFlash, --Symbol of Hope
+	[47788] =	CDFlash, --GS
 
 	--HUNTER
+	[213691] =	CDFlash, --Scatter Shot
+	[1513] =	CDFlash, --Scare Beast
+	[187650] =	CDFlash, --Freezing Trap
+	[257044] =	CDFlash, --Rapid Fire
+	[109304] =	CDFlash, --Exhileration
+	[109248] =	CDFlash, --Binding Shot
+	[53351] =	CDFlash, --Kill Shot
+	[34477] =	CDFlash, --Misdirection
+	[186387] =	CDFlash, --Bursting Shot
+	[187698] =	CDFlash, --Tar Trap
+	[19801] =	CDFlash, --Tranq Shot
+	[2649] =	CDFlash, --Pet Taunt
+	[236776] =	CDFlash, --Knock Trap
+	--[53480] =	CDFlash, --Pet Taunt
+
 
 	--DK
 	[49998] =	CDFlash, --Death Strike
+
 	--MONK
+	[115078] =	CDFlash, --Paralysis
+	[116844] =	CDFlash, --RoP
+	[115310] =	CDFlash, --Revival
+	[115450] =	CDFlash, --Healer Dispel
+	[115546] =	CDFlash, --Taunt
+	[119381] =	CDFlash, --Leg Sweep
+	[218164] =	CDFlash, --Non Healer Dispel
 
 	--DH
 	[323639] =	CDFlash, --The Hunt
+	[278326] =	CDFlash, --Purge
+	[207684] =	CDFlash, --Misery
+	[202137] =	CDFlash, --Silence
+	[204021] =	CDFlash, --Fiery Brand
+	[185245] =	CDFlash, --Taunt
+	[212084] =	CDFlash, --Fel Dev
+	[217832] =	CDFlash, --Imprison
+
 	--PALADIN
+	[316958] =	CDFlash, --Ashen
+	[633] =		CDFlash, --LoH
+	[62124] =	CDFlash, --Taunt
+	[31821] =	CDFlash, --Aura Mastery
+	[85673] =	CDFlash, --WoG
+	[853] =		CDFlash, --HoJ
+	--[1022] =	CDFlash, --BoP
+	--[1044] =	CDFlash, --Freedom
+
 
 	--WARRIOR
+	[355] =		CDFlash, --Taunt
+	[5246] =	CDFlash, --Intimidating Shout
+	[46968] =	CDFlash, --Shockwave
+	[107570] =	CDFlash, --Storm Bolt
+	[64382] =	CDFlash, --Shattering Throw
+	[1160] =	CDFlash, --Demo Shout
+	[3411] =	CDFlash, --Intervene
+	[163201] =	CDFlash, --Execute
+	--[23920] =	CDFlash, --Spell Reflect
 
 	--ROGUE
+	[1776] =	CDFlash, --Gogue
+	[2094] =	CDFlash, --Blind
+	[408] =		CDFlash, --Kidney Shot
+	[1833] =	CDFlash, --Cheap Shot
+	[57934] =	CDFlash, --Tricks
+	[6770] =	CDFlash, --Sap
+	[319032] =	CDFlash, --Shiv
+	[5938] =	CDFlash, --Shiv
+	[280719] =	CDFlash, --Secret Technique
+	[212283] =	CDFlash, --Symbol of Death
+	[121411] =	CDFlash, --Crimson Tempest
+	[200806] =	CDFlash, --Exsanguinate
+	[79140] =	CDFlash, --Vendetta
 
 
+
+
+
+
+	--Items
+	[344916] =	CDFlash, --Tuft
+	[336126] = 	CDFlash, --PvP trinket
+	[42292] = 	CDFlash, --Old PvP trinket
+	[171267] = 	CDFlash, --Health Potion Shadowlands
+	[6262] = 	CDFlash, --Healthstone
+	[177218] = 	CDFlash, --Phial of Serenity
+	[7744] = 	CDFlash, --Will of the Forsaken
 };
 
 local BCC_NONAURAS = {
@@ -393,6 +512,7 @@ local BCC_NONAURAS = {
 	[8983] =	CDFlash, --Bash
 	[17401] =	CDFlash, --Hurricane
 	[9862] =	CDFlash, --Tranquility
+	[17116] =	CDFlash, --NS
 
 
 
@@ -403,13 +523,10 @@ local BCC_NONAURAS = {
 
 	--HUNTER
 
-	--DK
-
-	--MONK
-
-	--DH
 
 	--PALADIN
+
+
 
 	--WARRIOR
 
@@ -450,6 +567,9 @@ local BUFFS = {
 		--Hunter
         ["Aspect of the Turtle"] =      CDStandard,
         ["Survival of the Fittest"] =   CDStandard,
+		["Double Tap"] =   				CDStandard,
+		["Sniper Shot"] =   			CDStandard,
+
 
 		--Mage
         ["Ice Block"] =                 CDStandard,
@@ -457,6 +577,10 @@ local BUFFS = {
         ["Greater Invisibility"] =      CDStandard,
         ["Alter Time"] =                CDStandard,
         ["Temporal Shield"] =           CDStandard,
+		["Blazing Barrier"] =           CDStandard,
+		["Ice Barrier"] =           	CDStandard,
+		["Prismatic Barrier"] =         CDStandard,
+
 
 		--Monk
         ["Zen Meditation"] =            CDStandard,
@@ -481,6 +605,8 @@ local BUFFS = {
         ["Dispersion"] =                CDStandard,
         ["Fade"] =                      CDStandard,
         ["Greater Fade"] =              CDStandard,
+		["Desperate Prayer"] =          CDStandard,
+		["Shadowform"] =              	CDStandard,
 
 		--Rogue
         ["Evasion"] =                   CDStandard,
@@ -489,6 +615,8 @@ local BUFFS = {
         ["Readiness"] =                 CDStandard,
         ["Riposte"] =                   CDStandard,
         ["Crimson Vial"] =              CDStandard,
+		["Shroud of Concealment"] =     CDStandard,
+
 
 		--Shaman
         ["Astral Shift"] =              CDStandard,
@@ -501,6 +629,7 @@ local BUFFS = {
         ["Unending Resolve"] =          CDStandard,
         ["Dark Pact"] =                 CDStandard,
         ["Nether Ward"] =               CDStandard,
+		["Fel Domination"] =            CDStandard,
 
 		--Warrior
         ["Shield Wall"] =               CDStandard,
@@ -509,6 +638,8 @@ local BUFFS = {
         ["Last Stand"] =                CDStandard,
         ["Die By The Sword"] =          CDStandard,
         ["Defensive Stance"] =          CDStandard,
+		["Berserker Rage"] =          	CDStandard,
+		["Ignore Pain"] =          		CDStandard,
 
 		--Demon Hunter
         ["Netherwalk"] =                CDStandard,
@@ -516,6 +647,9 @@ local BUFFS = {
         ["Darkness"] =                  CDStandard,
         ["Demon Spikes"] =              CDStandard,
         ["Soul Fragments"] =            CDStandard,
+		["Immolation Aura"] =           CDStandard,
+		["Spectral Sight"] =           	CDStandard,
+
 
 
 		--Major Externals
@@ -759,6 +893,7 @@ local THROUGHPUT_BUFFS = {
         ["Icy Veins"] =                         TCDStandard,
         ["Combustion"] =                        TCDStandard,
         ["Arcane Power"] =                      TCDStandard,
+		["Presence of Mind"] =         			TCDStandard,
 
     	--Monk
         ["Way of the Crane"] =                  TCDStandard,
@@ -787,6 +922,7 @@ local THROUGHPUT_BUFFS = {
         ["Surrender to Madness"] =              TCDStandard,
         [109964] =                              TCDStandard, --Spirit Shell
         ["Shadow Covenant"] =                   TCDStandard,
+		["Vampiric Embrace"] = 					TCDStandard,
 
 		--Rogue
         ["Shadow Blades"] =                     TCDStandard,
@@ -1417,6 +1553,7 @@ end
 
 CustomBuffs.trackedSummons = CustomBuffs.trackedSummons or {};
 CustomBuffs.trackedOwners = CustomBuffs.trackedOwners or {};
+CustomBuffs.petToOwner = CustomBuffs.petToOwner or {};
 
 
 local function vprint(...)
@@ -1443,10 +1580,35 @@ function CustomBuffs:sync()
 	end
 end
 
+local function getOwner(pet)
+	local owner = pet;
+	if CustomBuffs.petToOwner and CustomBuffs.petToOwner[pet] then
+		owner = CustomBuffs.petToOwner[pet];
+	end
+	if CustomBuffs.verbose and pet ~= owner then print("Translated pet", pet, "to owner", owner); end
+	return owner;
+end
+
+local function addPet(pet, owner)
+	local petGUID = UnitGUID(pet);
+	local guid = UnitGUID(owner);
+	if petGUID then
+		if CustomBuffs.verbose then print("Adding pet", petGUID, "for unit", guid); end
+		CustomBuffs.petToOwner[petGUID] = guid;
+	end
+end
 
 local function UpdateUnits()
 	if CustomBuffs.verbose then print("Updating unit table..."); end
 	CustomBuffs.units = CustomBuffs.units or {};
+	CustomBuffs.petToOwner = CustomBuffs.petToOwner or {};
+
+	addPet("pet","player");
+	for i = 1, 40 do
+		local pet = "raidpet"..i;
+		local unit = "raid"..i;
+		addPet(pet, unit);
+	end
     for _, table in pairs(CustomBuffs.units) do
         table.invalid = true;
     end
@@ -1476,6 +1638,10 @@ local function UpdateUnits()
             CustomBuffs.units[i] = nil;
         end
     end
+end
+
+function CustomBuffs:UpdateUnits()
+	UpdateUnits();
 end
 
 local function addTrackedSummon(casterGUID, spellID, spellName, destGUID, daisyChainOwner)
@@ -1554,6 +1720,7 @@ local function handleSummon(spellID, spellName, casterGUID, destGUID)
 		print("Summon: ", spellID, " : ", link);
 	end
 	if ((NONAURAS[spellID] and NONAURAS[spellID].type and NONAURAS[spellID].type == "summon") or (NONAURAS[spellName] and NONAURAS[spellName].type and NONAURAS[spellName].type == "summon" )) then
+		casterGUID = getOwner(casterGUID);
 		if CustomBuffs.units[casterGUID] then
 			--local realID = select(14, CombatLogGetCurrentEventInfo());
 			addTrackedSummon(casterGUID, spellID, spellName, destGUID, (NONAURAS[spellID] or NONAURAS[spellName]).chain or false);
@@ -1757,6 +1924,8 @@ local function handleCLEU()
 					local noSum = record.noSum;
 
 					if not noSum or not checkForSummon(noSum) then
+						casterGUID = getOwner(casterGUID);
+						if CustomBuffs.verbose then print("Spell from caster: ", casterGUID); end
         				if CustomBuffs.units[casterGUID] then
 							--print("Found Cast Success");
             				local duration = record.duration;
@@ -2149,7 +2318,7 @@ end
 local function setUpThroughputFrames(frame)
     if not frame then return; end
 
-    local size = calcBuffSize(frame) * (tbSize or 1.2);
+    local size = calcBuffSize(frame) * (tbSize or 1.2) * 1.1;
 
     if not frame.throughputFrames then
         local bfone = CreateFrame("Button", frame:GetName().."ThroughputBuff1", frame, "CompactBuffTemplate");
@@ -3095,6 +3264,13 @@ function CustomBuffs:OnEnable()
 					print(k, ": ", link);
 				end
 			end
+		elseif options == "units" then
+			print("Printing Current Units...")
+			if CustomBuffs.units then
+				for k, v in pairs(CustomBuffs.units) do
+					print(k);
+				end
+			end
 		elseif options == "verbose" then
 			CustomBuffs.verbose = not CustomBuffs.verbose;
 			print("CustomBuffs verbose mode", CustomBuffs.verbose and "enabled" or "disabled");
@@ -3134,6 +3310,7 @@ function CustomBuffs:OnEnable()
         end
     end);
 
+	self:RegisterEvent("UNIT_PET", "UpdateUnits");
     handleRosterUpdate();
 end
 
