@@ -243,6 +243,7 @@ local NONAURAS = {
     --DK
     [63560] = { duration = 15, tbPrio = 1 }, --Dark Transformation
     [42650] = { duration = 30, tbPrio = 1 }, --Army of the Dead
+	--[46585] = { duration = 60, tbPrio = 1, type = "summon" }, --Raise Ghoul
 
     --MONK
     [325197] = { duration = 25, tbPrio = 1, type = "summon" }, --Invoke Chi-ji
@@ -311,7 +312,7 @@ local NONAURAS = {
 	--HUNTER
 
 	--DK
-
+	[49998] =	CDFlash, --Death Strike
 	--MONK
 
 	--DH
