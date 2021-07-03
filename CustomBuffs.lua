@@ -1609,6 +1609,11 @@ local function UpdateUnits()
 		local unit = "raid"..i;
 		addPet(pet, unit);
 	end
+	for i = 1, 4 do
+		local pet = "partypet"..i;
+		local unit = "party"..i;
+		addPet(pet, unit);
+	end
     for _, table in pairs(CustomBuffs.units) do
         table.invalid = true;
     end
