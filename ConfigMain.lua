@@ -7,6 +7,8 @@ local CustomBuffs = addonTable.CustomBuffs
 local function generateProfiles()
 	local profs = {};
 	for i=1, GetNumRaidProfiles() do
+		local name = GetRaidProfileName(i);
+		if CustomBuffs.verbose then print("Found profile", name); end
 		tinsert(profs, GetRaidProfileName(i));
 	end
 	return profs;
@@ -52,7 +54,7 @@ function CustomBuffs:CreateGeneralOptions()
 			},
 			blizzardRaidOptionsButton = {
 				type = "execute",
-				name = "Open the Blizzard Menu",
+				name = "Open Blizz Menu",
 				desc = "",
 				func = function() InterfaceOptionsFrame_OpenToCategory("Raid Profiles") end,
 				width = THIRD_WIDTH * 0.75,
