@@ -3509,7 +3509,7 @@ function createOptionsTab(self, container)
 	--frame:SetFullWidth(true);
 
 	self.dialog:Open("CustomBuffs", container);
-	tab1:SetText("");
+	--tab1:SetText("");
 	--tab1:AddChild(frame);
 	container:AddChild(tab1);
 end
@@ -3519,7 +3519,7 @@ function createProfilesTab(self, container)
 	local tab2 = self.gui:Create("Label");
 	self.dialog:Open("CustomBuffs Profiles", container);
 	tab2:SetFullWidth(true);
-	tab2:SetText("");
+	--tab2:SetText("");
 	--frame:SetFullWidth(true);
 	--tab2:AddChild(frame);
 	container:AddChild(tab2);
