@@ -4,8 +4,23 @@ local CustomBuffs = addonTable.CustomBuffs
 
 -------------------------------------------------------------------------
 -------------------------------------------------------------------------
+local function generateProfiles()
+	local profs = {};
+	for i=1, GetNumRaidProfiles() do
+		tinsert(profs, GetRaidProfileName(i));
+	end
+	return profs;
+end
+local function findProfileNum(prof)
+	for i=1, GetNumRaidProfiles() do
+		if GetRaidProfileName(i) == prof then
+			return i;
+		end
+	end
+end
 
 function CustomBuffs:CreateGeneralOptions()
+
 	local THIRD_WIDTH = 1.15
 
 	local generalOptions = {
@@ -18,13 +33,30 @@ function CustomBuffs:CreateGeneralOptions()
 				name = "",
 				order = 3,
 			},
+			profileSelecter = {
+			type = 'select',
+			name = "Profile Selecter",
+			desc = "Choose a Raid Profile to Activate",
+			values = generateProfiles(),
+			get = function() return findProfileNum(GetCVar("activeCUFProfile")); end,
+			set = function(_, value)
+				local profs = generateProfiles();
+				local activeProf = profs[value];
+				CompactUnitFrameProfiles.selectedProfile = activeProf;
+				SetCVar("activeCUFProfile", activeProf);
+				CompactUnitFrameProfiles_ApplyProfile(activeProf);
+				CustomBuffs:loadFrames();
+			end,
+			width = THIRD_WIDTH * 0.75,
+			order = 4,
+			},
 			blizzardRaidOptionsButton = {
 				type = "execute",
-				name = "Open the Blizzard Raid Profiles Menu",
+				name = "Open the Blizzard Menu",
 				desc = "",
 				func = function() InterfaceOptionsFrame_OpenToCategory("Raid Profiles") end,
-				width = THIRD_WIDTH * 1.5,
-				order = 4,
+				width = THIRD_WIDTH * 0.75,
+				order = 5,
 			},
 			testButton = {
 				type = "execute",

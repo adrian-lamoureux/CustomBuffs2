@@ -443,6 +443,7 @@ local NONAURAS = {
 	[6262] = 	CDFlash, --Healthstone
 	[177218] = 	CDFlash, --Phial of Serenity
 	[7744] = 	CDFlash, --Will of the Forsaken
+	[312411] = 	CDFlash, --Bag of Tricks
 };
 
 local BCC_NONAURAS = {
@@ -2749,57 +2750,67 @@ function CustomBuffs:UpdateAuras(frame)
 
 
     --Sort bossDebuffs in priority order
-    tsort(bossDebuffs, function(a,b)
-        if not a or not b then return true; end
-        return a.bdPrio < b.bdPrio;
-    end);
+	if #bossDebuffs > 1 then
+    	tsort(bossDebuffs, function(a,b)
+        	if not a or not b then return true; end
+        	return a.bdPrio < b.bdPrio;
+    	end);
 
-    --If there are more bossDebuffs than frames, copy extra auras into appropriate fallthrough locations
-    for i = 3, #bossDebuffs do
-        --Buffs fall through to buffs, debuffs fall through to debuffs
-        --If the boss aura is a debuff and has a prio set for debuffs (is intended to fall through)
-        --it goes into the debuff list
-        if bossDebuffs[i].type and bossDebuffs[i].sdPrio then
-            tinsert(debuffs, bossDebuffs[i]);
 
-        --If the boss aura is a buff or doesn't have a standard debuff prio we check if it is flagged
-        --to show in a buff slot instead
-        elseif bossDebuffs[i].sbPrio then
-            --[[ debug stuff
-            local name, _, _, _, _, _, _, _, _, _, _, _ = UnitBuff(frame.displayedUnit, bossDebuffs[i].index);
-            local name2, _, _, _, _, _, _, _, _, _, _, _ = UnitDebuff(frame.displayedUnit, bossDebuffs[i].index);
-            print("Boss buff ", name, " or ", name2, " falling through to buffs.");
-            -- end debug stuff ]]
+    	--If there are more bossDebuffs than frames, copy extra auras into appropriate fallthrough locations
+    	for i = 3, #bossDebuffs do
+        	--Buffs fall through to buffs, debuffs fall through to debuffs
+        	--If the boss aura is a debuff and has a prio set for debuffs (is intended to fall through)
+        	--it goes into the debuff list
+        	if bossDebuffs[i].type and bossDebuffs[i].sdPrio then
+            	tinsert(debuffs, bossDebuffs[i]);
 
-            tinsert(buffs, bossDebuffs[i]);
-        end
-    end
+        	--If the boss aura is a buff or doesn't have a standard debuff prio we check if it is flagged
+        	--to show in a buff slot instead
+        	elseif bossDebuffs[i].sbPrio then
+            	--[[ debug stuff
+            	local name, _, _, _, _, _, _, _, _, _, _, _ = UnitBuff(frame.displayedUnit, bossDebuffs[i].index);
+            	local name2, _, _, _, _, _, _, _, _, _, _, _ = UnitDebuff(frame.displayedUnit, bossDebuffs[i].index);
+            	print("Boss buff ", name, " or ", name2, " falling through to buffs.");
+            	-- end debug stuff ]]
+
+            	tinsert(buffs, bossDebuffs[i]);
+        	end
+    	end
+	end
 
     --Sort throughputBuffs in priority order
-    tsort(throughputBuffs, function(a,b)
-        if not a or not b then return true; end
-        return a.tbPrio < b.tbPrio;
-    end);
+	if #throughputBuffs > 1 then
+    	tsort(throughputBuffs, function(a,b)
+        	if not a or not b then return true; end
+        	return a.tbPrio < b.tbPrio;
+    	end);
 
-    --If there are more throughputBuffs than frames, copy extra auras into appropriate fallthrough locations
-    for i = 3, #throughputBuffs do
-        --If the extra throughput buff has a standard buff priority then we allow it to fall through
-        if throughputBuffs[i].sbPrio then
-            tinsert(buffs, throughputBuffs[i]);
-        end
-    end
+
+    	--If there are more throughputBuffs than frames, copy extra auras into appropriate fallthrough locations
+    	for i = 3, #throughputBuffs do
+        	--If the extra throughput buff has a standard buff priority then we allow it to fall through
+        	if throughputBuffs[i].sbPrio then
+            	tinsert(buffs, throughputBuffs[i]);
+        	end
+    	end
+	end
 
     --Sort debuffs in priority order
-    tsort(debuffs, function(a,b)
-        if not a or not b then return true; end
-        return a.sdPrio < b.sdPrio;
-    end);
+	if #debuffs > 1 then
+    	tsort(debuffs, function(a,b)
+        	if not a or not b then return true; end
+        	return a.sdPrio < b.sdPrio;
+    	end);
+	end
 
     --Sort buffs in priority order
-    tsort(buffs, function(a,b)
-        if not a or not b then return true; end
-        return a.sbPrio < b.sbPrio;
-    end);
+	if #buffs > 1 then
+    	tsort(buffs, function(a,b)
+        	if not a or not b then return true; end
+        	return a.sbPrio < b.sbPrio;
+    	end);
+	end
 
     --Update all aura frames
 
