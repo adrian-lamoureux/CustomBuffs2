@@ -439,11 +439,29 @@ local NONAURAS = {
 	[344916] =	CDFlash, --Tuft
 	[336126] = 	CDFlash, --PvP trinket
 	[42292] = 	CDFlash, --Old PvP trinket
-	[171267] = 	CDFlash, --Health Potion Shadowlands
 	[6262] = 	CDFlash, --Healthstone
 	[177218] = 	CDFlash, --Phial of Serenity
+
+	--Racials
 	[7744] = 	CDFlash, --Will of the Forsaken
 	[312411] = 	CDFlash, --Bag of Tricks
+
+	--Shadowlands Potions
+	[307192] = 	CDFlash, --Health Potion Shadowlands
+	[307382] = 	CDFlash, --Phantom Fire Potion
+	[307193] = 	CDFlash, --Shadowlands Mana Potion
+	[307095] = 	CDFlash, --Shadowlands Sleeper Potion
+	[307496] = 	CDFlash, --Divine Awakening Potion
+	[307096] = 	CDFlash, --Shadowlands Int Potion
+	[307093] = 	CDFlash, --Shadowlands Agi Potion
+	[307098] = 	CDFlash, --Shadowlands Str Potion
+	[307097] = 	CDFlash, --Shadowlands Stm Potion
+	[322301] = 	CDFlash, --Sacrificial Anima Potion
+	[307384] = 	CDFlash, --Deathly Fixation Potion
+	[307381] = 	CDFlash, --Empowered Exorcisms Potion
+
+	--Other
+	[16589] = 	CDFlash, --Noggenfogger
 };
 
 local BCC_NONAURAS = {
@@ -3183,6 +3201,10 @@ end
 
 function CustomBuffs:EnableCastBars()
     self:CreateCastBars();
+
+	--Cannot show cast bars if we have keep groups together enabled, so force that setting off
+	CompactRaidFrameContainer_SetGroupMode(CompactRaidFrameContainer, "flush");
+	CompactRaidFrameContainer_SetFlowSortFunction(CompactRaidFrameContainer, CRFSort_Role);
 
     --Make sure we catch changing the sort function and update the bars accordingly
     if not self:IsHooked("CompactRaidFrameContainer_SetFlowSortFunction", function(frame) self:UpdateCastBars(); end) then

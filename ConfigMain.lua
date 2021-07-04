@@ -1,15 +1,15 @@
 local _, addonTable = ...
 local CustomBuffs = addonTable.CustomBuffs
 
-
+local profs;
 -------------------------------------------------------------------------
 -------------------------------------------------------------------------
 local function generateProfiles()
-	local profs = {};
+	profs = profs or {};
 	for i=1, GetNumRaidProfiles() do
 		local name = GetRaidProfileName(i);
 		if CustomBuffs.verbose then print("Found profile", name); end
-		tinsert(profs, GetRaidProfileName(i));
+		profs[i] = GetRaidProfileName(i);
 	end
 	return profs;
 end
