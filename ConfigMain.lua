@@ -5,12 +5,13 @@ local profs;
 -------------------------------------------------------------------------
 -------------------------------------------------------------------------
 local function generateProfiles()
-	LoadAddOn("Blizzard_CUFProfiles");
 	profs = profs or {};
-	for i=1, GetNumRaidProfiles() do
+	for i=1, GetNumRaidProfiles() or 5 do
 		local name = GetRaidProfileName(i);
 		if CustomBuffs.verbose then print("Found profile", name); end
-		profs[i] = GetRaidProfileName(i);
+		if name then
+			profs[i] = GetRaidProfileName(i);
+		end
 	end
 	return profs;
 end
@@ -23,6 +24,8 @@ local function findProfileNum(prof)
 end
 
 function CustomBuffs:CreateGeneralOptions()
+	LoadAddOn("Blizzard_CUFProfiles");
+	local profs = generateProfiles();
 
 	local THIRD_WIDTH = 1.15
 
@@ -40,10 +43,9 @@ function CustomBuffs:CreateGeneralOptions()
 			type = 'select',
 			name = "Profile Selecter",
 			desc = "Choose a Raid Profile to Activate",
-			values = generateProfiles(),
+			values = profs,
 			get = function() return findProfileNum(GetCVar("activeCUFProfile")); end,
 			set = function(_, value)
-				local profs = generateProfiles();
 				local activeProf = profs[value];
 				CompactUnitFrameProfiles.selectedProfile = activeProf;
 				SetCVar("activeCUFProfile", activeProf);

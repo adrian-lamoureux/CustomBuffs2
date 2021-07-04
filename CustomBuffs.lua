@@ -64,6 +64,7 @@ CustomBuffs.announceSums = CustomBuffs.announceSums or false;
 CustomBuffs.announceSpells = CustomBuffs.announceSpells or false;
 CustomBuffs.locked = CustomBuffs.locked or true;
 CustomBuffs.inRaidGroup = CustomBuffs.inRaidGroup or true;
+CustomBuffs.optionsOpen = CustomBuffs.optionsOpen or false;
 
 
 --Set up values for dispel types; used to quickly
@@ -519,6 +520,9 @@ local BCC_NONAURAS = {
 	--SHAMAN
 	[8177] = 	CDFlash, --Grounding Totem
 	[16188] = 	CDFlash, --Nature's Swiftness
+	[8012] = 	CDFlash, --Purge
+	[526] = 	CDFlash, --Dispel
+	[2870] = 	CDFlash, --Dispel
 
 	--LOCK
 
@@ -1488,7 +1492,7 @@ local testDebuffs = {
 		[188389] = 	{ duration = 16, sdPrio = 2, dispelType = "Magic"}, 		--Flame Shock
 		[589] = 	{ duration = 16, sdPrio = 2, dispelType = "Magic"}, 		--Shadow Word: Pain
 		[14914] = 	{ duration = 7, sdPrio = 2, dispelType = "Magic"}, 			--Holy Fire
-		[980] = 	{ duration = 7, sdPrio = 2, dispelType = "Curse"}, 			--Agony
+		[980] = 	{ duration = 7, sdPrio = 2, dispelType = "Curse", stacks = 10}, 			--Agony
 		[316099] = 	{ duration = 16, sdPrio = 2, dispelType = "Magic"}, 		--UA
 		[146739] = 	{ duration = 14, sdPrio = 2, dispelType = "Magic"}, 		--Corruption
 		[63106] = 	{ duration = 15, sdPrio = 2, dispelType = "Magic"}, 		--Siphon Life
@@ -3498,6 +3502,21 @@ function CustomBuffs:loaded()
 
 end
 
+function CustomBuffs:OpenOptions()
+	if not CustomBuffs.optionsOpen then
+		CustomBuffs.optionsOpen = true;
+		local frame = self.gui:Create("Window");
+		frame:SetWidth(3.45);
+		frame:SetTitle("CustomBuffs2 Options");
+		frame:SetCallback("OnClose", function(widget)
+			self.gui:Release(widget);
+			CustomBuffs.optionsOpen = false;
+		end);
+
+		self.dialog:Open("CustomBuffs", frame);
+	end
+end
+
 function CustomBuffs:OnEnable()
 	self:SecureHook("CompactUnitFrame_UpdateAuras", function(frame) self:UpdateAuras(frame); end);
 	self:RegisterComm("CBSync", "OnCommReceived");
@@ -3512,14 +3531,17 @@ function CustomBuffs:OnEnable()
         options = string.lower(options);
 
         if options == "" then
-		    InterfaceOptionsFrame_OpenToCategory("CustomBuffs");
-		    InterfaceOptionsFrame_OpenToCategory("CustomBuffs");
+		    --InterfaceOptionsFrame_OpenToCategory("CustomBuffs");
+		    --InterfaceOptionsFrame_OpenToCategory("CustomBuffs");
+			CustomBuffs:OpenOptions();
         elseif options == "weekly" and CustomBuffs.gameVersion == 0 then
             LoadAddOn("Blizzard_WeeklyRewards");
             WeeklyRewardsFrame:Show();
         elseif options == "test" then
 			CustomBuffs:loadFrames();
 			debugAuras();
+		elseif options == "show" then
+			CustomBuffs:loadFrames();
 		elseif options == "lock" then
 			CustomBuffs:unlockFrames();
 		elseif options == "sync" then
@@ -3581,13 +3603,12 @@ function CustomBuffs:OnEnable()
     handleRosterUpdate();
 end
 
-function CustomBuffs:Init()
-    -- Set up database defaults
+function CustomBuffs:CreateOptions()
 	local defaults = self:Defaults();
 
 	-- Create database object
 	self.db = LibStub("AceDB-3.0"):New("CustomBuffsData", defaults);
-	-- Profile handling
+
 	local profiles = LibStub("AceDBOptions-3.0"):GetOptionsTable(self.db);
 
     local generalOptions = self:CreateGeneralOptions();
@@ -3600,7 +3621,12 @@ function CustomBuffs:Init()
 	self.dialog:AddToBlizOptions("CustomBuffs", "CustomBuffs");
     self.dialog:AddToBlizOptions("CustomBuffs Profiles", "Profiles", "CustomBuffs");
 
+end
 
+function CustomBuffs:Init()
+    -- Set up database defaults
+	self.gui = LibStub("AceGUI-3.0");
+	CustomBuffs:CreateOptions();
 end
 
 function CustomBuffs:UpdateConfig()
