@@ -5,6 +5,7 @@ local profs;
 -------------------------------------------------------------------------
 -------------------------------------------------------------------------
 local function generateProfiles()
+	LoadAddOn("Blizzard_CUFProfiles");
 	profs = profs or {};
 	for i=1, GetNumRaidProfiles() do
 		local name = GetRaidProfileName(i);
@@ -52,17 +53,9 @@ function CustomBuffs:CreateGeneralOptions()
 			width = THIRD_WIDTH * 0.75,
 			order = 4,
 			},
-			blizzardRaidOptionsButton = {
+			showButton = {
 				type = "execute",
-				name = "Open Blizz Menu",
-				desc = "",
-				func = function() InterfaceOptionsFrame_OpenToCategory("Raid Profiles") end,
-				width = THIRD_WIDTH * 0.75,
-				order = 5,
-			},
-			testButton = {
-				type = "execute",
-				name = "Test Raid Frames",
+				name = "Show Raid Frames",
 				desc = "",
 				func = function() CustomBuffs:loadFrames(); end,
 				width = THIRD_WIDTH * 0.75,
@@ -79,11 +72,29 @@ function CustomBuffs:CreateGeneralOptions()
 				width = THIRD_WIDTH * 0.75,
 				order = 6,
 			},
-
+			testAurasButton = {
+				type = "toggle",
+				name = "Show test auras",
+				desc = "Create fake buffs and debuffs on raid frames for testing purposes",
+				get = function() return CustomBuffs.debugMode or false end,
+				set = function(_, value)
+					CustomBuffs:debugAuras();
+				end,
+				width = THIRD_WIDTH * 0.75,
+				order = 7,
+			},
+			blizzardRaidOptionsButton = {
+				type = "execute",
+				name = "Open Blizzard Raid Frames Menu",
+				desc = "",
+				func = function() InterfaceOptionsFrame_OpenToCategory("Raid Profiles") end,
+				width = THIRD_WIDTH * 1.5,
+				order = 10,
+			},
             spacer2 = {
                 type = "header",
 				name = "",
-				order = 10,
+				order = 20,
             },
 			useTweaks = {
 				type = "toggle",
@@ -98,7 +109,7 @@ function CustomBuffs:CreateGeneralOptions()
 					end
 				end,
 				width = THIRD_WIDTH * 2,
-				order = 20,
+				order = 30,
 			},
             spacer3 = {
                 type = "header",
@@ -225,6 +236,7 @@ function CustomBuffs:CreateGeneralOptions()
 				get = function() return self.db.profile.extraDebuffs end,
 				set = function(_, value)
 					self.db.profile.extraDebuffs = value;
+					if value == false then CustomBuffs:hideExtraAuraFrames("debuffs"); end
 					self:UpdateConfig();
 				end,
 				width = THIRD_WIDTH,
@@ -237,6 +249,7 @@ function CustomBuffs:CreateGeneralOptions()
 				get = function() return self.db.profile.extraBuffs end,
 				set = function(_, value)
 					self.db.profile.extraBuffs = value;
+					if value == false then CustomBuffs:hideExtraAuraFrames("buffs"); end
 					self:UpdateConfig();
 				end,
 				width = THIRD_WIDTH,

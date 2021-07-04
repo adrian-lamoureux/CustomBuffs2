@@ -63,6 +63,7 @@ CustomBuffs.verbose = CustomBuffs.verbose or false;
 CustomBuffs.announceSums = CustomBuffs.announceSums or false;
 CustomBuffs.announceSpells = CustomBuffs.announceSpells or false;
 CustomBuffs.locked = CustomBuffs.locked or true;
+CustomBuffs.inRaidGroup = CustomBuffs.inRaidGroup or true;
 
 
 --Set up values for dispel types; used to quickly
@@ -83,6 +84,7 @@ CustomBuffs.MAX_BUFFS = CustomBuffs.MAX_BUFFS or 6;
 
 --Set Buff Scale Factor
 CustomBuffs.BUFF_SCALE_FACTOR = CustomBuffs.BUFF_SCALE_FACTOR or 10;
+CustomBuffs.debugMode = CustomBuffs.debugMode or false;
 
 CustomBuffs.UPDATE_DELAY_TOLERANCE = CustomBuffs.UPDATE_DELAY_TOLERANCE or 0.01;
 --CustomBuffs.inRaidGroup = false;
@@ -582,6 +584,7 @@ local BUFFS = {
         ["Barkskin"] =                  CDStandard,
         ["Ironfur"] =                   CDStandard,
         ["Frenzied Regeneration"] =     CDStandard,
+		["Dash"] =    	 				CDStandard,
 
 		--Hunter
         ["Aspect of the Turtle"] =      CDStandard,
@@ -629,6 +632,7 @@ local BUFFS = {
 
 		--Rogue
         ["Evasion"] =                   CDStandard,
+		["Sprint"] =                   	CDStandard,
         ["Cloak of Shadows"] =          CDStandard,
         ["Feint"] =                     CDStandard,
         ["Readiness"] =                 CDStandard,
@@ -1465,6 +1469,89 @@ CustomBuffs.BuffBlacklist = {
 	["Tranquil Air"] = true,
 };
 
+local testBuffs = {
+		[61295] = 	{ duration = 18, sbPrio = 2 }, 		--Riptide
+		[974] = 	{ duration = 600, sbPrio = 2, stacks = 9 }, 	--Earth Shield
+		[774] = 	{ duration = 15, sbPrio = 2 }, 		--Rejuv
+		[8936] = 	{ duration = 12, sbPrio = 2 }, 		--Regrowth
+		[22812] = 	{ duration = 12, sbPrio = 2 }, 		--Barkskin
+		[22842] = 	{ duration = 3, sbPrio = 2 }, 		--Frenzied Regen
+		[48438] = 	{ duration = 7, sbPrio = 2 }, 		--Wild Growth
+		[33763] = 	{ duration = 15, sbPrio = 2 }, 		--Lifebloom
+		[108416] = 	{ duration = 20, sbPrio = 1 }, 		--Dark Pact
+
+
+};
+local testDebuffs = {
+		[192090] = 	{ duration = 15, sdPrio = 2, stacks = 3 }, 					--Thrash
+		[164812] = 	{ duration = 16, sdPrio = 2, dispelType = "Magic"}, 		--Moonfire
+		[188389] = 	{ duration = 16, sdPrio = 2, dispelType = "Magic"}, 		--Flame Shock
+		[589] = 	{ duration = 16, sdPrio = 2, dispelType = "Magic"}, 		--Shadow Word: Pain
+		[14914] = 	{ duration = 7, sdPrio = 2, dispelType = "Magic"}, 			--Holy Fire
+		[980] = 	{ duration = 7, sdPrio = 2, dispelType = "Curse"}, 			--Agony
+		[316099] = 	{ duration = 16, sdPrio = 2, dispelType = "Magic"}, 		--UA
+		[146739] = 	{ duration = 14, sdPrio = 2, dispelType = "Magic"}, 		--Corruption
+		[63106] = 	{ duration = 15, sdPrio = 2, dispelType = "Magic"}, 		--Siphon Life
+
+
+};
+
+local testThroughputBuffs = {
+		[114052] = 	{ duration = 15, tbPrio = 1 }, 		--Ascendance
+		[345228] = 	{ duration = 15, tbPrio = 3 }, 		--PvP Badge
+		[33697] = 	{ duration = 15, tbPrio = 2 }, 		--Bloodfury
+
+
+
+};
+
+testBossDebuffs = {
+		[118] = 	{ duration = 8, bdPrio = 2, dispelType = "Magic"}, 			--Polymorph
+		[408] = 	{ duration = 6, bdPrio = 1}, 								--Kidney Shot
+
+};
+
+local BCC_testBuffs = {
+		[974] = 	{ duration = 600, sbPrio = 2, stacks = 6 }, 	--Earth Shield
+		[774] = 	{ duration = 15, sbPrio = 2 }, 		--Rejuv
+		[8936] = 	{ duration = 12, sbPrio = 2 }, 		--Regrowth
+		[22812] = 	{ duration = 12, sbPrio = 1 }, 		--Barkskin
+		[22842] = 	{ duration = 10, sbPrio = 1 }, 		--Frenzied Regen
+		[33763] = 	{ duration = 7, sbPrio = 2, stacks = 3 }, 		--Lifebloom
+		[25218] = 	{ duration = 15, sbPrio = 2}, 		--Power Word: Shield
+
+
+};
+local BCC_testDebuffs = {
+		[33745] = 	{ duration = 15, sdPrio = 2, stacks = 5 }, 					--Lacerate
+		[26988] = 	{ duration = 12, sdPrio = 1, dispelType = "Magic"}, 		--Moonfire
+		[25457] = 	{ duration = 12, sdPrio = 1, dispelType = "Magic"}, 		--Flame Shock
+		[589] = 	{ duration = 16, sdPrio = 2, dispelType = "Magic"}, 		--Shadow Word: Pain
+		[14914] = 	{ duration = 10, sdPrio = 2, dispelType = "Magic"}, 		--Holy Fire
+		[27218] = 	{ duration = 24, sdPrio = 1, dispelType = "Curse"}, 		--Agony
+		[30405] = 	{ duration = 18, sdPrio = 1, dispelType = "Magic"}, 		--UA
+		[27216] = 	{ duration = 18, sdPrio = 1, dispelType = "Magic"}, 		--Corruption
+		[30911] = 	{ duration = 30, sdPrio = 1, dispelType = "Magic"}, 		--Siphon Life
+
+
+};
+
+local BCC_testThroughputBuffs = {
+		[35165] = 	{ duration = 15, tbPrio = 3 }, 		--Trinket Proc
+		[345228] = 	{ duration = 15, tbPrio = 3 }, 		--PvP Badge
+		[33697] = 	{ duration = 15, tbPrio = 2 }, 		--Bloodfury
+
+
+
+};
+
+local BCC_testBossDebuffs = {
+		[8643] = 	{ duration = 6, bdPrio = 1}, 								--Kidney Shot
+		[12826] = 	{ duration = 12, bdPrio = 2, dispelType = "Magic"}, 			--Poly
+
+
+};
+
 
 
 if CustomBuffs.gameVersion == 2 then
@@ -1473,6 +1560,10 @@ if CustomBuffs.gameVersion == 2 then
 	BUFFS = BCC_BUFFS;
 	THROUGHPUT_BUFFS = BCC_THROUGHPUT_BUFFS;
 	CC = BCC_CC;
+	testDebuffs = BCC_testDebuffs;
+	testBuffs = BCC_testBuffs;
+	testThroughputBuffs = BCC_testThroughputBuffs;
+	testBossDebuffs = BCC_testBossDebuffs;
 end
 
 
@@ -1555,7 +1646,10 @@ end --= CompactUnitFrame_UtilShouldDisplayBuff;
 
 
 local function ForceUpdateFrame(fNum)
-    local name = CustomBuffs:CleanName(UnitGUID(_G["CompactRaidFrame"..fNum].unit), _G["CompactRaidFrame"..fNum]);
+	local name = "";
+	if _G["CompactRaidFrame"..fNum].unit then
+    	name = CustomBuffs:CleanName(UnitGUID(_G["CompactRaidFrame"..fNum].unit), _G["CompactRaidFrame"..fNum]);
+	end
     if CustomBuffs.verbose then print("Forcing frame update for frame", fNum, "for unit", name); end
     CustomBuffs:UpdateAuras(_G["CompactRaidFrame"..fNum]);
 end
@@ -1830,57 +1924,57 @@ local function handleRosterUpdate()
     --Frames are disabled when the player's group grows past 5 players because most UI
     --configurations wrap to a new column after 5 players.
     if (CustomBuffs.db.profile.extraDebuffs or CustomBuffs.db.profile.extraBuffs) then
-        if GetNumGroupMembers() <= 5 then
-            if CustomBuffs.inRaidGroup then
-                if CustomBuffs.db.profile.extraDebuffs then
-                    CustomBuffs.MAX_DEBUFFS = 15;
-                    for index, frame in ipairs(_G.CompactRaidFrameContainer.flowFrames) do
-                        --index 1 is a string for some reason so we skip it
-                        if index ~= 1 and frame and frame.debuffFrames then
-                            frame.debuffNeedUpdate = true;
-                        end
-                    end
-                else
-                    CustomBuffs.MAX_BUFFS = 15;
-                    for index, frame in ipairs(_G.CompactRaidFrameContainer.flowFrames) do
-                        --index 1 is a string for some reason so we skip it
-                        if index ~= 1 and frame and frame.debuffFrames then
-                            frame.buffNeedUpdate = true;
-                        end
+		if CustomBuffs.verbose then print("Inside extra aura update block"); end
+        if GetNumGroupMembers() <= 5 or not IsInGroup() then
+            if CustomBuffs.db.profile.extraDebuffs then
+				if CustomBuffs.verbose then print("Enabling extra debuff frames"); end
+                CustomBuffs.MAX_DEBUFFS = 15;
+                for index, frame in ipairs(_G.CompactRaidFrameContainer.flowFrames) do
+                    --index 1 is a string for some reason so we skip it
+                    if index ~= 1 and frame and frame.debuffFrames then
+                        frame.debuffNeedUpdate = true;
                     end
                 end
-                CustomBuffs.inRaidGroup = false;
+			end
+            if CustomBuffs.db.profile.extraBuffs then
+				if CustomBuffs.verbose then print("Enabling extra buff frames"); end
+                CustomBuffs.MAX_BUFFS = 15;
+                for index, frame in ipairs(_G.CompactRaidFrameContainer.flowFrames) do
+                    --index 1 is a string for some reason so we skip it
+                    if index ~= 1 and frame and frame.debuffFrames then
+                        frame.buffNeedUpdate = true;
+                    end
+                end
             end
         else
-            if not CustomBuffs.inRaidGroup then
-                if CustomBuffs.db.profile.extraDebuffs then
-                    CustomBuffs.MAX_DEBUFFS = 6;
-                    for index, frame in ipairs(_G.CompactRaidFrameContainer.flowFrames) do
-                        --index 1 is a string for some reason so we skip it
-                        if index ~= 1 and frame and frame.debuffFrames then
-                            frame.debuffNeedUpdate = true;
-                        end
-                    end
-                else
-                    CustomBuffs.MAX_BUFFS = 6;
-                    for index, frame in ipairs(_G.CompactRaidFrameContainer.flowFrames) do
-                        --index 1 is a string for some reason so we skip it
-                        if index ~= 1 and frame and frame.debuffFrames then
-                            frame.buffNeedUpdate = true;
-                        end
+            if CustomBuffs.db.profile.extraDebuffs then
+				if CustomBuffs.verbose then print("Disabling extra debuff frames"); end
+                CustomBuffs.MAX_DEBUFFS = 6;
+                for index, frame in ipairs(_G.CompactRaidFrameContainer.flowFrames) do
+                    --index 1 is a string for some reason so we skip it
+                    if index ~= 1 and frame and frame.debuffFrames then
+                        frame.debuffNeedUpdate = true;
                     end
                 end
-                CustomBuffs.inRaidGroup = true;
+			end
+            if CustomBuffs.db.profile.extraBuffs then
+				if CustomBuffs.verbose then print("Disabling extra buff frames"); end
+                CustomBuffs.MAX_BUFFS = 6;
+                for index, frame in ipairs(_G.CompactRaidFrameContainer.flowFrames) do
+                    --index 1 is a string for some reason so we skip it
+                    if index ~= 1 and frame and frame.debuffFrames then
+                        frame.buffNeedUpdate = true;
+                    end
+                end
             end
         end
-    elseif CustomBuffs.db.profile.showCastBars then
+	end
         --We only show cast bars in groups of 5 or less, so we still need to update our group
         --size tracker if cast bars are enabled
-        if GetNumGroupMembers() <= 5 then
-             CustomBuffs.inRaidGroup = false;
-        else
-             CustomBuffs.inRaidGroup = true;
-        end
+    if GetNumGroupMembers() <= 5 or not IsInGroup() then
+        CustomBuffs.inRaidGroup = false;
+    else
+        CustomBuffs.inRaidGroup = true;
     end
 
     --Update table of group members
@@ -1897,6 +1991,33 @@ local function handleRosterUpdate()
     CustomBuffs:UpdateRaidIcons();
 
     CustomBuffs:UpdateCastBars();
+end
+
+function CustomBuffs:HandleRosterUpdate()
+	handleRosterUpdate();
+end
+
+function CustomBuffs:hideExtraAuraFrames(type)
+	if CustomBuffs.verbose then print("hiding extra", type, "frames"); end
+	if not type or type == "debuffs" then
+		CustomBuffs.MAX_DEBUFFS = 6;
+		for index, frame in ipairs(_G.CompactRaidFrameContainer.flowFrames) do
+			--index 1 is a string for some reason so we skip it
+			if index ~= 1 and frame and frame.debuffFrames then
+				frame.debuffNeedUpdate = true;
+			end
+		end
+	end
+	if not type or type == "buffs" then
+		CustomBuffs.MAX_BUFFS = 6;
+		for index, frame in ipairs(_G.CompactRaidFrameContainer.flowFrames) do
+			--index 1 is a string for some reason so we skip it
+			if index ~= 1 and frame and frame.debuffFrames then
+				frame.buffNeedUpdate = true;
+			end
+		end
+	end
+	ForceUpdateFrames();
 end
 
 function CustomBuffs:loadFrames()
@@ -2443,6 +2564,13 @@ end
 local function updateAura(auraFrame, index, auraData)
     local icon, count, expirationTime, duration, debuffType, spellID, isBuff = auraData[1], auraData[2], auraData[3], auraData[4], auraData[5], auraData[6], auraData[7];
 
+	--[[
+	if CustomBuffs.verbose and debuffType then
+		local link = GetSpellLink(spellID);
+		print("Added spell:",link, "dispelType:", debuffType);
+	end
+	--]]
+
     auraFrame.icon:SetTexture(icon);
     if ( count > 1 ) then
         local countText = count;
@@ -2566,6 +2694,8 @@ local function updateAura(auraFrame, index, auraData)
 end
 
 
+
+
 -------------------------------
 -- Main Aura Update function --
 -------------------------------
@@ -2576,6 +2706,26 @@ end
 --the UI code is single threaded, so we can never have simultaneous executions
 --of UpdateAuras
 local bossDebuffs, throughputBuffs, buffs, debuffs = {}, {}, {}, {};
+
+local function debugAuras()
+	CustomBuffs.debugMode = not CustomBuffs.debugMode;
+	if CustomBuffs.verbose then print("CustomBuffs aura display mode", CustomBuffs.debugMode and "enabled" or "disabled"); end
+	handleRosterUpdate();
+	ForceUpdateFrames();
+end
+
+local function contains(spellID, table)
+	for id, data in ipairs(table) do
+		if data.auraData[6] == spellID then
+			return true;
+		end
+	end
+end
+
+function CustomBuffs:debugAuras()
+	debugAuras();
+end
+
 
 function CustomBuffs:UpdateAuras(frame)
     if (not frame or not frame.displayedUnit or frame:IsForbidden() or not frame:IsShown() or not frame.debuffFrames or not frame:GetName():match("^Compact") or not frame.optionTable or not frame.optionTable.displayNonBossDebuffs) then return; end
@@ -2606,6 +2756,80 @@ function CustomBuffs:UpdateAuras(frame)
 
     --Check for interrupts
     local guid = UnitGUID(frame.displayedUnit);
+	if CustomBuffs.debugMode then
+		if CustomBuffs.verbose then print("Adding fake test auras; Max Buffs:", CustomBuffs.MAX_BUFFS, "Max Debuffs:", CustomBuffs.MAX_DEBUFFS); end
+		if #buffs < CustomBuffs.MAX_BUFFS then
+			for k, data in pairs(testBuffs) do
+				if not contains(k, buffs) then
+					tinsert(buffs, { index = -1, sbPrio = data.sbPrio, auraData = {
+						--{icon, count, expirationTime, duration}
+						GetSpellTexture(k),
+						data.stacks or 1,
+						GetTime() + data.duration,
+						data.duration,
+						nil,                             --no dispel type
+						k,                    --Need a special field containing the spellID
+						summon = data.summon or false,
+						trackedUnit = data.trackedUnit or nil,
+					}});
+				end
+			end
+		end
+		if #debuffs < CustomBuffs.MAX_DEBUFFS then
+			for k, data in pairs(testDebuffs) do
+				if not contains(k, debuffs) then
+					tinsert(debuffs, { index = -1, sdPrio = data.sdPrio, auraData = {
+						--{icon, count, expirationTime, duration}
+						GetSpellTexture(k),
+						data.stacks or 1,
+						GetTime() + data.duration,
+						data.duration,
+						data.dispelType,
+						k,                    --Need a special field containing the spellID
+						summon = data.summon or false,
+						trackedUnit = data.trackedUnit or nil,
+					}});
+				end
+			end
+		end
+		if #throughputBuffs < 2 then
+			for k, data in pairs(testThroughputBuffs) do
+				if not contains(k, throughputBuffs) then
+					tinsert(throughputBuffs, { index = -1, tbPrio = data.tbPrio, auraData = {
+						--{icon, count, expirationTime, duration}
+						GetSpellTexture(k),
+						data.stacks or 1,
+						GetTime() + data.duration,
+						data.duration,
+						data.dispelType,
+						k,                    --Need a special field containing the spellID
+						summon = data.summon or false,
+						trackedUnit = data.trackedUnit or nil,
+					}});
+				end
+			end
+		end
+		if #bossDebuffs < 2 then
+			for k, data in pairs(testBossDebuffs) do
+				if not contains(k, bossDebuffs) then
+					tinsert(bossDebuffs, { index = -1, bdPrio = data.bdPrio, auraData = {
+						--{icon, count, expirationTime, duration}
+						GetSpellTexture(k),
+						data.stacks or 1,
+						GetTime() + data.duration,
+						data.duration,
+						data.dispelType,
+						k,                    --Need a special field containing the spellID
+						summon = data.summon or false,
+						trackedUnit = data.trackedUnit or nil,
+					}});
+				end
+			end
+		end
+		C_Timer.After(3 + CustomBuffs.UPDATE_DELAY_TOLERANCE, function()
+			ForceUpdateFrame(CustomBuffs.units[guid].frameNum);
+		end);
+	end
     if guid and CustomBuffs.units[guid] then
         local unit = CustomBuffs.units[guid];
         if unit.int and unit.int.expires and unit.int.expires > GetTime() then
@@ -2864,20 +3088,24 @@ function CustomBuffs:UpdateAuras(frame)
 
 
     --Hide unused aura frames
-    for i = #debuffs + 1, frame.maxDebuffs do
+    for i = math.min(#debuffs + 1, frame.maxDebuffs + 1), 15 do
         local auraFrame = frame.debuffFrames[i];
         --if auraFrame ~= frame.bossDebuffs[1] and auraFrame ~= frame.bossDebuffs[2] then auraFrame:Hide(); end
-        auraFrame:Hide();
+		if auraFrame then
+			auraFrame:Hide();
+		end
     end
 
     for i = #bossDebuffs + 1, 2 do
         frame.bossDebuffs[i]:Hide();
     end
 
-    for i = #buffs + 1, frame.maxBuffs do
+    for i = math.min(#buffs + 1, frame.maxBuffs + 1), 15 do
         local auraFrame = frame.buffFrames[i];
         --if auraFrame ~= frame.throughputFrames[1] and auraFrame ~= frame.throughputFrames[2] then auraFrame:Hide(); end
-        auraFrame:Hide();
+		if auraFrame then
+			auraFrame:Hide();
+		end
     end
 
     for i = #throughputBuffs + 1, 2 do
@@ -3291,6 +3519,7 @@ function CustomBuffs:OnEnable()
             WeeklyRewardsFrame:Show();
         elseif options == "test" then
 			CustomBuffs:loadFrames();
+			debugAuras();
 		elseif options == "lock" then
 			CustomBuffs:unlockFrames();
 		elseif options == "sync" then
@@ -3406,11 +3635,13 @@ function CustomBuffs:UpdateConfig()
 		self:RegisterEvent("GROUP_ROSTER_UPDATE", "loadFrames");
 	end
 
-    ForceUpdateFrames();
+
 
     self:UpdateRaidIcons();
 
     handleRosterUpdate();
+
+	ForceUpdateFrames();
 
     --Clear cached names in case updated settings change displayed names
     twipe(NameCache);
