@@ -26,6 +26,11 @@ end
 function CustomBuffs:CreateGeneralOptions()
 	LoadAddOn("Blizzard_CUFProfiles");
 	local profs = generateProfiles();
+	if not profs[1] then
+		C_Timer.After(5, function()
+			profs = generateProfiles();
+		end);
+	end
 
 	local THIRD_WIDTH = 1.15
 

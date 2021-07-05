@@ -557,7 +557,10 @@ local BCC_NONAURAS = {
 
 	--ROGUE
 
-
+	--Items
+	[42292] = CDFlash, --PvP trinket
+	[28499] = CDFlash, --Super Mana Potion
+	[28495] = CDFlash, --Health Potion
 };
 
 
@@ -2054,6 +2057,70 @@ function CustomBuffs:unlockFrames()
 	end
 end
 
+
+local function handleCastSuccess(casterGUID, spellID, spellName)
+	local spellName = spellName;
+	if not spellName or spellName == "" then
+		spellName, _, _, _, _, _, _ = GetSpellInfo(spellID);
+	end
+	if CustomBuffs.announceSpells then
+		local link = GetSpellLink(spellID);
+		print("Spell: ", spellID, " : ", link);
+	end
+	if NONAURAS[spellID] or NONAURAS[spellName] then
+		local record = (NONAURAS[spellID] or NONAURAS[spellName]);
+		if (not record.type or record.type ~= "summon") then
+			if (CustomBuffs.db.profile.cooldownFlash or not record.isFlash) then
+				local noSum = record.noSum;
+
+				if not noSum or not checkForSummon(noSum) then
+					casterGUID = getOwner(casterGUID);
+					if CustomBuffs.verbose then print("Spell from caster: ", casterGUID); end
+					if CustomBuffs.units[casterGUID] then
+						--print("Found Cast Success");
+						local duration = record.duration;
+
+						if CustomBuffs.verbose then
+							local link = GetSpellLink(spellID);
+							print("Adding fake aura:", spellID, "/", link);
+						end
+						--local _, class = UnitClass(unit)
+						CustomBuffs.units[casterGUID].nauras = CustomBuffs.units[casterGUID].nauras or {};
+						CustomBuffs.units[casterGUID].nauras[spellID] = CustomBuffs.units[casterGUID].nauras[spellID] or {};
+						CustomBuffs.units[casterGUID].nauras[spellID].expires = GetTime() + duration;
+						CustomBuffs.units[casterGUID].nauras[spellID].spellID = spellID;
+						CustomBuffs.units[casterGUID].nauras[spellID].duration = duration;
+						CustomBuffs.units[casterGUID].nauras[spellID].spellName = spellName;
+						--self.units[destGUID].spellID = spell.parent and spell.parent or spellId
+
+						ForceUpdateFrame(CustomBuffs.units[casterGUID].frameNum);
+						-- Make sure we clear it after the duration
+						C_Timer.After(duration + CustomBuffs.UPDATE_DELAY_TOLERANCE, function()
+							if CustomBuffs.units[casterGUID] and CustomBuffs.units[casterGUID].nauras and CustomBuffs.units[casterGUID].nauras[spellID] then
+								CustomBuffs.units[casterGUID].nauras[spellID] = nil;
+								ForceUpdateFrame(CustomBuffs.units[casterGUID].frameNum);
+							end
+						end);
+
+
+					end
+				end
+			end
+		end
+	end
+end
+
+function CustomBuffs:BCC_UNIT_SPELLCAST_SUCCEEDED(self, unit, castID, spellID)
+	local casterGUID = UnitGUID(unit);
+	--if casterGUID then
+		if CustomBuffs.verbose then
+			local link = GetSpellLink(spellID);
+			print("Found UNIT_SPELLCAST_SUCCEEDED event for", casterGUID, spellID, " / ", link);
+		end
+		handleCastSuccess(casterGUID, spellID, nil);
+	--end
+end
+
 --Check combat log events for interrupts
 local function handleCLEU()
 
@@ -2062,51 +2129,7 @@ local function handleCLEU()
 	wipeTrackedSummon = wipeTrackedSummon or {};
 
 	if (event == "SPELL_CAST_SUCCESS") then
-		if CustomBuffs.announceSpells then
-			local link = GetSpellLink(spellID);
-			print("Spell: ", spellID, " : ", link);
-		end
-		if NONAURAS[spellID] or NONAURAS[spellName] then
-			local record = (NONAURAS[spellID] or NONAURAS[spellName]);
-			if (not record.type or record.type ~= "summon") then
-				if (CustomBuffs.db.profile.cooldownFlash or not record.isFlash) then
-					local noSum = record.noSum;
-
-					if not noSum or not checkForSummon(noSum) then
-						casterGUID = getOwner(casterGUID);
-						if CustomBuffs.verbose then print("Spell from caster: ", casterGUID); end
-        				if CustomBuffs.units[casterGUID] then
-							--print("Found Cast Success");
-            				local duration = record.duration;
-
-							if CustomBuffs.verbose then
-								local link = GetSpellLink(spellID);
-				                print("Adding fake aura:", spellID, "/", link);
-							end
-            				--local _, class = UnitClass(unit)
-            				CustomBuffs.units[casterGUID].nauras = CustomBuffs.units[casterGUID].nauras or {};
-							CustomBuffs.units[casterGUID].nauras[spellID] = CustomBuffs.units[casterGUID].nauras[spellID] or {};
-            				CustomBuffs.units[casterGUID].nauras[spellID].expires = GetTime() + duration;
-							CustomBuffs.units[casterGUID].nauras[spellID].spellID = spellID;
-            				CustomBuffs.units[casterGUID].nauras[spellID].duration = duration;
-        					CustomBuffs.units[casterGUID].nauras[spellID].spellName = spellName;
-        					--self.units[destGUID].spellID = spell.parent and spell.parent or spellId
-
-        					ForceUpdateFrame(CustomBuffs.units[casterGUID].frameNum);
-            				-- Make sure we clear it after the duration
-            				C_Timer.After(duration + CustomBuffs.UPDATE_DELAY_TOLERANCE, function()
-                				if CustomBuffs.units[casterGUID] and CustomBuffs.units[casterGUID].nauras and CustomBuffs.units[casterGUID].nauras[spellID] then
-                					CustomBuffs.units[casterGUID].nauras[spellID] = nil;
-                					ForceUpdateFrame(CustomBuffs.units[casterGUID].frameNum);
-            					end
-        					end);
-
-
-						end
-        			end
-				end
-			end
-		end
+		handleCastSuccess(casterGUID, spellID, spellName);
     end
 
     -- SPELL_INTERRUPT doesn't fire for some channeled spells; if the spell isn't a known interrupt we're done
@@ -3565,6 +3588,10 @@ function CustomBuffs:OnEnable()
 	self:SecureHook("CompactUnitFrame_UpdateAuras", function(frame) self:UpdateAuras(frame); end);
 	self:RegisterComm("CBSync", "OnCommReceived");
 
+	--Workaround for some items not firing combat log events when activated on BCC
+	if CustomBuffs.gameVersion ~= 0 then
+		self:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED", "BCC_UNIT_SPELLCAST_SUCCEEDED");
+	end
 
 	self:UpdateConfig();
 
