@@ -558,9 +558,10 @@ local BCC_NONAURAS = {
 	--ROGUE
 
 	--Items
-	[42292] = CDFlash, --PvP trinket
-	[28499] = { duration = 1, tbPrio = -2, isFlash = true, iconID = 22832 }, --Super Mana Potion
-	[28495] = { duration = 1, tbPrio = -2, isFlash = true, iconID = 22829 }, --Health Potion
+	[42292] = { duration = 1, tbPrio = -2, isFlash = true, iconID = 30345 }, 	--PvP trinket
+	[28499] = { duration = 1, tbPrio = -2, isFlash = true, iconID = 22832 },	--Super Mana Potion
+	[28495] = { duration = 1, tbPrio = -2, isFlash = true, iconID = 22829 }, 	--Health Potion
+	[27237] = { duration = 1, tbPrio = -2, isFlash = true }, 					--Healthstone
 };
 
 
@@ -1455,7 +1456,7 @@ local BCC_CC = {
     ["Intimidating Shout"] =    CCStandard,
     ["Scatter Shot"] =          CCStandard,
 	["Gouge"] =          		CCStandard,
-	["Garrote"] =          		CCStandard,
+	["Garrote - Silence"] =     CCStandard,
 
 
 
