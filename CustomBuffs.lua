@@ -559,8 +559,8 @@ local BCC_NONAURAS = {
 
 	--Items
 	[42292] = CDFlash, --PvP trinket
-	[28499] = CDFlash, --Super Mana Potion
-	[28495] = CDFlash, --Health Potion
+	[28499] = { duration = 1, tbPrio = -2, isFlash = true, iconID = 22832 }, --Super Mana Potion
+	[28495] = { duration = 1, tbPrio = -2, isFlash = true, iconID = 22829 }, --Health Potion
 };
 
 
@@ -2878,31 +2878,40 @@ function CustomBuffs:UpdateAuras(frame)
 				if (NONAURAS[data.spellID] or NONAURAS[data.spellName]) then
 					prioData = (NONAURAS[data.spellID] or NONAURAS[data.spellName]);
 				end
-				if prioData and prioData.tbPrio ~= 0 then
+				if prioData then
+					local texture = nil;
+					if prioData.iconID then
+						_, _, _, _, _, _, _, _, _, texture, _ = GetItemInfo(prioData.iconID);
+					else
+						texture = GetSpellTexture(id);
+					end
+
+					if prioData.tbPrio ~= 0 then
 					--if prioData and prioData.tbPrio then print(prioData.tbPrio); end
-                	tinsert(throughputBuffs, { index = -1, tbPrio = prioData.tbPrio or 7, sbPrio = prioData.sbPrio or nil, auraData = {
-                    	--{icon, count, expirationTime, duration}
-                    	GetSpellTexture(id),
-                    	1,
-                    	data.expires,
-                    	data.duration,
-                    	nil,                             --no dispel type
-                    	data.spellID,                    --Need a special field containing the spellID
-						summon = data.summon or false,
-						trackedUnit = data.trackedUnit or nil,
-                	}});
-            	elseif prioData and prioData.tbPrio == 0 and prioData.sbPrio then
-					tinsert(buffs, { index = -1, sbPrio = prioData.sbPrio, auraData = {
-                    	--{icon, count, expirationTime, duration}
-                    	GetSpellTexture(id),
-                    	1,
-                    	data.expires,
-                    	data.duration,
-                    	nil,                             --no dispel type
-                    	data.spellID,                    --Need a special field containing the spellID
-						summon = data.summon or false,
-						trackedUnit = data.trackedUnit or nil,
-                	}});
+                		tinsert(throughputBuffs, { index = -1, tbPrio = prioData.tbPrio or 7, sbPrio = prioData.sbPrio or nil, auraData = {
+                    		--{icon, count, expirationTime, duration}
+                    		texture,
+                    		1,
+                    		data.expires,
+                    		data.duration,
+                    		nil,                             --no dispel type
+                    		data.spellID,                    --Need a special field containing the spellID
+							summon = data.summon or false,
+							trackedUnit = data.trackedUnit or nil,
+                		}});
+            		elseif prioData.tbPrio == 0 and prioData.sbPrio then
+						tinsert(buffs, { index = -1, sbPrio = prioData.sbPrio, auraData = {
+                    		--{icon, count, expirationTime, duration}
+                    		texture,
+                    		1,
+                    		data.expires,
+                    		data.duration,
+                    		nil,                             --no dispel type
+                    		data.spellID,                    --Need a special field containing the spellID
+							summon = data.summon or false,
+							trackedUnit = data.trackedUnit or nil,
+                		}});
+					end
 				end
         	end
 		end
