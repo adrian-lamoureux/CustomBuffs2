@@ -58,6 +58,7 @@ CustomBuffs.CustomBuffsFrame = CustomBuffs.CustomBuffsFrame or CreateFrame("Fram
 
 --Create units table
 CustomBuffs.units = CustomBuffs.units or {};
+CustomBuffs.partyUnits = CustomBuffs.partyUnits or {};
 
 CustomBuffs.verbose = CustomBuffs.verbose or false;
 CustomBuffs.announceSums = CustomBuffs.announceSums or false;
@@ -161,6 +162,8 @@ local INTERRUPTS = {
     ["Quake"] = 				{ duration = 5 }, --240448
     ["Deafening Crash"] = 		{ duration = 2 },
 	[296523] =			 		{ duration = 3 },
+	[220543] =			 		{ duration = 3 },
+	[2676] =			 		{ duration = 2 },
 };
 
 local BCC_INTERRUPTS = {
@@ -304,6 +307,7 @@ local NONAURAS = {
 	[197995] = 	CDFlash, --Wellspring
 	[51886] = 	CDFlash, --Resto Dispel
 	[370] = 	CDFlash, --Purge
+	[73685]  = 	CDFlash, --Unleash Life
 
 
 	--LOCK
@@ -655,6 +659,7 @@ local BUFFS = {
 		["Water Shield"] =				CDStandard,
 		["Lightning Shield"] =			CDStandard,
         ["Harden Skin"] =               CDStandard,
+		["Spiritwalker's Grace"] =      CDStandard,
 
 		--Warlock
         ["Unending Resolve"] =          CDStandard,
@@ -852,6 +857,7 @@ local BCC_BUFFS = {
 	    ["Tricks of the Trade"] =       EStandard,
 	    ["Rallying Cry"] =              EStandard,
 	    ["Anti-Magic Zone"] =           EStandard,
+		["Power Word: Shield"] = 		EStandard,
 
 	    ["Stoneform"] =                 EStandard,
 	    ["Fireblood"] =                 EStandard,
@@ -874,6 +880,7 @@ local BCC_BUFFS = {
 
 		["Healing Way"] =     			EPStandard,
 		["Ancestral Fortitude"] =     	EStandard,
+		["Inspiration"] =     			EStandard,
 
 	    ["Gladiator's Emblem"] =        EStandard,
 
@@ -1415,7 +1422,7 @@ local BCC_CC = {
     --poison/curse/disease/MD dispellable
     ["Mind Control"] =          PurgeStandard,
     ["Wyvern Sting"] =          PoisonStandard,
-    ["Spider Sting"] =          PoisonStandard,
+    ["Viper Sting"] =          	PoisonStandard,
     --[233022] = true, --Spider Sting Silence
     ["Cyclone"] =               MDStandard,
 
@@ -1457,6 +1464,7 @@ local BCC_CC = {
     ["Scatter Shot"] =          CCStandard,
 	["Gouge"] =          		CCStandard,
 	["Garrote - Silence"] =     CCStandard,
+	["Feral Charge Effect"] =   CCStandard,
 
 
 
@@ -1723,8 +1731,11 @@ local function UpdateUnits()
 	if CustomBuffs.verbose then print("Updating unit table..."); end
 	CustomBuffs.units = CustomBuffs.units or {};
 	CustomBuffs.petToOwner = CustomBuffs.petToOwner or {};
+	CustomBuffs.partyUnits = CustomBuffs.partyUnits or {};
+	twipe(CustomBuffs.partyUnits);
 
 	addPet("pet","player");
+	CustomBuffs.partyUnits[UnitGUID("player")] = true;
 	for i = 1, 40 do
 		local pet = "raidpet"..i;
 		local unit = "raid"..i;
@@ -1733,6 +1744,10 @@ local function UpdateUnits()
 	for i = 1, 4 do
 		local pet = "partypet"..i;
 		local unit = "party"..i;
+		local guid = UnitGUID(unit);
+		if guid then
+			CustomBuffs.partyUnits[guid] = true;
+		end
 		addPet(pet, unit);
 	end
     for _, table in pairs(CustomBuffs.units) do
@@ -3006,11 +3021,14 @@ function CustomBuffs:UpdateAuras(frame)
             elseif (BUFFS[name] or BUFFS[spellID]) then
                 --Add to buffs
                 local auraData = BUFFS[name] or BUFFS[spellID];
-                tinsert(buffs, {
-                    ["index"] = index,
-                    ["sbPrio"] = auraData.sbPrio,
-                    ["auraData"] = {icon, count, expirationTime, duration}
-                });
+				if CustomBuffs.verbose then print(unitCaster); end
+				if not auraData.player or unitCaster == "player" then
+                	tinsert(buffs, {
+                    	["index"] = index,
+                    	["sbPrio"] = auraData.sbPrio,
+                    	["auraData"] = {icon, count, expirationTime, duration}
+                	});
+				end
             elseif shouldDisplayBuff(name, icon, count, debuffType, duration, expirationTime, unitCaster, nil, nil, spellID, canApplyAura, isBossAura) then
                 --Add to buffs
                 tinsert(buffs, {
@@ -3158,9 +3176,9 @@ function CustomBuffs:UpdateAuras(frame)
         --When we call show it doesn't update the text of the name, which
         --means that our SetName code doesn't run until the next update,
         --so we call it manually to override the default blizzard names
-        if self.db.profile.cleanNames then
-            CustomBuffs:SetName(frame);
-        end
+        --if self.db.profile.cleanNames then
+        CustomBuffs:SetName(frame);
+        --end
     end
 
     --Boss debuff location is variable, so we need to update their location every update
@@ -3296,7 +3314,25 @@ function CustomBuffs:SetName(frame)
             name = CustomBuffs:CleanName(UnitGUID(frame.unit), frame);
             if not name then frame.name:Hide(); return; end
         end
-        frame.name:SetText(name);
+		if self.db.profile.cleanNames then
+            frame.name:SetText(name);
+        end
+		local guid = UnitGUID(frame.unit);
+		local _, className, _ = UnitClass(frame.unit);
+		local r, g, b, hex = GetClassColor(className);
+		if not (CustomBuffs.inRaidGroup and self.db.profile.colorNames and CustomBuffs.partyUnits[guid]) then
+			if CustomBuffs.verbose then print("Changing color for unit",guid,r,g,b); end
+			frame.name:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE");
+			frame.name:SetShadowColor(0, 0, 0, 1);
+			frame.name:SetShadowOffset(1, -1);
+			frame.name:SetTextColor(r, g, b, 1);
+			--frame.name:SetTextColor(0, 0, 0, 1);
+		else
+			frame.name:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE");
+			frame.name:SetShadowColor(1, 1, 1, 1);
+			frame.name:SetShadowOffset(1, -1);
+			frame.name:SetTextColor(0, 0, 0, 1);
+		end
 end--);
 --]]
 
@@ -3567,7 +3603,7 @@ function CustomBuffs:OpenOptions()
 		CustomBuffs.optionsOpen = true;
 		local frame = self.gui:Create("Window");
 		frame:SetLayout("Fill");
-		frame:SetWidth(700);
+		frame:SetWidth(670);
 		frame:SetTitle("CustomBuffs2 Options");
 		frame:SetCallback("OnClose", function(widget)
 			self.gui:Release(widget);
@@ -3647,6 +3683,7 @@ function CustomBuffs:OnEnable()
 		elseif options == "recover" then
 			print("Attempting to recover from broken state.");
 			UpdateUnits();
+			ForceUpdateFrames();
 		elseif options == "announce" then
 			if CustomBuffs.announceSums and CustomBuffs.announceSpells then
 				CustomBuffs.announceSums = false;
@@ -3681,6 +3718,9 @@ function CustomBuffs:OnEnable()
     end);
 
 	self:RegisterEvent("UNIT_PET", "UpdateUnits");
+	if not self:IsHooked("CompactUnitFrame_UpdateName", function(frame) self:SetName(frame); end) then
+		self:SecureHook("CompactUnitFrame_UpdateName", function(frame) self:SetName(frame); end);
+	end
     handleRosterUpdate();
 end
 

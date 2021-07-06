@@ -135,6 +135,18 @@ function CustomBuffs:CreateGeneralOptions()
 				width = THIRD_WIDTH,
 				order = 50,
 			},
+			colorNames = {
+				type = "toggle",
+				name = "Highlight Group Names",
+				desc = "Set the color of players in your group to be black while in a raid",
+				get = function() return self.db.profile.colorNames end,
+				set = function(_, value)
+					self.db.profile.colorNames = value;
+					self:UpdateConfig();
+				end,
+				width = THIRD_WIDTH,
+				order = 52,
+			},
 			maxNameLength = {
 				type = "range",
 				name = "Max Name Length",
