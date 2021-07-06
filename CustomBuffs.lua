@@ -3365,6 +3365,8 @@ end--);
 --]]
 
 function CustomBuffs:SetStatusText(frame)
+	if (not frame or not frame.displayedUnit or frame:IsForbidden() or not frame:IsShown() or not frame.debuffFrames or not frame:GetName():match("^Compact") or not frame.optionTable or not frame.optionTable.displayNonBossDebuffs) then return; end
+
 	local statusText = frame.statusText;
 	--if CustomBuffs.verbose then print(statusText); end
 	if statusText and statusText:IsShown() then
@@ -3668,9 +3670,9 @@ function CustomBuffs:OpenOptions()
 		tab:SetFullWidth(true);
 
 		frame:AddChild(tab);
-		-- Add the frame as a global variable under the name `MyGlobalFrameName`
+		-- Add the frame as a global variable under the name `CustomBuffsOptionsFrame`
 	    _G["CustomBuffsOptionsFrame"] = frame;
- 	    -- Register the global variable `MyGlobalFrameName` as a "special frame"
+ 	    -- Register the global variable `CustomBuffsOptionsFrame` as a "special frame"
 	    -- so that it is closed when the escape key is pressed.
 	    tinsert(UISpecialFrames, "CustomBuffsOptionsFrame");
 	end
