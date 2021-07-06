@@ -1424,7 +1424,7 @@ local BCC_CC = {
 
     --poison/curse/disease/MD dispellable
     ["Mind Control"] =          PurgeStandard,
-    ["Wyvern Sting"] =          PoisonStandard,
+    --["Wyvern Sting"] =          PoisonStandard,
     ["Viper Sting"] =          	PoisonStandard,
     --[233022] = true, --Spider Sting Silence
     ["Cyclone"] =               MDStandard,
@@ -3668,6 +3668,11 @@ function CustomBuffs:OpenOptions()
 		tab:SetFullWidth(true);
 
 		frame:AddChild(tab);
+		-- Add the frame as a global variable under the name `MyGlobalFrameName`
+	    _G["CustomBuffsOptionsFrame"] = frame;
+ 	    -- Register the global variable `MyGlobalFrameName` as a "special frame"
+	    -- so that it is closed when the escape key is pressed.
+	    tinsert(UISpecialFrames, "CustomBuffsOptionsFrame");
 	end
 end
 
