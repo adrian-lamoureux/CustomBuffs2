@@ -66,6 +66,7 @@ CustomBuffs.announceSpells = CustomBuffs.announceSpells or false;
 CustomBuffs.locked = CustomBuffs.locked or true;
 CustomBuffs.inRaidGroup = CustomBuffs.inRaidGroup or true;
 CustomBuffs.optionsOpen = CustomBuffs.optionsOpen or false;
+CustomBuffs.runOnExitCombat = CustomBuffs.runOnExitCombat or {};
 
 
 --Set up values for dispel types; used to quickly
@@ -164,6 +165,8 @@ local INTERRUPTS = {
 	[296523] =			 		{ duration = 3 },
 	[220543] =			 		{ duration = 3 },
 	[2676] =			 		{ duration = 2 },
+	[335485] =			 		{ duration = 4 },
+
 };
 
 local BCC_INTERRUPTS = {
@@ -2044,19 +2047,23 @@ function CustomBuffs:hideExtraAuraFrames(type)
 end
 
 function CustomBuffs:loadFrames()
-	if not CompactRaidFrame1 then --Don't spam create new raid frames; causes a huge mess
-		CompactRaidFrameManager_OnLoad(CompactRaidFrameManager);
-		--CompactRaidFrameManagerDisplayFrameProfileSelector_Initialize();
-		CompactRaidFrameContainer_OnLoad(CompactRaidFrameContainer);
-		CompactRaidFrameContainer_SetGroupMode(CompactRaidFrameContainer, "flush");
-		CompactRaidFrameContainer_SetFlowSortFunction(CompactRaidFrameContainer, CRFSort_Role);
-		CompactRaidFrameContainer_AddUnitFrame(CompactRaidFrameContainer, "player", "raid");
+	if not InCombatLockdown() then
+		if not CompactRaidFrame1 then --Don't spam create new raid frames; causes a huge mess
+			CompactRaidFrameManager_OnLoad(CompactRaidFrameManager);
+			--CompactRaidFrameManagerDisplayFrameProfileSelector_Initialize();
+			CompactRaidFrameContainer_OnLoad(CompactRaidFrameContainer);
+			CompactRaidFrameContainer_SetGroupMode(CompactRaidFrameContainer, "flush");
+			CompactRaidFrameContainer_SetFlowSortFunction(CompactRaidFrameContainer, CRFSort_Role);
+			CompactRaidFrameContainer_AddUnitFrame(CompactRaidFrameContainer, "player", "raid");
+		end
+		CompactRaidFrameContainer_LayoutFrames(CompactRaidFrameContainer);
+		CompactRaidFrameContainer_UpdateDisplayedUnits(CompactRaidFrameContainer);
+		CompactRaidFrameManager:Show();
+		CompactRaidFrameContainer:Show();
+		handleRosterUpdate();
+	else
+		CustomBuffs:RunOnExitCombat(CustomBuffs.loadFrames);
 	end
-	CompactRaidFrameContainer_LayoutFrames(CompactRaidFrameContainer);
-	CompactRaidFrameContainer_UpdateDisplayedUnits(CompactRaidFrameContainer);
-	CompactRaidFrameManager:Show();
-	CompactRaidFrameContainer:Show();
-	handleRosterUpdate();
 end
 
 function CustomBuffs:unlockFrames()
@@ -2137,6 +2144,26 @@ function CustomBuffs:BCC_UNIT_SPELLCAST_SUCCEEDED(self, unit, castID, spellID)
 	--end
 end
 
+
+function CustomBuffs:RunOnExitCombat(func, ...)
+	CustomBuffs.runOnExitCombat = CustomBuffs.runOnExitCombat or {};
+
+	tinsert(CustomBuffs.runOnExitCombat, {func = func, args = ...});
+end
+
+local function handleExitCombat()
+	for i, entry in ipairs(CustomBuffs.runOnExitCombat) do
+		if entry.func then
+			if entry.args then
+				entry.func(entry.args);
+			else
+				entry.func();
+			end
+		else
+			error("Invalid construct found for RunOnExitCombat");
+		end
+	end
+end
 --Check combat log events for interrupts
 local function handleCLEU()
 
@@ -2400,6 +2427,7 @@ CustomBuffs.CustomBuffsFrame:SetScript("OnEvent",function(self, event, ...)
             oldUpdateLayout(CompactRaidFrameContainer);
             CustomBuffs.layoutNeedsUpdate = false;
         end
+		handleExitCombat();
         --[[
         for frame, _ in ipairs(needsUpdateVisible) do
             CompactUnitFrame_UpdateVisible(frame);
@@ -3323,20 +3351,33 @@ function CustomBuffs:SetName(frame)
 		if not (CustomBuffs.inRaidGroup and self.db.profile.colorNames and CustomBuffs.partyUnits[guid]) then
 			if CustomBuffs.verbose then print("Changing color for unit",guid,r,g,b); end
 			frame.name:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE");
-			frame.name:SetShadowColor(0, 0, 0, 1);
+			frame.name:SetShadowColor(r * 0.5, g * 0.5, b * 0.5, 0.5);
 			frame.name:SetShadowOffset(1, -1);
 			frame.name:SetTextColor(r, g, b, 1);
 			--frame.name:SetTextColor(0, 0, 0, 1);
 		else
 			frame.name:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE");
-			frame.name:SetShadowColor(1, 1, 1, 1);
+			frame.name:SetShadowColor(1, 1, 1, 0.8);
 			frame.name:SetShadowOffset(1, -1);
 			frame.name:SetTextColor(0, 0, 0, 1);
 		end
 end--);
 --]]
 
-
+function CustomBuffs:SetStatusText(frame)
+	local statusText = frame.statusText;
+	--if CustomBuffs.verbose then print(statusText); end
+	if statusText and statusText:IsShown() then
+		if CustomBuffs.verbose then print("Updating Status Text"); end
+		local guid = UnitGUID(frame.unit);
+		local _, className, _ = UnitClass(frame.unit);
+		local r, g, b, hex = GetClassColor(className);
+		--statusText:SetFont("Fonts\\FRIZQT__.TTF", 20, "OUTLINE");
+		statusText:SetShadowColor(0, 0, 0, 0.5);
+		statusText:SetShadowOffset(1, -1);
+		statusText:SetTextColor(r, g, b, 1);
+	end
+end
 
 
 
@@ -3720,6 +3761,9 @@ function CustomBuffs:OnEnable()
 	self:RegisterEvent("UNIT_PET", "UpdateUnits");
 	if not self:IsHooked("CompactUnitFrame_UpdateName", function(frame) self:SetName(frame); end) then
 		self:SecureHook("CompactUnitFrame_UpdateName", function(frame) self:SetName(frame); end);
+	end
+	if not self:IsHooked("CompactUnitFrame_UpdateStatusText", function(frame) self:SetStatusText(frame); end) then
+		self:SecureHook("CompactUnitFrame_UpdateStatusText", function(frame) self:SetStatusText(frame); end);
 	end
     handleRosterUpdate();
 end
