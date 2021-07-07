@@ -7,7 +7,7 @@ addonTable.CustomBuffs = LibStub("AceAddon-3.0"):NewAddon("CustomBuffs", "AceTim
 local CustomBuffs = addonTable.CustomBuffs;
 local LibAceSerializer = LibStub:GetLibrary("AceSerializer-3.0");
 
-CustomBuffs.version = 020001;
+CustomBuffs.version = 020002;
 
 if WOW_PROJECT_ID == WOW_PROJECT_CLASSIC then
 	CustomBuffs.gameVersion = 1; --Classic
@@ -3601,23 +3601,28 @@ function CustomBuffs:OnCommReceived(prefix, message, distribution, sender)
 	end
 end
 
+function oldVersion()
+	print("Your version of CustomBuffs2 is out of date, please update");
+	StaticPopupDialogs["CustomBuffsUpdatePopup"] = {
+		  text = "Your version of CustomBuffs2 is out of date, please update",
+		  button1 = "OK",
+		  --button2 = "No",
+		  OnAccept = function()
+		  end,
+		  timeout = 0,
+		  whileDead = true,
+		  hideOnEscape = true,
+		  preferredIndex = 3,  -- avoid some UI taint, see http://www.wowace.com/announcements/how-to-avoid-some-ui-taint/
+	};
+	StaticPopup_Show("CustomBuffsUpdatePopup");
+end
+
 function CustomBuffs:VersCheck(prefix, message, distribution, sender)
 	local success, deserialized = LibAceSerializer:Deserialize(message);
 	if success then
 		if deserialized and CustomBuffs.version then
 			if deserialized > CustomBuffs.version then
-				print("Your version of CustomBuffs2 is out of date, please update");
-				StaticPopupDialogs["CustomBuffsUpdatePopup"] = {
-					  text = "Your version of CustomBuffs2 is out of date, please update",
-					  button1 = "OK",
-					  --button2 = "No",
-					  OnAccept = function()
-					  end,
-					  timeout = 0,
-					  whileDead = true,
-					  hideOnEscape = true,
-					  preferredIndex = 3,  -- avoid some UI taint, see http://www.wowace.com/announcements/how-to-avoid-some-ui-taint/
-				};
+				oldVersion();
 			end
 		end
 	end
@@ -3739,6 +3744,8 @@ function CustomBuffs:OnEnable()
         elseif options == "test" then
 			CustomBuffs:loadFrames();
 			debugAuras();
+		elseif options == "test old version" then
+			oldVersion();
 		elseif options == "show" then
 			CustomBuffs:loadFrames();
 		elseif options == "lock" then
