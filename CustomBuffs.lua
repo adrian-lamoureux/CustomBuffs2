@@ -7,6 +7,7 @@ addonTable.CustomBuffs = LibStub("AceAddon-3.0"):NewAddon("CustomBuffs", "AceTim
 local CustomBuffs = addonTable.CustomBuffs;
 local LibAceSerializer = LibStub:GetLibrary("AceSerializer-3.0");
 
+CustomBuffs.version = 020000;
 
 if WOW_PROJECT_ID == WOW_PROJECT_CLASSIC then
 	CustomBuffs.gameVersion = 1; --Classic
@@ -736,6 +737,7 @@ local BUFFS = {
 	    ["Drink"] =           				EStandard,
 		["Refreshment"] =           		EStandard,
 		["Invisibility"] =           		EStandard,
+		["Invisibile"] =           			EStandard,
 		["Dimensional Shifter"] =           EStandard,
 
 		["Cultivation"] =               	EPStandard,
@@ -1702,12 +1704,16 @@ end
 
 
 function CustomBuffs:sync()
-	print("sending int data...");
+	print("CustomBuffs2 performing sync...");
 	if self.db.global.unknownInterrupts then
 		local serialized = LibAceSerializer:Serialize(self.db.global.unknownInterrupts);
+		local vers = LibAceSerializer:Serialize(CustomBuffs.version);
 		self:SendCommMessage("CBSync", serialized, "GUILD", nil, "BULK");
 		self:SendCommMessage("CBSync", serialized, "RAID", 	nil, "BULK");
 		self:SendCommMessage("CBSync", serialized, "PARTY", nil, "BULK");
+		self:SendCommMessage("CBVers", vers, "GUILD", nil, "BULK");
+		self:SendCommMessage("CBVers", vers, "RAID", nil, "BULK");
+		self:SendCommMessage("CBVers", vers, "PARTY", nil, "BULK");
 
 	end
 end
@@ -3584,9 +3590,23 @@ function CustomBuffs:OnCommReceived(prefix, message, distribution, sender)
 	if success then
 		if self.db.global.unknownInterrupts and deserialized then
 			for k, v in pairs(deserialized) do
-				local link = GetSpellLink(k);
-				self.db.global.unknownInterrupts[k] = v or nil;
-				print(k, ": ", link);
+				spellName, _, _, _, _, _, _ = GetSpellInfo(spellID);
+				if not (INTERRUPTS[k] or INTERRUPTS[spellName]) then
+					local link = GetSpellLink(k);
+					self.db.global.unknownInterrupts[k] = v or nil;
+					print(k, ": ", link);
+				end
+			end
+		end
+	end
+end
+
+function CustomBuffs:VersCheck(prefix, message, distribution, sender)
+	local success, deserialized = LibAceSerializer:Deserialize(message);
+	if success then
+		if deserialized and CustomBuffs.version then
+			if deserialized < CustomBuffs.version then
+				print("Your version of CustomBuffs2 is out of date, please update");
 			end
 		end
 	end
@@ -3681,13 +3701,16 @@ end
 function CustomBuffs:OnEnable()
 	self:SecureHook("CompactUnitFrame_UpdateAuras", function(frame) self:UpdateAuras(frame); end);
 	self:RegisterComm("CBSync", "OnCommReceived");
+	self:RegisterComm("CBVers", "VersCheck");
+
+
 
 	--Workaround for some items not firing combat log events when activated on BCC
 	if CustomBuffs.gameVersion ~= 0 then
 		self:RegisterEvent("UNIT_SPELLCAST_SUCCEEDED", "BCC_UNIT_SPELLCAST_SUCCEEDED");
 	end
 
-	self:UpdateConfig();
+	self:loaded();
 
     -- Hook raid icon updates
 	self:RegisterBucketEvent({"RAID_TARGET_UPDATE", "RAID_ROSTER_UPDATE"}, 0.1, "UpdateRaidIcons");
@@ -3799,11 +3822,19 @@ function CustomBuffs:Init()
     -- Set up database defaults
 	self.gui = LibStub("AceGUI-3.0");
 	CustomBuffs:CreateOptions();
+
+	if self.db.profile.alwaysShowFrames then
+		CustomBuffs:loadFrames();
+		self:RegisterEvent("PLAYER_ENTERING_WORLD", "loadFrames");
+		self:RegisterEvent("GROUP_ROSTER_UPDATE", "loadFrames");
+	end
 end
 
 function CustomBuffs:UpdateConfig()
     if not InCombatLockdown() then
 		CompactRaidFrameContainer:SetScale(self.db.profile.frameScale);
+	else
+		CustomBuffs:RunOnExitCombat(CompactRaidFrameContainer.SetScale, self.db.profile.frameScale);
 	end
 
     if self.db.profile.loadTweaks then
@@ -3827,12 +3858,12 @@ function CustomBuffs:UpdateConfig()
     tbSize = self.db.profile.throughputBuffScale;
     bdSize = self.db.profile.bossDebuffScale;
 
+
 	if self.db.profile.alwaysShowFrames then
 		CustomBuffs:loadFrames();
 		self:RegisterEvent("PLAYER_ENTERING_WORLD", "loadFrames");
 		self:RegisterEvent("GROUP_ROSTER_UPDATE", "loadFrames");
 	end
-
 
 
     self:UpdateRaidIcons();
