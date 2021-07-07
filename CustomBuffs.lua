@@ -3605,8 +3605,19 @@ function CustomBuffs:VersCheck(prefix, message, distribution, sender)
 	local success, deserialized = LibAceSerializer:Deserialize(message);
 	if success then
 		if deserialized and CustomBuffs.version then
-			if deserialized < CustomBuffs.version then
+			if deserialized > CustomBuffs.version then
 				print("Your version of CustomBuffs2 is out of date, please update");
+				StaticPopupDialogs["CustomBuffsUpdatePopup"] = {
+					  text = "Your version of CustomBuffs2 is out of date, please update",
+					  button1 = "OK",
+					  --button2 = "No",
+					  OnAccept = function()
+					  end,
+					  timeout = 0,
+					  whileDead = true,
+					  hideOnEscape = true,
+					  preferredIndex = 3,  -- avoid some UI taint, see http://www.wowace.com/announcements/how-to-avoid-some-ui-taint/
+				};
 			end
 		end
 	end
