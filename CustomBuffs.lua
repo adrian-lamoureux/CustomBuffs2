@@ -7,7 +7,7 @@ addonTable.CustomBuffs = LibStub("AceAddon-3.0"):NewAddon("CustomBuffs", "AceTim
 local CustomBuffs = addonTable.CustomBuffs;
 local LibAceSerializer = LibStub:GetLibrary("AceSerializer-3.0");
 
-CustomBuffs.version = 020003;
+CustomBuffs.version = 020004;
 
 if WOW_PROJECT_ID == WOW_PROJECT_CLASSIC then
 	CustomBuffs.gameVersion = 1; --Classic
@@ -168,6 +168,7 @@ local INTERRUPTS = {
 	[220543] =			 		{ duration = 3 },
 	[2676] =			 		{ duration = 2 },
 	[335485] =			 		{ duration = 4 },
+	[342135] =			 		{ duration = 3 },
 
 };
 
@@ -1375,6 +1376,8 @@ local CC = {
     ["Decaying Blight"] =                       DiseaseStandard,
     ["Curse of Desolation"] =                   CurseStandard,
 
+	
+	["Biting Cold"] =                           CCStandard,
 
     --------------------
     -- Castle Nathria --
@@ -3605,7 +3608,7 @@ function CustomBuffs:OnCommReceived(prefix, message, distribution, sender)
 end
 
 function oldVersion()
-	if not CustomBuffs.hadNotified then
+	if not CustomBuffs.hasNotified then
 		print("Your version of CustomBuffs2 is out of date, please update");
 		StaticPopupDialogs["CustomBuffsUpdatePopup"] = {
 			  text = "Your version of CustomBuffs2 is out of date, please update",
@@ -3619,7 +3622,7 @@ function oldVersion()
 			  preferredIndex = 3,  -- avoid some UI taint, see http://www.wowace.com/announcements/how-to-avoid-some-ui-taint/
 		};
 		StaticPopup_Show("CustomBuffsUpdatePopup");
-		CustomBuffs.hadNotified = true;
+		CustomBuffs.hasNotified = true;
 	end
 end
 
