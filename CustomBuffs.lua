@@ -7,7 +7,7 @@ addonTable.CustomBuffs = LibStub("AceAddon-3.0"):NewAddon("CustomBuffs", "AceTim
 local CustomBuffs = addonTable.CustomBuffs;
 local LibAceSerializer = LibStub:GetLibrary("AceSerializer-3.0");
 
-CustomBuffs.version = 020002;
+CustomBuffs.version = 020003;
 
 if WOW_PROJECT_ID == WOW_PROJECT_CLASSIC then
 	CustomBuffs.gameVersion = 1; --Classic
@@ -68,6 +68,7 @@ CustomBuffs.locked = CustomBuffs.locked or true;
 CustomBuffs.inRaidGroup = CustomBuffs.inRaidGroup or true;
 CustomBuffs.optionsOpen = CustomBuffs.optionsOpen or false;
 CustomBuffs.runOnExitCombat = CustomBuffs.runOnExitCombat or {};
+CustomBuffs.hasNotified = CustomBuffs.hasNotified or false;
 
 
 --Set up values for dispel types; used to quickly
@@ -312,6 +313,7 @@ local NONAURAS = {
 	[51886] = 	CDFlash, --Resto Dispel
 	[370] = 	CDFlash, --Purge
 	[73685]  = 	CDFlash, --Unleash Life
+	[77130]  = 	CDFlash, --Resto dispel
 
 
 	--LOCK
@@ -734,6 +736,7 @@ local BUFFS = {
 	    ["Prowl"] =                     	EStandard,
 
 		["Food"] =              			EStandard,
+		["Food & Drink"] =              	EStandard,
 	    ["Drink"] =           				EStandard,
 		["Refreshment"] =           		EStandard,
 		["Invisibility"] =           		EStandard,
@@ -3602,19 +3605,22 @@ function CustomBuffs:OnCommReceived(prefix, message, distribution, sender)
 end
 
 function oldVersion()
-	print("Your version of CustomBuffs2 is out of date, please update");
-	StaticPopupDialogs["CustomBuffsUpdatePopup"] = {
-		  text = "Your version of CustomBuffs2 is out of date, please update",
-		  button1 = "OK",
-		  --button2 = "No",
-		  OnAccept = function()
-		  end,
-		  timeout = 0,
-		  whileDead = true,
-		  hideOnEscape = true,
-		  preferredIndex = 3,  -- avoid some UI taint, see http://www.wowace.com/announcements/how-to-avoid-some-ui-taint/
-	};
-	StaticPopup_Show("CustomBuffsUpdatePopup");
+	if not CustomBuffs.hadNotified then
+		print("Your version of CustomBuffs2 is out of date, please update");
+		StaticPopupDialogs["CustomBuffsUpdatePopup"] = {
+			  text = "Your version of CustomBuffs2 is out of date, please update",
+			  button1 = "OK",
+			  --button2 = "No",
+			  OnAccept = function()
+			  end,
+			  timeout = 0,
+			  whileDead = true,
+			  hideOnEscape = true,
+			  preferredIndex = 3,  -- avoid some UI taint, see http://www.wowace.com/announcements/how-to-avoid-some-ui-taint/
+		};
+		StaticPopup_Show("CustomBuffsUpdatePopup");
+		CustomBuffs.hadNotified = true;
+	end
 end
 
 function CustomBuffs:VersCheck(prefix, message, distribution, sender)
