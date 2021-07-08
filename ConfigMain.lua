@@ -183,6 +183,21 @@ function CustomBuffs:CreateGeneralOptions()
 				width = THIRD_WIDTH,
 				order = 70,
 			},
+			frameAlpha = {
+				type = "range",
+				name = "Raidframe Alpha",
+				desc = "Adjust the trasparency of the raid frames and all of their contents",
+				min = 0,
+				max = 1,
+				step = 0.1,
+				get = function() return self.db.profile.frameAlpha end,
+				set = function(_, value)
+					self.db.profile.frameAlpha = value;
+					self:UpdateConfig();
+				end,
+				width = THIRD_WIDTH,
+				order = 70,
+			},
 			buffScale = {
 				type = "range",
 				name = "Buff Scale",
@@ -196,7 +211,7 @@ function CustomBuffs:CreateGeneralOptions()
 					self:UpdateConfig();
 				end,
 				width = THIRD_WIDTH,
-				order = 71,
+				order = 72,
 			},
 			debuffScale = {
 				type = "range",
@@ -211,7 +226,7 @@ function CustomBuffs:CreateGeneralOptions()
 					self:UpdateConfig();
 				end,
 				width = THIRD_WIDTH,
-				order = 72,
+				order = 73,
 			},
 			bossDebuffScale = {
 				type = "range",
@@ -226,7 +241,7 @@ function CustomBuffs:CreateGeneralOptions()
 					self:UpdateConfig();
 				end,
 				width = THIRD_WIDTH,
-				order = 73,
+				order = 74,
 			},
 			throughputBuffScale = {
 				type = "range",
@@ -241,7 +256,7 @@ function CustomBuffs:CreateGeneralOptions()
 					self:UpdateConfig();
 				end,
 				width = THIRD_WIDTH,
-				order = 74,
+				order = 75,
 			},
 			spacer5 = {
                 type = "header",

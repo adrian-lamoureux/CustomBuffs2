@@ -7,7 +7,7 @@ addonTable.CustomBuffs = LibStub("AceAddon-3.0"):NewAddon("CustomBuffs", "AceTim
 local CustomBuffs = addonTable.CustomBuffs;
 local LibAceSerializer = LibStub:GetLibrary("AceSerializer-3.0");
 
-CustomBuffs.version = 020004;
+CustomBuffs.version = 020005;
 
 if WOW_PROJECT_ID == WOW_PROJECT_CLASSIC then
 	CustomBuffs.gameVersion = 1; --Classic
@@ -1376,7 +1376,7 @@ local CC = {
     ["Decaying Blight"] =                       DiseaseStandard,
     ["Curse of Desolation"] =                   CurseStandard,
 
-	
+
 	["Biting Cold"] =                           CCStandard,
 
     --------------------
@@ -3857,12 +3857,24 @@ function CustomBuffs:Init()
 	end
 end
 
+function CustomBuffs:SetRaidFrameAlpha()
+	CompactRaidFrameContainer:SetAlpha(self.db.profile.frameAlpha);
+
+	for index, frame in ipairs(_G.CompactRaidFrameContainer.flowFrames) do
+		--index 1 is a string for some reason so we skip it
+		if index ~= 1 and frame and frame.background then
+			frame.background:SetAlpha(self.db.profile.frameAlpha);
+		end
+	end
+end
+
 function CustomBuffs:UpdateConfig()
     if not InCombatLockdown() then
 		CompactRaidFrameContainer:SetScale(self.db.profile.frameScale);
 	else
 		CustomBuffs:RunOnExitCombat(CompactRaidFrameContainer.SetScale, self.db.profile.frameScale);
 	end
+	CustomBuffs:SetRaidFrameAlpha();
 
     if self.db.profile.loadTweaks then
         self:UITweaks();

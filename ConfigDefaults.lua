@@ -12,6 +12,7 @@ function CustomBuffs:Defaults()
 		["unknownInterrupts"] = {},
 	};
 	defaults.profile = {
+		frameAlpha = 1,
 		colorPartyNames = false,
 		alwaysShowFrames = false,
 		cooldownFlash = true,
