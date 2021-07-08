@@ -10,7 +10,7 @@ local LibAceSerializer = LibStub:GetLibrary("AceSerializer-3.0");
 
 CustomBuffs.major = 2;
 CustomBuffs.mid = 0;
-CustomBuffs.minor = 10;
+CustomBuffs.minor = 11;
 CustomBuffs.version = CustomBuffs.minor + 100 * CustomBuffs.mid + 10000 * CustomBuffs.major;
 
 if WOW_PROJECT_ID == WOW_PROJECT_CLASSIC then
@@ -747,7 +747,7 @@ local BUFFS = {
 	    ["Drink"] =           				EStandard,
 		["Refreshment"] =           		EStandard,
 		["Invisibility"] =           		EStandard,
-		["Invisibile"] =           			EStandard,
+		["Invisible"] =           			EStandard,
 		["Dimensional Shifter"] =           EStandard,
 
 		["Cultivation"] =               	EPStandard,
