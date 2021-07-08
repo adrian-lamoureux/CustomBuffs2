@@ -7,7 +7,7 @@ addonTable.CustomBuffs = LibStub("AceAddon-3.0"):NewAddon("CustomBuffs", "AceTim
 local CustomBuffs = addonTable.CustomBuffs;
 local LibAceSerializer = LibStub:GetLibrary("AceSerializer-3.0");
 
-CustomBuffs.version = 020005;
+CustomBuffs.version = 020008;
 
 if WOW_PROJECT_ID == WOW_PROJECT_CLASSIC then
 	CustomBuffs.gameVersion = 1; --Classic
@@ -549,6 +549,7 @@ local BCC_NONAURAS = {
 	[17401] =	CDFlash, --Hurricane
 	[9862] =	CDFlash, --Tranquility
 	[17116] =	CDFlash, --NS
+	[18562] =	CDFlash, --Swiftmend
 
 
 
@@ -723,6 +724,7 @@ local BUFFS = {
 
 	    ["Stoneform"] =                 	EStandard,
 	    ["Fireblood"] =                 	EStandard,
+		["Soulstone"] =                 	EStandard,
 
 
 	    ["Gladiator's Emblem"] =        	EStandard,
@@ -796,6 +798,9 @@ local BCC_BUFFS = {
 
 		--Mage
         ["Ice Block"] =                 CDStandard,
+		["Mana Shield"] =               CDStandard,
+		["Ice Barrier"] =               CDStandard,
+
 
 		--Paladin
         ["Divine Shield"] =             CDStandard,
@@ -3368,8 +3373,8 @@ function CustomBuffs:SetName(frame)
 			frame.name:SetTextColor(r, g, b, 1);
 			--frame.name:SetTextColor(0, 0, 0, 1);
 		else
-			frame.name:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE");
-			frame.name:SetShadowColor(1, 1, 1, 0.8);
+			frame.name:SetFont("Fonts\\FRIZQT__.TTF", 11--[[, "OUTLINE"]]);
+			frame.name:SetShadowColor(0.5, 0.5, 0.5, 0.8);
 			frame.name:SetShadowOffset(1, -1);
 			frame.name:SetTextColor(0, 0, 0, 1);
 		end
