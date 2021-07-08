@@ -17,7 +17,7 @@ else
     CustomBuffs.gameVersion = 0; --Retail
 end
 
-_G.CustomBuffs = CustomBuffs
+_G.CustomBuffs = CustomBuffs;
     --[[
         CustomBuffsFrame        :   Frame
 
