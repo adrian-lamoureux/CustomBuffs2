@@ -10,7 +10,7 @@ local LibAceSerializer = LibStub:GetLibrary("AceSerializer-3.0");
 
 CustomBuffs.major = 2;
 CustomBuffs.mid = 0;
-CustomBuffs.minor = 11;
+CustomBuffs.minor = 12;
 CustomBuffs.version = CustomBuffs.minor + 100 * CustomBuffs.mid + 10000 * CustomBuffs.major;
 
 if WOW_PROJECT_ID == WOW_PROJECT_CLASSIC then
@@ -3617,7 +3617,8 @@ function CustomBuffs:OnCommReceived(prefix, message, distribution, sender)
 end
 
 function oldVersion()
-	if not CustomBuffs.hasNotified then
+	local inInstance, instanceType = IsInInstance();
+	if not CustomBuffs.hasNotified and not inInstance then
 		print("Your version of CustomBuffs2 is out of date, please update");
 		StaticPopupDialogs["CustomBuffsUpdatePopup"] = {
 			  text = "Your version of CustomBuffs2 is out of date, please update",
