@@ -7,7 +7,7 @@ addonTable.CustomBuffs = LibStub("AceAddon-3.0"):NewAddon("CustomBuffs", "AceTim
 local CustomBuffs = addonTable.CustomBuffs;
 local LibAceSerializer = LibStub:GetLibrary("AceSerializer-3.0");
 
-CustomBuffs.version = 020008;
+CustomBuffs.version = 020009;
 
 if WOW_PROJECT_ID == WOW_PROJECT_CLASSIC then
 	CustomBuffs.gameVersion = 1; --Classic
@@ -475,7 +475,7 @@ local NONAURAS = {
 	[307381] = 	CDFlash, --Empowered Exorcisms Potion
 
 	--Other
-	[16589] = 	CDFlash, --Noggenfogger
+	[16589] = { duration = 1, tbPrio = -2, isFlash = true, iconID = 8529 }, 	--Noggenfogger
 };
 
 local BCC_NONAURAS = {
@@ -560,10 +560,7 @@ local BCC_NONAURAS = {
 
 	--HUNTER
 
-
 	--PALADIN
-
-
 
 	--WARRIOR
 
@@ -574,6 +571,9 @@ local BCC_NONAURAS = {
 	[28499] = { duration = 1, tbPrio = -2, isFlash = true, iconID = 22832 },	--Super Mana Potion
 	[28495] = { duration = 1, tbPrio = -2, isFlash = true, iconID = 22829 }, 	--Health Potion
 	[27237] = { duration = 1, tbPrio = -2, isFlash = true }, 					--Healthstone
+
+	--other
+	[16589] = { duration = 1, tbPrio = -2, isFlash = true, iconID = 8529 }, 	--Noggenfogger
 };
 
 
