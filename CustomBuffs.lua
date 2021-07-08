@@ -7,7 +7,11 @@ addonTable.CustomBuffs = LibStub("AceAddon-3.0"):NewAddon("CustomBuffs", "AceTim
 local CustomBuffs = addonTable.CustomBuffs;
 local LibAceSerializer = LibStub:GetLibrary("AceSerializer-3.0");
 
-CustomBuffs.version = 020009;
+
+CustomBuffs.major = 2;
+CustomBuffs.mid = 0;
+CustomBuffs.minor = 10;
+CustomBuffs.version = CustomBuffs.minor + 100 * CustomBuffs.mid + 10000 * CustomBuffs.major;
 
 if WOW_PROJECT_ID == WOW_PROJECT_CLASSIC then
 	CustomBuffs.gameVersion = 1; --Classic
