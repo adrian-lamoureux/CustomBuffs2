@@ -28,6 +28,7 @@ function CustomBuffs:CreateGeneralOptions()
 	local profs = generateProfiles();
 	if not profs[1] then
 		C_Timer.After(5, function()
+			LoadAddOn("Blizzard_CUFProfiles");
 			profs = generateProfiles();
 		end);
 	end
@@ -123,6 +124,38 @@ function CustomBuffs:CreateGeneralOptions()
                 name = "Raid Frame Name Options",
                 order = 40,
             },
+			nameFont = {
+     			type = 'select',
+			    dialogControl = 'LSM30_Font',
+			    name = 'Raid Frame Name Font',
+			    desc = 'Choose the font to be used for the names on raid frames',
+			    values = AceGUIWidgetLSMlists.font,
+			    get = function()
+			        return self.db.profile.nameFont;
+			    end,
+			    set = function(_, value)
+			         self.db.profile.nameFont = value;
+					 if CustomBuffs.verbose then print("Setting Font to", value); end
+					 self:UpdateConfig();
+			    end,
+				width = THIRD_WIDTH,
+				order = 50,
+			},
+			nameFontSize = {
+				type = "range",
+				name = "Raid Frame Name Size",
+				desc = "Set the font size to be used for names on raid frames",
+				min = 10,
+				max = 26,
+				step = 1,
+				get = function() return self.db.profile.nameSize end,
+				set = function(_, value)
+					self.db.profile.nameSize = value;
+					self:UpdateConfig();
+				end,
+				width = THIRD_WIDTH,
+				order = 51,
+			},
             cleanNames = {
 				type = "toggle",
 				name = "Clean Names",
@@ -130,18 +163,6 @@ function CustomBuffs:CreateGeneralOptions()
 				get = function() return self.db.profile.cleanNames end,
 				set = function(_, value)
 					self.db.profile.cleanNames = value;
-					self:UpdateConfig();
-				end,
-				width = THIRD_WIDTH,
-				order = 50,
-			},
-			colorNames = {
-				type = "toggle",
-				name = "Highlight Group Names",
-				desc = "Set the color of players in your group to be black while in a raid",
-				get = function() return self.db.profile.colorNames end,
-				set = function(_, value)
-					self.db.profile.colorNames = value;
 					self:UpdateConfig();
 				end,
 				width = THIRD_WIDTH,
@@ -160,8 +181,31 @@ function CustomBuffs:CreateGeneralOptions()
 					self:UpdateConfig();
 				end,
 				width = THIRD_WIDTH,
-				order = 51
-				,
+				order = 53,
+			},
+			colorNames = {
+				type = "toggle",
+				name = "Highlight Group Names",
+				desc = "Set the color of players in your group to be black while in a raid",
+				get = function() return self.db.profile.colorNames end,
+				set = function(_, value)
+					self.db.profile.colorNames = value;
+					self:UpdateConfig();
+				end,
+				width = THIRD_WIDTH,
+				order = 54,
+			},
+			useClassColors = {
+				type = "toggle",
+				name = "Use Class Colors",
+				desc = "Color the raid frame text with class colors",
+				get = function() return self.db.profile.useClassColors end,
+				set = function(_, value)
+					self.db.profile.useClassColors = value;
+					self:UpdateConfig();
+				end,
+				width = THIRD_WIDTH,
+				order = 52,
 			},
 			spacer4 = {
                 type = "header",

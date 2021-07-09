@@ -12,6 +12,8 @@ function CustomBuffs:Defaults()
 		["unknownInterrupts"] = {},
 	};
 	defaults.profile = {
+		nameFont = "Friz Quadrata TT",
+		nameSize = 10,
 		frameAlpha = 1,
 		colorPartyNames = false,
 		alwaysShowFrames = false,

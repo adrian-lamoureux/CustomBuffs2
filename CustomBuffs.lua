@@ -6,12 +6,12 @@ local addonName, addonTable = ...; --make use of the default addon namespace
 addonTable.CustomBuffs = LibStub("AceAddon-3.0"):NewAddon("CustomBuffs", "AceTimer-3.0", "AceHook-3.0", "AceEvent-3.0", "AceBucket-3.0", "AceConsole-3.0", "AceComm-3.0");
 local CustomBuffs = addonTable.CustomBuffs;
 local LibAceSerializer = LibStub:GetLibrary("AceSerializer-3.0");
-
+CustomBuffs.areWidgetsLoaded = LibStub:GetLibrary("AceGUISharedMediaWidgets-1.0", true);
 
 CustomBuffs.major = 2;
 CustomBuffs.mid = 0;
-CustomBuffs.minor = 12;
-CustomBuffs.version = CustomBuffs.minor + 100 * CustomBuffs.mid + 10000 * CustomBuffs.major;
+CustomBuffs.minor = 16;
+CustomBuffs.version = CustomBuffs.minor + (100 * CustomBuffs.mid) + (10000 * CustomBuffs.major);
 
 if WOW_PROJECT_ID == WOW_PROJECT_CLASSIC then
 	CustomBuffs.gameVersion = 1; --Classic
@@ -1696,6 +1696,9 @@ local function ForceUpdateFrames()
 			if CustomBuffs.verbose then print("Forcing frame update for frame", frame); end
 			frame.auraNeedResize = true;
 			CustomBuffs:UpdateAuras(frame);
+			--if CustomBuffs.db.profile.useClassColors then
+			CompactUnitFrame_UpdateStatusText(frame);
+			--end
 		end
     end
 end
@@ -1971,10 +1974,10 @@ local function handleRosterUpdate()
     --Frames are disabled when the player's group grows past 5 players because most UI
     --configurations wrap to a new column after 5 players.
     if (CustomBuffs.db.profile.extraDebuffs or CustomBuffs.db.profile.extraBuffs) then
-		if CustomBuffs.verbose then print("Inside extra aura update block"); end
+		--if CustomBuffs.verbose then print("Inside extra aura update block"); end
         if GetNumGroupMembers() <= 5 or not IsInGroup() then
             if CustomBuffs.db.profile.extraDebuffs then
-				if CustomBuffs.verbose then print("Enabling extra debuff frames"); end
+				--if CustomBuffs.verbose then print("Enabling extra debuff frames"); end
                 CustomBuffs.MAX_DEBUFFS = 15;
                 for index, frame in ipairs(_G.CompactRaidFrameContainer.flowFrames) do
                     --index 1 is a string for some reason so we skip it
@@ -1984,7 +1987,7 @@ local function handleRosterUpdate()
                 end
 			end
             if CustomBuffs.db.profile.extraBuffs then
-				if CustomBuffs.verbose then print("Enabling extra buff frames"); end
+				--if CustomBuffs.verbose then print("Enabling extra buff frames"); end
                 CustomBuffs.MAX_BUFFS = 15;
                 for index, frame in ipairs(_G.CompactRaidFrameContainer.flowFrames) do
                     --index 1 is a string for some reason so we skip it
@@ -1995,7 +1998,7 @@ local function handleRosterUpdate()
             end
         else
             if CustomBuffs.db.profile.extraDebuffs then
-				if CustomBuffs.verbose then print("Disabling extra debuff frames"); end
+				--if CustomBuffs.verbose then print("Disabling extra debuff frames"); end
                 CustomBuffs.MAX_DEBUFFS = 6;
                 for index, frame in ipairs(_G.CompactRaidFrameContainer.flowFrames) do
                     --index 1 is a string for some reason so we skip it
@@ -2005,7 +2008,7 @@ local function handleRosterUpdate()
                 end
 			end
             if CustomBuffs.db.profile.extraBuffs then
-				if CustomBuffs.verbose then print("Disabling extra buff frames"); end
+				--if CustomBuffs.verbose then print("Disabling extra buff frames"); end
                 CustomBuffs.MAX_BUFFS = 6;
                 for index, frame in ipairs(_G.CompactRaidFrameContainer.flowFrames) do
                     --index 1 is a string for some reason so we skip it
@@ -3367,17 +3370,20 @@ function CustomBuffs:SetName(frame)
             frame.name:SetText(name);
         end
 		local guid = UnitGUID(frame.unit);
-		local _, className, _ = UnitClass(frame.unit);
-		local r, g, b, hex = GetClassColor(className);
+		local r, g, b = 1, 1, 1;
+		if self.db.profile.useClassColors then
+			_, className, _ = UnitClass(frame.unit);
+			r, g, b, _ = GetClassColor(className);
+		end
 		if not (CustomBuffs.inRaidGroup and self.db.profile.colorNames and CustomBuffs.partyUnits[guid]) then
-			if CustomBuffs.verbose then print("Changing color for unit",guid,r,g,b); end
-			frame.name:SetFont("Fonts\\FRIZQT__.TTF", 10, "OUTLINE");
+			--if CustomBuffs.verbose then print("Changing color for unit",guid,r,g,b); end
+			frame.name:SetFont(self.SM:Fetch('font', self.db.profile.nameFont), self.db.profile.nameSize, "OUTLINE");
 			frame.name:SetShadowColor(r * 0.5, g * 0.5, b * 0.5, 0.5);
 			frame.name:SetShadowOffset(1, -1);
 			frame.name:SetTextColor(r, g, b, 1);
 			--frame.name:SetTextColor(0, 0, 0, 1);
 		else
-			frame.name:SetFont("Fonts\\FRIZQT__.TTF", 11--[[, "OUTLINE"]]);
+			frame.name:SetFont(self.SM:Fetch('font', self.db.profile.nameFont), self.db.profile.nameSize + 1--[[, "OUTLINE"]]);
 			frame.name:SetShadowColor(0.5, 0.5, 0.5, 0.8);
 			frame.name:SetShadowOffset(1, -1);
 			frame.name:SetTextColor(0, 0, 0, 1);
@@ -3386,19 +3392,23 @@ end--);
 --]]
 
 function CustomBuffs:SetStatusText(frame)
-	if (not frame or not frame.displayedUnit or frame:IsForbidden() or not frame:IsShown() or not frame.debuffFrames or not frame:GetName():match("^Compact") or not frame.optionTable or not frame.optionTable.displayNonBossDebuffs) then return; end
-
+	if (not frame or not frame.displayedUnit or frame:IsForbidden() or not frame:IsShown() or not frame:GetName():match("^Compact")) then return; end
 	local statusText = frame.statusText;
-	--if CustomBuffs.verbose then print(statusText); end
+	if CustomBuffs.verbose then print("Inside SetStatusText",statusText,statusText:IsShown()); end
 	if statusText and statusText:IsShown() then
-		if CustomBuffs.verbose then print("Updating Status Text"); end
-		local guid = UnitGUID(frame.unit);
-		local _, className, _ = UnitClass(frame.unit);
-		local r, g, b, hex = GetClassColor(className);
-		--statusText:SetFont("Fonts\\FRIZQT__.TTF", 20, "OUTLINE");
-		statusText:SetShadowColor(0, 0, 0, 0.5);
-		statusText:SetShadowOffset(1, -1);
-		statusText:SetTextColor(r, g, b, 1);
+		if self.db.profile.useClassColors then
+			if CustomBuffs.verbose then print("Setting Status Text to class colors"); end
+			local _, className, _ = UnitClass(frame.unit);
+			local r, g, b, _ = GetClassColor(className);
+			statusText:SetShadowColor(0, 0, 0, 0.5);
+			statusText:SetShadowOffset(1, -1);
+			statusText:SetTextColor(r, g, b, 1);
+		else
+			if CustomBuffs.verbose then print("Setting Status Text to default colors"); end
+			statusText:SetShadowColor(0, 0, 0, 0.5);
+			statusText:SetShadowOffset(1, -1);
+			statusText:SetTextColor(0.5, 0.5, 0.5, 1);
+		end
 	end
 end
 
@@ -3670,34 +3680,21 @@ function CustomBuffs:loaded()
 end
 
 function createOptionsTab(self, container)
-	--local frame = self.gui:Create("InlineGroup");
 	local tab1 = self.gui:Create("Label");
 	tab1:SetFullWidth(true);
-	--frame:SetFullWidth(true);
-
 	self.dialog:Open("CustomBuffs", container);
-	--tab1:SetText("");
-	--tab1:AddChild(frame);
 	container:AddChild(tab1);
 end
 
 function createProfilesTab(self, container)
-	--local frame = self.gui:Create("InlineGroup");
 	local tab2 = self.gui:Create("Label");
 	self.dialog:Open("CustomBuffs Profiles", container);
 	tab2:SetFullWidth(true);
-	--tab2:SetText("");
-	--frame:SetFullWidth(true);
-	--tab2:AddChild(frame);
 	container:AddChild(tab2);
 end
 
 function CustomBuffs:OpenOptions()
 	if not CustomBuffs.optionsOpen then
-
-
-
-
 		CustomBuffs.optionsOpen = true;
 		local frame = self.gui:Create("Window");
 		frame:SetLayout("Fill");
@@ -3772,16 +3769,23 @@ function CustomBuffs:OnEnable()
 		elseif options == "sync" then
 			CustomBuffs:sync();
 		elseif options == "ints" then
+			print("Printing all unknown interrupts...");
 			if self.db.global.unknownInterrupts then
 				for k, v in pairs(self.db.global.unknownInterrupts) do
-					local link = GetSpellLink(k);
-					print(k, ": ", link);
+					spellName, _, _, _, _, _, _ = GetSpellInfo(spellID);
+					if not (INTERRUPTS[k] or INTERRUPTS[spellName]) then
+						local link = GetSpellLink(k);
+						print(k, ": ", link);
+					else
+						self.db.global.unknownInterrupts[k] = nil;
+					end
 				end
 			end
 		elseif options == "units" then
 			print("Printing Current Units...")
 			if CustomBuffs.units then
 				for k, v in pairs(CustomBuffs.units) do
+
 					print(k);
 				end
 			end
@@ -3829,10 +3833,9 @@ function CustomBuffs:OnEnable()
 	if not self:IsHooked("CompactUnitFrame_UpdateName", function(frame) self:SetName(frame); end) then
 		self:SecureHook("CompactUnitFrame_UpdateName", function(frame) self:SetName(frame); end);
 	end
-	if not self:IsHooked("CompactUnitFrame_UpdateStatusText", function(frame) self:SetStatusText(frame); end) then
-		self:SecureHook("CompactUnitFrame_UpdateStatusText", function(frame) self:SetStatusText(frame); end);
-	end
+
     handleRosterUpdate();
+	self:UpdateConfig();
 end
 
 function CustomBuffs:CreateOptions()
@@ -3858,6 +3861,7 @@ end
 function CustomBuffs:Init()
     -- Set up database defaults
 	self.gui = LibStub("AceGUI-3.0");
+	self.SM = LibStub("LibSharedMedia-3.0");
 	CustomBuffs:CreateOptions();
 
 	if self.db.profile.alwaysShowFrames then
@@ -3865,6 +3869,16 @@ function CustomBuffs:Init()
 		self:RegisterEvent("PLAYER_ENTERING_WORLD", "loadFrames");
 		self:RegisterEvent("GROUP_ROSTER_UPDATE", "loadFrames");
 	end
+
+	self:RegisterEvent("GROUP_JOINED", "sync");
+	self:SecureHook("CompactUnitFrameProfiles_CheckAutoActivation", function(frame) self:loadFrames(); end);
+	self:SecureHook("CompactUnitFrameProfilesNewProfileDialogBaseProfileSelectorButton_OnClick", function(frame) self:loadFrames(); end);
+	self:SecureHook("CompactUnitFrameProfiles_ActivateRaidProfile", function(frame) self:loadFrames(); end);
+	self:SecureHook("CompactUnitFrameProfiles_ApplyCurrentSettings", function(frame) self:loadFrames(); end);
+	self:SecureHook("CompactUnitFrameProfiles_UpdateCurrentPanel", function(frame) self:loadFrames(); end);
+	self:SecureHook("SetActiveRaidProfile", function(frame) self:loadFrames(); end);
+	self:SecureHook("CompactUnitFrameProfilesDropdownButton_OnClick", function(frame) self:loadFrames(); end);
+
 end
 
 function CustomBuffs:SetRaidFrameAlpha()
@@ -3890,11 +3904,12 @@ function CustomBuffs:UpdateConfig()
         self:UITweaks();
     end
 
-    if self.db.profile.cleanNames and not self:IsHooked("CompactUnitFrame_UpdateName", function(frame) self:SetName(frame); end) then
+    if not self:IsHooked("CompactUnitFrame_UpdateName", function(frame) self:SetName(frame); end) then
         self:SecureHook("CompactUnitFrame_UpdateName", function(frame) self:SetName(frame); end);
-    elseif not self.db.profile.cleanNames and self:IsHooked("CompactUnitFrame_UpdateName", function(frame) self:SetName(frame); end) then
-        self:Unhook("CompactUnitFrame_UpdateName", function(frame) self:SetName(frame); end);
     end
+	if not self:IsHooked("CompactUnitFrame_UpdateStatusText", function(frame) self:SetStatusText(frame); end) then
+		self:SecureHook("CompactUnitFrame_UpdateStatusText", function(frame) self:SetStatusText(frame); end);
+	end
 
     if self.db.profile.showCastBars then
         self:EnableCastBars();
