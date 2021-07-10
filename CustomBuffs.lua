@@ -258,11 +258,13 @@ end --= CompactUnitFrame_UtilShouldDisplayBuff;
 
 
 local function ForceUpdateFrame(fNum)
-	local name = "";
-	if _G["CompactRaidFrame"..fNum].unit then
-    	name = CustomBuffs:CleanName(UnitGUID(_G["CompactRaidFrame"..fNum].unit), _G["CompactRaidFrame"..fNum]);
+	if CustomBuffs.verbose then
+		local name = "";
+		if _G["CompactRaidFrame"..fNum].unit then
+	    	name = CustomBuffs:CleanName(UnitGUID(_G["CompactRaidFrame"..fNum].unit), _G["CompactRaidFrame"..fNum]);
+		end
+	    print("Forcing frame update for frame", fNum, "for unit", name);
 	end
-    if CustomBuffs.verbose then print("Forcing frame update for frame", fNum, "for unit", name); end
     CustomBuffs:UpdateAuras(_G["CompactRaidFrame"..fNum]);
 end
 
