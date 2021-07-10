@@ -14,6 +14,7 @@ function CustomBuffs:Defaults()
 	defaults.profile = {
 		nameFont = "Friz Quadrata TT",
 		nameSize = 10,
+		useClassColors = true,
 		frameAlpha = 1,
 		colorPartyNames = false,
 		alwaysShowFrames = false,
