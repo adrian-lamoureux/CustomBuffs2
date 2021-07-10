@@ -370,6 +370,98 @@ CustomBuffs.THROUGHPUT_BUFFS = {
 
 };
 
+CustomBuffs.CC = {
+
+    --------------------
+    --   Dispelable   --
+    --------------------
+
+    ["Polymorph"] =             MagicStandard,
+    ["Freezing Trap"] =         MagicStandard,
+    ["Fear"] =                  MagicStandard,
+    ["Howl of Terror"] =        MagicStandard,
+    ["Death Coil"] =           	MagicStandard,
+    ["Psychic Scream"] =        MagicStandard,
+    ["Psychic Horror"] =        MagicStandard,
+    ["Seduction"] =             MagicStandard,
+	["Scare Beast"] =           MagicStandard,
+	["Hibernate"] =             MagicStandard,
+    ["Hammer of Justice"] =     MagicStandard,
+    ["Silence"] =               MagicStandard,
+	["Silencing Shot"] =        MagicStandard,
+	[18469] =                   MagicStandard, --Mage Blanket
+	[24259] =                   MagicStandard, --Lock Blanket
+	[18425] =          			MagicStandard, --Improved Kick
+    [31117] =                   MagicStandard, --UA Silence
+    --["Sin and Punishment"] =    MagicStandard, --VT dispel fear
+    --[117526] =                  MagicStandard, --Binding Shot CC
+    ["Arcane Torrent"] = 		MagicStandard,
+    ["Repentance"] =            MagicStandard,
+    ["Dragon's Breath"] =       MagicStandard,
+    ["Shadowfury"] =            MagicStandard,
+	[22703] =                   MagicStandard, --Infernal Stun
+
+
+    --Roots
+    ["Frost Nova"] =            MagicStandard,
+    ["Entangling Roots"] =      MagicStandard,
+	["Nature's Grasp"] =      	MagicStandard,
+	["Entangling Roots"] =      MagicStandard,
+    ["Freeze"] =                MagicStandard,
+	[12494] =      				MagicStandard, --Frostbite
+
+
+    --poison/curse/disease/MD dispellable
+    ["Mind Control"] =          PurgeStandard,
+    --["Wyvern Sting"] =          PoisonStandard,
+    ["Viper Sting"] =          	PoisonStandard,
+    --[233022] = true, --Spider Sting Silence
+    ["Cyclone"] =               MDStandard,
+
+    --Warlock Curses
+    ["Curse of Exhaustion"] =   CurseLow,
+    ["Curse of Tongues"] =      CurseLow,
+    ["Curse of Weakness"] =     CurseLow,
+
+    --------------------
+    -- Not Dispelable --
+    --------------------
+
+	["Counterattack"] =      	CCStandard,
+	[12809] =                   CCStandard, --Concussion Blow
+	[7922] =                    CCStandard, --Charge Stun
+	[16922] =                 	CCStandard, --Starfire Stun
+	[19410] =                 	CCStandard, --Improved Concussive Shot
+	[12355] =                 	CCStandard, --Impact
+	[20170] =                 	CCStandard, --Seal of Justice
+	[15269] =                 	CCStandard, --Blackout
+	[18093] =                 	CCStandard, --Pyroclasm
+	[12798] =                 	CCStandard, --Revenge Stun
+	[5530] =                 	CCStandard, --Mace Spec Stun
+	[15283] =                 	CCStandard, --Stunning Blow
+	[56] =                 		CCStandard, --Stun Proc
+    ["Blind"] =                 CCStandard,
+    ["Disarm"] =                CCStandard,
+    ["War Stomp"] =             CCStandard,
+    ["Intimidation"] =          CCStandard,
+    ["Kidney Shot"] =           CCStandard,
+	["Pounce"] =           		CCStandard,
+    ["Maim"] =                  CCStandard,
+    ["Intercept Stun"] =        CCStandard,
+    ["Bash"] =           		CCStandard,
+    ["Sap"] =                   CCStandard,
+    ["Storm Bolt"] =            CCStandard,
+    ["Cheap Shot"] =            CCStandard,
+    ["Intimidating Shout"] =    CCStandard,
+    ["Scatter Shot"] =          CCStandard,
+	["Gouge"] =          		CCStandard,
+	["Garrote - Silence"] =     CCStandard,
+	["Feral Charge Effect"] =   CCStandard,
+
+
+
+};
+
 
 --List of Buffs that will not shown on frames
 CustomBuffs.BuffBlacklist = {

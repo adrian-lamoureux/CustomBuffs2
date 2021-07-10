@@ -2,8 +2,8 @@
 --issue with taint on show() causing invalid combat show errors sometimes; unsure of cause
 --issue with raid frames sometimes losing click interaction functionality maybe because of this addon
 
-
-local _, addonTable = ...;
+local addonName, addonTable = ...; --make use of the default addon namespace
+addonTable.CustomBuffs = LibStub("AceAddon-3.0"):NewAddon("CustomBuffs", "AceTimer-3.0", "AceHook-3.0", "AceEvent-3.0", "AceBucket-3.0", "AceConsole-3.0", "AceComm-3.0");
 local CustomBuffs = addonTable.CustomBuffs;
 local LibAceSerializer = LibStub:GetLibrary("AceSerializer-3.0");
 CustomBuffs.areWidgetsLoaded = LibStub:GetLibrary("AceGUISharedMediaWidgets-1.0", true);
@@ -143,17 +143,6 @@ Priority level for throughput frames:
 
 --]]
 
---Table of interrupts and their durations from BigDebuffs
-
-
-
-
---Template table for CD flashes
-
-
-
-
-
 
 
 
@@ -177,22 +166,6 @@ CustomBuffs.BOSS_BUFFS = { --Custom Buffs that should be displayed in the Boss D
 };
 
 
---CCs display CC debuffs in the boss debuff frames
-    --Display Location:     boss debuff frames
-    --Aura Sources:         any
-    --Aura Type:            debuff
-    --Standard Priority Level: (priority is increased one level for debuffs that are currently dispellable)
-
-
-
-
-
-
-
-
-
-
-
 
 
 local NONAURAS = CustomBuffs.NONAURAS;
@@ -204,7 +177,6 @@ local testDebuffs = CustomBuffs.testDebuffs;
 local testBuffs = CustomBuffs.testBuffs;
 local testThroughputBuffs = CustomBuffs.testThroughputBuffs;
 local testBossDebuffs = CustomBuffs.testBossDebuffs;
-
 
 
 --[[
