@@ -2,8 +2,8 @@
 --issue with taint on show() causing invalid combat show errors sometimes; unsure of cause
 --issue with raid frames sometimes losing click interaction functionality maybe because of this addon
 
-local addonName, addonTable = ...; --make use of the default addon namespace
-addonTable.CustomBuffs = LibStub("AceAddon-3.0"):NewAddon("CustomBuffs", "AceTimer-3.0", "AceHook-3.0", "AceEvent-3.0", "AceBucket-3.0", "AceConsole-3.0", "AceComm-3.0");
+
+local _, addonTable = ...;
 local CustomBuffs = addonTable.CustomBuffs;
 local LibAceSerializer = LibStub:GetLibrary("AceSerializer-3.0");
 CustomBuffs.areWidgetsLoaded = LibStub:GetLibrary("AceGUISharedMediaWidgets-1.0", true);
