@@ -10,7 +10,7 @@ CustomBuffs.areWidgetsLoaded = LibStub:GetLibrary("AceGUISharedMediaWidgets-1.0"
 
 CustomBuffs.major = 2;
 CustomBuffs.mid = 0;
-CustomBuffs.minor = 16;
+CustomBuffs.minor = 17;
 CustomBuffs.version = CustomBuffs.minor + (100 * CustomBuffs.mid) + (10000 * CustomBuffs.major);
 
 if WOW_PROJECT_ID == WOW_PROJECT_CLASSIC then
@@ -1968,7 +1968,7 @@ end--);
 --]]
 
 function CustomBuffs:SetStatusText(frame)
-	if (not frame or not frame.displayedUnit or frame:IsForbidden() or not frame:IsShown() or not frame:GetName():match("^Compact")) then return; end
+	if (not frame or not frame.displayedUnit or frame:IsForbidden() or not frame:IsShown() or not frame.debuffFrames or not frame:GetName():match("^Compact") or not frame.optionTable or not frame.optionTable.displayNonBossDebuffs) then return; end
 	local statusText = frame.statusText;
 	if CustomBuffs.verbose then print("Inside SetStatusText",statusText,statusText:IsShown()); end
 	if statusText and statusText:IsShown() then
