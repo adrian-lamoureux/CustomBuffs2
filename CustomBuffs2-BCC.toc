@@ -1,4 +1,4 @@
-## Interface: 90100
+## Interface: 20501
 ## Author: Hypocrit
 ## Title: CustomBuffs
 ## DefaultState: enabled
@@ -6,8 +6,7 @@
 
 Libs\embeds.xml
 
-
-Tables.lua
+BCC-Tables.lua
 CustomBuffs.lua
 ConfigDefaults.lua
 
