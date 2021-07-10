@@ -53,6 +53,7 @@ CustomBuffs.INTERRUPTS = {
 	[2676] =			 		{ duration = 2 },
 	[335485] =			 		{ duration = 4 },
 	[342135] =			 		{ duration = 3 },
+    [351252] =			 		{ duration = 6 },
 
 };
 
@@ -861,6 +862,7 @@ CustomBuffs.CC = {
 
 
 	["Biting Cold"] =                           CCStandard,
+    ["Melt Soul"] =                             MagicStandard,
 
     --------------------
     -- Castle Nathria --

@@ -10,7 +10,7 @@ CustomBuffs.areWidgetsLoaded = LibStub:GetLibrary("AceGUISharedMediaWidgets-1.0"
 
 CustomBuffs.major = 2;
 CustomBuffs.mid = 0;
-CustomBuffs.minor = 17;
+CustomBuffs.minor = 18;
 CustomBuffs.version = CustomBuffs.minor + (100 * CustomBuffs.mid) + (10000 * CustomBuffs.major);
 
 if WOW_PROJECT_ID == WOW_PROJECT_CLASSIC then
