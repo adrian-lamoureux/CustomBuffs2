@@ -470,6 +470,7 @@ CustomBuffs.BUFFS = {
 
 	    --Minor Externals worth tracking
 	    ["Enveloping Mist"] =           	EStandard,
+        ["Hold Your Ground"] =        	    EStandard,
 
 
 	    --Show party/raid member's stealth status in buffs
