@@ -54,7 +54,7 @@ CustomBuffs.INTERRUPTS = {
 	[335485] =			 		{ duration = 4 },
 	[342135] =			 		{ duration = 3 },
     [351252] =			 		{ duration = 6 },
-
+    [318995] =			 		{ duration = 3 },
 };
 
 
