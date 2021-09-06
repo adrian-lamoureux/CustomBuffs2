@@ -381,6 +381,7 @@ CustomBuffs.BUFFS = {
   --["Seraphim"] =                  CDStandard, moved to throughput cds
   ["Guardian of the Fortress"] =  CDStandard,
   ["Shield of the Righteous"] =   CDStandard,
+  ["Blessing of Freedom"] =       CDStandard,
 
   --Priest
   ["Dispersion"] =                CDStandard,
@@ -471,6 +472,7 @@ CustomBuffs.BUFFS = {
   --Minor Externals worth tracking
   ["Enveloping Mist"] =           	EStandard,
   ["Hold Your Ground"] =        	  EStandard,
+  ["Survivor's Rally"] =        	  EStandard,
 
 
   --Show party/raid member's stealth status in buffs
@@ -493,6 +495,8 @@ CustomBuffs.BUFFS = {
   ["Ancestral Vigor"] =           	EPStandard,
   ["Anti-Magic Zone"] =           	EPStandard,
   ["Blessing of Sacrifice"] =     	EPStandard,
+
+  ["Frostrime"] =                   EPStandard,
 
   --BFA procs
   ["Luminous Jellyweed"] =        	EPStandard,
@@ -586,6 +590,7 @@ CustomBuffs.THROUGHPUT_BUFFS = {
   [109964] =                              TCDStandard, --Spirit Shell
   ["Shadow Covenant"] =                   TCDStandard,
   ["Vampiric Embrace"] = 					        TCDStandard,
+  [327710] =                              TCDStandard,
 
   --Rogue
   ["Shadow Blades"] =                     TCDStandard,
@@ -705,6 +710,7 @@ CustomBuffs.CC = {
 
   --Not CC but track anyway
   [122470] =                  CCStandard, --Touch of karma debuff
+  ["Gladiator's Maledict"] =  MagicStandard,
 
   ["Mirrors of Torment"] =    CCStandard,
 
