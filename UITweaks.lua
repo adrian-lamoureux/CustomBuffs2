@@ -127,7 +127,7 @@ function CustomBuffs:UITweaksRetail()
 
         --Hide extraactionbutton background
         ExtraActionBarFrame.button.style:SetAlpha(0);
-        --ZoneAbilityFrame.SpellButton.Style:SetAlpha(0);
+        ZoneAbilityFrame.Style:SetAlpha(0);
 
         --Hide group number on player frame
         PlayerFrameGroupIndicator.Show = CBFVoid;
@@ -191,6 +191,6 @@ function CustomBuffs:UITweaksRetail()
         MainMenuMicroButton.SetParent = CBFVoid;
     else
         CustomBuffs:RunOnExitCombat(CustomBuffs.UITweaksRetail);
-    end        
+    end
 
 end

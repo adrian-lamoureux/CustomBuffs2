@@ -649,26 +649,6 @@ function CustomBuffs:hideExtraAuraFrames(type)
 	ForceUpdateFrames();
 end
 
-function CustomBuffs:loadFrames()
-	if not InCombatLockdown() then
-		if not CompactRaidFrame1 then --Don't spam create new raid frames; causes a huge mess
-			CompactRaidFrameManager_OnLoad(CompactRaidFrameManager);
-			--CompactRaidFrameManagerDisplayFrameProfileSelector_Initialize();
-			CompactRaidFrameContainer_OnLoad(CompactRaidFrameContainer);
-			CompactRaidFrameContainer_SetGroupMode(CompactRaidFrameContainer, "flush");
-			CompactRaidFrameContainer_SetFlowSortFunction(CompactRaidFrameContainer, CRFSort_Role);
-			CompactRaidFrameContainer_AddUnitFrame(CompactRaidFrameContainer, "player", "raid");
-		end
-		CompactRaidFrameContainer_LayoutFrames(CompactRaidFrameContainer);
-		CompactRaidFrameContainer_UpdateDisplayedUnits(CompactRaidFrameContainer);
-		CompactRaidFrameManager:Show();
-		CompactRaidFrameContainer:Show();
-		handleRosterUpdate();
-	else
-		CustomBuffs:RunOnExitCombat(CustomBuffs.loadFrames);
-	end
-end
-
 function CustomBuffs:unlockFrames()
 	CompactRaidFrameManager_ResizeFrame_Reanchor(CompactRaidFrameManager);
 	CompactRaidFrameManager_UpdateContainerBounds(CompactRaidFrameManager);
@@ -1902,6 +1882,30 @@ local function stripChars(str)
 
 end
 
+
+function CustomBuffs:loadFrames()
+	if not InCombatLockdown() then
+		if not CompactRaidFrame1 then --Don't spam create new raid frames; causes a huge mess
+			CompactRaidFrameManager_OnLoad(CompactRaidFrameManager);
+			--CompactRaidFrameManagerDisplayFrameProfileSelector_Initialize();
+			CompactRaidFrameContainer_OnLoad(CompactRaidFrameContainer);
+			CompactRaidFrameContainer_SetGroupMode(CompactRaidFrameContainer, "flush");
+			CompactRaidFrameContainer_SetFlowSortFunction(CompactRaidFrameContainer, CRFSort_Role);
+			CompactRaidFrameContainer_AddUnitFrame(CompactRaidFrameContainer, "player", "raid");
+			setUpExtraBuffFrames(CompactRaidFrame1);
+			setUpBossDebuffFrames(CompactRaidFrame1);
+			setUpThroughputFrames(CompactRaidFrame1);
+			setUpBossDebuffFrames(CompactRaidFrame1);
+		end
+		CompactRaidFrameContainer_LayoutFrames(CompactRaidFrameContainer);
+		CompactRaidFrameContainer_UpdateDisplayedUnits(CompactRaidFrameContainer);
+		CompactRaidFrameManager:Show();
+		CompactRaidFrameContainer:Show();
+		handleRosterUpdate();
+	else
+		CustomBuffs:RunOnExitCombat(CustomBuffs.loadFrames);
+	end
+end
 
 function CustomBuffs:CleanName(unitGUID, backupFrame)
 	local name = NameCache[unitGUID];
