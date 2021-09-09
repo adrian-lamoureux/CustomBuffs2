@@ -1892,13 +1892,13 @@ function CustomBuffs:loadFrames()
 			CompactRaidFrameContainer_SetGroupMode(CompactRaidFrameContainer, "flush");
 			CompactRaidFrameContainer_SetFlowSortFunction(CompactRaidFrameContainer, CRFSort_Role);
 			CompactRaidFrameContainer_AddUnitFrame(CompactRaidFrameContainer, "player", "raid");
-			setUpExtraBuffFrames(CompactRaidFrame1);
-			setUpBossDebuffFrames(CompactRaidFrame1);
-			setUpThroughputFrames(CompactRaidFrame1);
-			setUpBossDebuffFrames(CompactRaidFrame1);
 		end
 		CompactRaidFrameContainer_LayoutFrames(CompactRaidFrameContainer);
 		CompactRaidFrameContainer_UpdateDisplayedUnits(CompactRaidFrameContainer);
+		setUpExtraBuffFrames(CompactRaidFrame1);
+		setUpBossDebuffFrames(CompactRaidFrame1);
+		setUpThroughputFrames(CompactRaidFrame1);
+		setUpBossDebuffFrames(CompactRaidFrame1);
 		CompactRaidFrameManager:Show();
 		CompactRaidFrameContainer:Show();
 		handleRosterUpdate();
