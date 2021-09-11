@@ -344,6 +344,7 @@ CustomBuffs.BUFFS = {
   ["Ironfur"] =                   CDStandard,
   ["Frenzied Regeneration"] =     CDStandard,
   ["Dash"] =    	 				        CDStandard,
+  ["Stampeding Roar"] =    	 			CDStandard,
 
   --Hunter
   ["Aspect of the Turtle"] =      CDStandard,
@@ -361,6 +362,7 @@ CustomBuffs.BUFFS = {
   ["Blazing Barrier"] =           CDStandard,
   ["Ice Barrier"] =           	  CDStandard,
   ["Prismatic Barrier"] =         CDStandard,
+  ["Slow Fall"] =                 CDStandard,
 
 
   --Monk
@@ -408,6 +410,7 @@ CustomBuffs.BUFFS = {
   ["Lightning Shield"] =			    CDStandard,
   ["Harden Skin"] =               CDStandard,
   ["Spiritwalker's Grace"] =      CDStandard,
+  ["Water Walking"] =				      CDStandard,
 
   --Warlock
   ["Unending Resolve"] =          CDStandard,
