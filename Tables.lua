@@ -391,6 +391,7 @@ CustomBuffs.BUFFS = {
   ["Greater Fade"] =              CDStandard,
   ["Desperate Prayer"] =          CDStandard,
   ["Shadowform"] =              	CDStandard,
+  ["Levitate"] =              	  CDStandard,
 
   --Rogue
   ["Evasion"] =                   CDStandard,
@@ -411,7 +412,7 @@ CustomBuffs.BUFFS = {
   ["Harden Skin"] =               CDStandard,
   ["Spiritwalker's Grace"] =      CDStandard,
   ["Water Walking"] =				      CDStandard,
-
+  ["Ancestral Protection"] =			CDStandard,
   --Warlock
   ["Unending Resolve"] =          CDStandard,
   ["Dark Pact"] =                 CDStandard,
@@ -490,6 +491,7 @@ CustomBuffs.BUFFS = {
   ["Invisibility"] =           		  EStandard,
   ["Invisible"] =           			  EStandard,
   ["Dimensional Shifter"] =         EStandard,
+  [357852] =                        EStandard, --Bolstering
 
   ["Cultivation"] =               	EPStandard,
   ["Spring Blossoms"] =           	EPStandard,
