@@ -2375,7 +2375,7 @@ function CustomBuffs:OnEnable()
 		elseif options == "verbose" then
 			CustomBuffs.verbose = not CustomBuffs.verbose;
 			print("CustomBuffs verbose mode", CustomBuffs.verbose and "enabled" or "disabled");
-		elseif options == "recover" then
+		elseif options == "recover" or options == "reload" or options == "rl" then
 			print("Attempting to recover from broken state.");
 			UpdateUnits();
 			ForceUpdateFrames();
