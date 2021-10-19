@@ -30,7 +30,9 @@ function CustomBuffs:Defaults()
 		cleanNames = true,
 		maxNameLength = 12,
 		showRaidMarkers = true,
-		showCastBars = false
+		showCastBars = false,
+		showOverShield = true,
+		reverseOverShield = true,
 	};
 
 	return defaults;

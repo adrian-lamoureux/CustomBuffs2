@@ -78,6 +78,7 @@ CustomBuffs.NONAURAS = {
   --[2484] = 	{ duration = 40, tbPrio = 20, type = "summon" },
   [192077] = 	{ duration = 15, tbPrio = 1, sbPrio = nil, type = "summon" },	--Wind Rush Totem
 
+
   --LOCK
   [205180] = { duration = 20, tbPrio = 1, type = "summon" }, --Summon Darkglare
   [111898] = { duration = 17, tbPrio = 1, type = "summon" }, --Grimoire: Felguard
@@ -152,6 +153,7 @@ CustomBuffs.NONAURAS = {
   [192058] = 	CDFlash, --Cap Totem
   [51485] = 	CDFlash, --Earthgrab Totem
   [320674] = 	CDFlash, --Chain Harvest
+  [324386] =  CDFlash, --Vesper Totem
   [157375] = 	CDFlash, --Eye of the Storm
   [157348] = 	CDFlash, --Call Lightning
   [118345] = 	CDFlash, --Pulverize
@@ -413,6 +415,8 @@ CustomBuffs.BUFFS = {
   ["Spiritwalker's Grace"] =      CDStandard,
   ["Water Walking"] =				      CDStandard,
   ["Ancestral Protection"] =			CDStandard,
+  ["Chains of Devastation"] =			CDStandard,
+
   --Warlock
   ["Unending Resolve"] =          CDStandard,
   ["Dark Pact"] =                 CDStandard,
@@ -516,6 +520,7 @@ CustomBuffs.BUFFS = {
   ["Blessed Portents"] =          	EPStandard,
 
   ["Dream Delver"] =        	      EPStandard,
+  [352938] =        	              EPStandard, --kyr soulbind power
 
   [344227] =                      	EStandard, --Consumptive Infusion
 

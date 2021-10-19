@@ -1974,6 +1974,83 @@ function CustomBuffs:SetName(frame)
 end--);
 --]]
 
+function CustomBuffs:OnUnitFrameUpdateAll(frame)
+	local absorbBar = frame.totalAbsorb;
+	if ( not absorbBar or absorbBar:IsForbidden()  ) then return end
+
+	local absorbOverlay = frame.totalAbsorbOverlay;
+	if ( not absorbOverlay or absorbOverlay:IsForbidden() ) then return end
+
+	local healthBar = frame.healthBar;
+	if ( not healthBar or healthBar:IsForbidden() ) then return end
+
+	absorbOverlay:SetParent(healthBar);
+	absorbOverlay:ClearAllPoints();		--we'll be attaching the overlay on heal prediction update.
+
+	local absorbGlow = frame.overAbsorbGlow;
+	if ( absorbGlow and not absorbGlow:IsForbidden() ) then
+		absorbGlow:ClearAllPoints();
+		absorbGlow:SetPoint("TOPLEFT", absorbOverlay, "TOPLEFT", -3, 0);
+		absorbGlow:SetPoint("BOTTOMLEFT", absorbOverlay, "BOTTOMLEFT", -3, 0);
+		absorbGlow:SetAlpha(0.6);
+	end
+end
+
+function CustomBuffs:OnUnitFrameHealPredictionUpdate(frame)
+	local absorbBar = frame.totalAbsorb;
+	if ( not absorbBar or absorbBar:IsForbidden()  ) then return end
+
+	local absorbOverlay = frame.totalAbsorbOverlay;
+	if ( not absorbOverlay or absorbOverlay:IsForbidden() ) then return end
+
+	local healthBar = frame.healthBar;
+	if ( not healthBar or healthBar:IsForbidden() ) then return end
+
+	local _, maxHealth = healthBar:GetMinMaxValues();
+	if ( maxHealth <= 0 ) then return end
+
+	local totalAbsorb = UnitGetTotalAbsorbs(frame.displayedUnit) or 0;
+	if( totalAbsorb > maxHealth ) then
+		totalAbsorb = maxHealth;
+	end
+
+	if( totalAbsorb > 0 ) then	--show overlay when there's a positive absorb amount
+		if ( absorbBar:IsShown() ) then		--If absorb bar is shown, attach absorb overlay to it; otherwise, attach to health bar.
+		  	absorbOverlay:SetPoint("TOPRIGHT", absorbBar, "TOPRIGHT", 0, 0);
+		  	absorbOverlay:SetPoint("BOTTOMRIGHT", absorbBar, "BOTTOMRIGHT", 0, 0);
+		else
+			absorbOverlay:SetPoint("TOPRIGHT", healthBar, "TOPRIGHT", 0, 0);
+	    absorbOverlay:SetPoint("BOTTOMRIGHT", healthBar, "BOTTOMRIGHT", 0, 0);
+		end
+
+		local totalWidth, totalHeight = healthBar:GetSize();
+		local barSize = (totalAbsorb / maxHealth * totalWidth);
+
+		absorbOverlay:SetWidth( barSize );
+    absorbOverlay:SetTexCoord(0, barSize / absorbOverlay.tileSize, 0, totalHeight / absorbOverlay.tileSize);
+		absorbOverlay:Show();
+	end
+end
+
+
+function CustomBuffs:SetUpOverShield()
+	if self.db.profile.showOverShield and CustomBuffs.gameVersion == 0 then
+		if not self:IsHooked("CompactUnitFrame_UpdateAll", function(frame) self:OnUnitFrameUpdateAll(frame); end) then
+			self:SecureHook("CompactUnitFrame_UpdateAll", function(frame) self:OnUnitFrameUpdateAll(frame); end);
+		end
+		if not self:IsHooked("CompactUnitFrame_UpdateHealPrediction", function(frame) self:OnUnitFrameHealPredictionUpdate(frame); end) then
+			self:SecureHook("CompactUnitFrame_UpdateHealPrediction", function(frame) self:OnUnitFrameHealPredictionUpdate(frame); end);
+		end
+	else
+		if self:IsHooked("CompactUnitFrame_UpdateAll", function(frame) self:OnUnitFrameUpdateAll(frame); end) then
+			self:Unhook("CompactUnitFrame_UpdateAll", function(frame) self:OnUnitFrameUpdateAll(frame); end);
+		end
+		if self:IsHooked("CompactUnitFrame_UpdateHealPrediction", function(frame) self:OnUnitFrameHealPredictionUpdate(frame); end) then
+			self:Unhook("CompactUnitFrame_UpdateHealPrediction", function(frame) self:OnUnitFrameHealPredictionUpdate(frame); end);
+		end
+	end
+end
+
 function CustomBuffs:SetStatusText(frame)
 	if (not frame or not frame.displayedUnit or frame:IsForbidden() or not frame:IsShown() or not frame.debuffFrames or not frame:GetName():match("^Compact") or not frame.optionTable or not frame.optionTable.displayNonBossDebuffs) then return; end
 	local statusText = frame.statusText;
@@ -2482,6 +2559,8 @@ function CustomBuffs:UpdateConfig()
 		CustomBuffs:RunOnExitCombat(CompactRaidFrameContainer.SetScale, self.db.profile.frameScale);
 	end
 	CustomBuffs:SetRaidFrameAlpha();
+
+	CustomBuffs:SetUpOverShield();
 
 	if self.db.profile.loadTweaks then
 		self:UITweaks();

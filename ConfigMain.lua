@@ -387,6 +387,30 @@ function CustomBuffs:CreateGeneralOptions()
 				width = THIRD_WIDTH * 1.5,
 				order = 113,
 			},
+			showOverShield = {
+				type = "toggle",
+				name = "Show Shield Amount",
+				desc = "Show shielding past 100% health as an additional bar on raid frames",
+				get = function() return self.db.profile.showOverShield end,
+				set = function(_, value)
+					self.db.profile.showOverShield = value;
+					self:UpdateConfig();
+				end,
+				width = THIRD_WIDTH * 1.5,
+				order = 114,
+			},
+			reverseOverShield = {
+				type = "toggle",
+				name = "NYI Over Shield From Left",
+				desc = "Show shielding past 100% health as an additional bar starting from the left side of the frames",
+				get = function() return self.db.profile.reverseOverShield end,
+				set = function(_, value)
+					self.db.profile.reverseOverShield = value;
+					self:UpdateConfig();
+				end,
+				width = THIRD_WIDTH * 1.5,
+				order = 115,
+			},
 		}
 	}
 
