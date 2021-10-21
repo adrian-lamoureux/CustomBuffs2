@@ -215,6 +215,8 @@ local GetSpellInfo = GetSpellInfo;
 
 local UnitGUID = UnitGUID;
 local CompactUnitFrame_UpdateAuras = CompactUnitFrame_UpdateAuras;
+local UnitGetTotalAbsorbs = UnitGetTotalAbsorbs;
+local UnitHealth = UnitHealth;
 
 local dbSize = 1;
 local bSize = 1;
