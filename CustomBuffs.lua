@@ -2038,15 +2038,34 @@ function CustomBuffs:CreateOverShield(frame)
 	local absorbBar = frame.totalAbsorb;
 	if ( not absorbBar or absorbBar:IsForbidden()  ) then return end
 
+	local _, maxHealth = healthBar:GetMinMaxValues();
+
+	local totalAbsorb = UnitGetTotalAbsorbs(frame.displayedUnit) or 0;
+	if( totalAbsorb > maxHealth ) then
+		totalAbsorb = maxHealth;
+	end
+
 	local f = frame.overShield;
 	if not f then
 		local name = frame:GetName();
 		if not name then return; end
+
+		local health = UnitHealth(frame.displayedUnit);
+		local percent = totalAbsorb / maxHealth;
+		local over = percent - (1 - (health / maxHealth));
+		if over < 0 then
+			over = 0;
+		end
+		local totalWidth, totalHeight = healthBar:GetSize();
+		local barSize = ((percent - over) * totalWidth);
 		frame.overShield = CreateFrame("StatusBar",name.."OverShield", frame);
 		local f = frame.overShield;
 		f:SetPoint("TOPLEFT", healthBar, "TOPLEFT", 0, 0);
 		f:SetPoint("BOTTOMLEFT", healthBar, "BOTTOMLEFT", 0, 0);
-		f:SetStatusBarTexture("Interface\\RAIDFRAME\\Shield-Overlay", 32);
+		local tex = f:CreateTexture(nil, "ARTWORK");
+		tex:SetTexture("Interface\\RAIDFRAME\\Shield-Overlay", true);
+		f:SetStatusBarTexture(tex);
+		f:GetStatusBarTexture():SetTexCoord(0, 4, 0, 1);
 		f:GetStatusBarTexture():SetHorizTile(true);
 		f:GetStatusBarTexture():SetVertTile(false);
 		f:SetFrameStrata("LOW");
@@ -2141,7 +2160,7 @@ function CustomBuffs:UpdateOverShield(frame, reverse)
 						absorbGlow:SetPoint("BOTTOMLEFT", f, "BOTTOMRIGHT", -3, 0);
 					end
 			end
-			--f:SetTexCoord(0, barSize / 32, 0, totalHeight / 32);
+			--f:GetStatusBarTexture():SetTexCoord(0, 16, 0, 16);
 			f:Show();
 			--absorbGlow:SetPoint("TOPLEFT", f, "TOPRIGHT", 0, 0);
 			--absorbGlow:SetPoint("BOTTOMLEFT", f, "BOTTOMRIGHT", 0, 0);
