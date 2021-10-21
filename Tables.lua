@@ -302,26 +302,27 @@ CustomBuffs.NONAURAS = {
   [344916] =	CDFlash, --Tuft
   [336126] = 	CDFlash, --PvP trinket
   [42292] = 	CDFlash, --Old PvP trinket
-  [6262] = 	CDFlash, --Healthstone
-  [177218] = 	CDFlash, --Phial of Serenity
+  [6262] = 	CDFlash,   --Healthstone
+  [323436] = 	CDFlash, --Phial of Serenity
 
   --Racials
-  [7744] = 	CDFlash, --Will of the Forsaken
+  [7744] = 	CDFlash,   --Will of the Forsaken
   [312411] = 	CDFlash, --Bag of Tricks
 
   --Shadowlands Potions
   [307192] = 	CDFlash, --Health Potion Shadowlands
-  [307382] = 	CDFlash, --Phantom Fire Potion
+  [307495] = 	CDFlash, --Phantom Fire Potion
   [307193] = 	CDFlash, --Shadowlands Mana Potion
-  [307095] = 	CDFlash, --Shadowlands Sleeper Potion
+  [307161] = 	CDFlash, --Shadowlands Sleeper Potion
   [307496] = 	CDFlash, --Divine Awakening Potion
-  [307096] = 	CDFlash, --Shadowlands Int Potion
-  [307093] = 	CDFlash, --Shadowlands Agi Potion
+  [307162] = 	CDFlash, --Shadowlands Int Potion
+  [307159] = 	CDFlash, --Shadowlands Agi Potion
   [307098] = 	CDFlash, --Shadowlands Str Potion
-  [307097] = 	CDFlash, --Shadowlands Stm Potion
-  [322301] = 	CDFlash, --Sacrificial Anima Potion
-  [307384] = 	CDFlash, --Deathly Fixation Potion
-  [307381] = 	CDFlash, --Empowered Exorcisms Potion
+  [307163] = 	CDFlash, --Shadowlands Stm Potion
+  [307160] = 	CDFlash, --Shadowlands Armor Potion
+  [322302] = 	CDFlash, --Sacrificial Anima Potion
+  [307497] = 	CDFlash, --Deathly Fixation Potion
+  [307494] = 	CDFlash, --Empowered Exorcisms Potion
 
   --Other
   [16589] = { duration = 1, tbPrio = -2, isFlash = true, iconID = 8529 }, 	--Noggenfogger
