@@ -1984,19 +1984,88 @@ function CustomBuffs:OnUnitFrameUpdateAll(frame)
 	local healthBar = frame.healthBar;
 	if ( not healthBar or healthBar:IsForbidden() ) then return end
 
+	local overShield = frame.overShield;
+
 	absorbOverlay:SetParent(healthBar);
 	absorbOverlay:ClearAllPoints();		--we'll be attaching the overlay on heal prediction update.
 
 	local absorbGlow = frame.overAbsorbGlow;
 	if ( absorbGlow and not absorbGlow:IsForbidden() ) then
 		absorbGlow:ClearAllPoints();
-		absorbGlow:SetPoint("TOPLEFT", absorbOverlay, "TOPLEFT", -3, 0);
-		absorbGlow:SetPoint("BOTTOMLEFT", absorbOverlay, "BOTTOMLEFT", -3, 0);
+		if self.db.profile.reverseOverShield then
+			if overShield then
+				absorbOverlay:SetPoint("TOPRIGHT", healthBar, "TOPRIGHT", 0, 0);
+		    absorbOverlay:SetPoint("BOTTOMRIGHT", healthBar, "BOTTOMRIGHT", 0, 0);
+				absorbGlow:SetPoint("TOPLEFT", overShield, "TOPRIGHT", 0, 0);
+				absorbGlow:SetPoint("BOTTOMLEFT", overShield, "BOTTOMRIGHT", 0, 0);
+			end
+		else
+			absorbGlow:SetPoint("TOPLEFT", absorbOverlay, "TOPLEFT", -3, 0);
+			absorbGlow:SetPoint("BOTTOMLEFT", absorbOverlay, "BOTTOMLEFT", -3, 0);
+		end
 		absorbGlow:SetAlpha(0.6);
 	end
 end
 
 function CustomBuffs:OnUnitFrameHealPredictionUpdate(frame)
+	CustomBuffs:UpdateOverShield(frame, self.db.profile.reverseOverShield);
+--[[
+	if( totalAbsorb > 0 ) then	--show overlay when there's a positive absorb amount
+		if ( absorbBar:IsShown() ) then		--If absorb bar is shown, attach absorb overlay to it; otherwise, attach to health bar.
+		  	absorbOverlay:SetPoint("TOPRIGHT", absorbBar, "TOPRIGHT", 0, 0);
+		  	absorbOverlay:SetPoint("BOTTOMRIGHT", absorbBar, "BOTTOMRIGHT", 0, 0);
+		else
+			absorbOverlay:SetPoint("TOPRIGHT", healthBar, "TOPRIGHT", 0, 0);
+	    absorbOverlay:SetPoint("BOTTOMRIGHT", healthBar, "BOTTOMRIGHT", 0, 0);
+		end
+
+		local totalWidth, totalHeight = healthBar:GetSize();
+		local barSize = (totalAbsorb / maxHealth * totalWidth);
+
+		absorbOverlay:SetWidth( barSize );
+    absorbOverlay:SetTexCoord(0, barSize / absorbOverlay.tileSize, 0, totalHeight / absorbOverlay.tileSize);
+		absorbOverlay:Show();
+	end
+	--]]
+end
+
+function CustomBuffs:CreateOverShield(frame)
+	if ( not frame or frame:IsForbidden()) then return; end
+
+	local healthBar = frame.healthBar;
+	if ( not healthBar or healthBar:IsForbidden() ) then return end
+
+	local absorbBar = frame.totalAbsorb;
+	if ( not absorbBar or absorbBar:IsForbidden()  ) then return end
+
+	local f = frame.overShield;
+	if not f then
+		local name = frame:GetName();
+		if not name then return; end
+		frame.overShield = CreateFrame("StatusBar",name.."OverShield", frame);
+		local f = frame.overShield;
+		f:SetPoint("TOPLEFT", healthBar, "TOPLEFT", 0, 0);
+		f:SetPoint("BOTTOMLEFT", healthBar, "BOTTOMLEFT", 0, 0);
+		f:SetStatusBarTexture("Interface\\RAIDFRAME\\Shield-Overlay", 32);
+		f:SetFrameStrata("LOW");
+		f:SetFrameLevel(3);
+	end
+	local absorbOverlay = frame.totalAbsorbOverlay;
+	if ( not absorbOverlay or absorbOverlay:IsForbidden() ) then return end
+
+	local absorbGlow = frame.overAbsorbGlow;
+	if ( absorbGlow and not absorbGlow:IsForbidden() ) then
+		absorbGlow:ClearAllPoints();
+		absorbGlow:SetAlpha(0.6);
+	end
+
+	absorbOverlay:SetPoint("TOPRIGHT", absorbBar, "TOPRIGHT", 0, 0);
+	absorbOverlay:SetPoint("BOTTOMRIGHT", absorbBar, "BOTTOMRIGHT", 0, 0);
+	absorbGlow:SetPoint("TOPLEFT", overShield, "TOPRIGHT", 0, 0);
+	absorbGlow:SetPoint("BOTTOMLEFT", overShield, "BOTTOMRIGHT", 0, 0);
+end
+
+function CustomBuffs:UpdateOverShield(frame, reverse)
 	local absorbBar = frame.totalAbsorb;
 	if ( not absorbBar or absorbBar:IsForbidden()  ) then return end
 
@@ -2014,24 +2083,98 @@ function CustomBuffs:OnUnitFrameHealPredictionUpdate(frame)
 		totalAbsorb = maxHealth;
 	end
 
-	if( totalAbsorb > 0 ) then	--show overlay when there's a positive absorb amount
-		if ( absorbBar:IsShown() ) then		--If absorb bar is shown, attach absorb overlay to it; otherwise, attach to health bar.
-		  	absorbOverlay:SetPoint("TOPRIGHT", absorbBar, "TOPRIGHT", 0, 0);
-		  	absorbOverlay:SetPoint("BOTTOMRIGHT", absorbBar, "BOTTOMRIGHT", 0, 0);
-		else
-			absorbOverlay:SetPoint("TOPRIGHT", healthBar, "TOPRIGHT", 0, 0);
-	    absorbOverlay:SetPoint("BOTTOMRIGHT", healthBar, "BOTTOMRIGHT", 0, 0);
-		end
+	local health = UnitHealth(frame.displayedUnit);
+	local percent = totalAbsorb / maxHealth;
+	local over = percent - (1 - (health / maxHealth));
+	if over < 0 then
+		over = 0;
+	end
+
+	local absorbBar = frame.totalAbsorb;
+	if ( not absorbBar or absorbBar:IsForbidden()  ) then return end
+
+	local absorbOverlay = frame.totalAbsorbOverlay;
+	if ( not absorbOverlay or absorbOverlay:IsForbidden() ) then return end
+
+	local healthBar = frame.healthBar;
+	if ( not healthBar or healthBar:IsForbidden() ) then return end
+
+	--[[
+	print(frame:GetName());
+	print(percent - over);
+	print(over);
+	print(over > 0);
+	--]]
+
+	if reverse then
+		CustomBuffs:CreateOverShield(frame);
 
 		local totalWidth, totalHeight = healthBar:GetSize();
-		local barSize = (totalAbsorb / maxHealth * totalWidth);
+		local barSize = ((percent - over) * totalWidth);
 
-		absorbOverlay:SetWidth( barSize );
-    absorbOverlay:SetTexCoord(0, barSize / absorbOverlay.tileSize, 0, totalHeight / absorbOverlay.tileSize);
-		absorbOverlay:Show();
+		if ( absorbBar:IsShown() ) then
+			absorbOverlay:SetWidth( barSize );
+			absorbOverlay:SetTexCoord(0, barSize / absorbOverlay.tileSize, 0, totalHeight / absorbOverlay.tileSize);
+			absorbOverlay:Show();
+		else
+			absorbOverlay:Hide();
+		end
+
+		local f = frame.overShield;
+		if not f then return; end
+		if (over > 0) then
+
+			local fBarSize = over * totalWidth;
+
+			if f then
+				f:SetWidth( fBarSize );
+			end
+
+			local absorbGlow = frame.overAbsorbGlow;
+			if ( absorbGlow and not absorbGlow:IsForbidden() ) then
+				absorbGlow:ClearAllPoints();
+					if f then
+						absorbGlow:SetPoint("TOPLEFT", f, "TOPRIGHT", -3, 0);
+						absorbGlow:SetPoint("BOTTOMLEFT", f, "BOTTOMRIGHT", -3, 0);
+					end
+			end
+				--f:SetTexCoord(0, barSize / 32, 0, totalHeight / 32);
+			f:Show();
+			--absorbGlow:SetPoint("TOPLEFT", f, "TOPRIGHT", 0, 0);
+			--absorbGlow:SetPoint("BOTTOMLEFT", f, "BOTTOMRIGHT", 0, 0);
+		else
+			f:Hide();
+		end
+	else
+		if frame.overShield then
+			frame.overShield:Hide();
+		end
+		if( totalAbsorb > 0 ) then	--show overlay when there's a positive absorb amount
+			if ( absorbBar:IsShown() ) then		--If absorb bar is shown, attach absorb overlay to it; otherwise, attach to health bar.
+			  	absorbOverlay:SetPoint("TOPRIGHT", absorbBar, "TOPRIGHT", 0, 0);
+			  	absorbOverlay:SetPoint("BOTTOMRIGHT", absorbBar, "BOTTOMRIGHT", 0, 0);
+			else
+				absorbOverlay:SetPoint("TOPRIGHT", healthBar, "TOPRIGHT", 0, 0);
+		    absorbOverlay:SetPoint("BOTTOMRIGHT", healthBar, "BOTTOMRIGHT", 0, 0);
+			end
+
+
+			local totalWidth, totalHeight = healthBar:GetSize();
+			local barSize = (percent * totalWidth);
+
+			absorbOverlay:SetWidth( barSize );
+	    absorbOverlay:SetTexCoord(0, barSize / absorbOverlay.tileSize, 0, totalHeight / absorbOverlay.tileSize);
+			absorbOverlay:Show();
+		end
 	end
 end
 
+function CustomBuffs:AddReverseOverShield(frame)
+
+
+	CustomBuffs:UpdateOverShield(frame, self.db.profile.showOverShield);
+
+end
 
 function CustomBuffs:SetUpOverShield()
 	if self.db.profile.showOverShield and CustomBuffs.gameVersion == 0 then
@@ -2040,6 +2183,11 @@ function CustomBuffs:SetUpOverShield()
 		end
 		if not self:IsHooked("CompactUnitFrame_UpdateHealPrediction", function(frame) self:OnUnitFrameHealPredictionUpdate(frame); end) then
 			self:SecureHook("CompactUnitFrame_UpdateHealPrediction", function(frame) self:OnUnitFrameHealPredictionUpdate(frame); end);
+		end
+		for index, frame in ipairs(_G.CompactRaidFrameContainer.flowFrames) do
+			if frame and frame.debuffFrames then
+				CustomBuffs:AddReverseOverShield(frame);
+			end
 		end
 	else
 		if self:IsHooked("CompactUnitFrame_UpdateAll", function(frame) self:OnUnitFrameUpdateAll(frame); end) then

@@ -401,7 +401,7 @@ function CustomBuffs:CreateGeneralOptions()
 			},
 			reverseOverShield = {
 				type = "toggle",
-				name = "NYI Over Shield From Left",
+				name = "Over Shield From Left",
 				desc = "Show shielding past 100% health as an additional bar starting from the left side of the frames",
 				get = function() return self.db.profile.reverseOverShield end,
 				set = function(_, value)
