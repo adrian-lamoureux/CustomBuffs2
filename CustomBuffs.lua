@@ -9,8 +9,8 @@ local LibAceSerializer = LibStub:GetLibrary("AceSerializer-3.0");
 CustomBuffs.areWidgetsLoaded = LibStub:GetLibrary("AceGUISharedMediaWidgets-1.0", true);
 
 CustomBuffs.major = 2;
-CustomBuffs.mid = 0;
-CustomBuffs.minor = 22;
+CustomBuffs.mid = 1;
+CustomBuffs.minor = 0;
 CustomBuffs.version = CustomBuffs.minor + (100 * CustomBuffs.mid) + (10000 * CustomBuffs.major);
 
 if WOW_PROJECT_ID == WOW_PROJECT_CLASSIC then
