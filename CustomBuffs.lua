@@ -1937,6 +1937,14 @@ function CustomBuffs:CleanName(unitGUID, backupFrame)
 	end
 	return name;
 end
+
+function CustomBuffs:SetHealthTexture(frame)
+	local healthBar = frame.healthBar;
+	if ( not healthBar or healthBar:IsForbidden() ) then return end
+	if IsAddOnLoaded("WeakAuras") then
+		healthBar:GetStatusBarTexture():SetTexture("Interface\\AddOns\\WeakAuras\\Media\\Textures\\Statusbar_Clean", "BORDER");
+	end
+end
 ----[[
 --Clean Up Names
 function CustomBuffs:SetName(frame)
@@ -1947,6 +1955,8 @@ function CustomBuffs:SetName(frame)
 			frame.name:Hide();
 			return;
 		end
+
+		CustomBuffs:SetHealthTexture(frame);
 
 		name = CustomBuffs:CleanName(UnitGUID(frame.unit), frame);
 		if not name then frame.name:Hide(); return; end
