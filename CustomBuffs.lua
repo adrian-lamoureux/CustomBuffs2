@@ -10,7 +10,7 @@ CustomBuffs.areWidgetsLoaded = LibStub:GetLibrary("AceGUISharedMediaWidgets-1.0"
 
 CustomBuffs.major = 2;
 CustomBuffs.mid = 1;
-CustomBuffs.minor = 1;
+CustomBuffs.minor = 2;
 CustomBuffs.version = CustomBuffs.minor + (100 * CustomBuffs.mid) + (10000 * CustomBuffs.major);
 
 if WOW_PROJECT_ID == WOW_PROJECT_CLASSIC then
@@ -1941,8 +1941,13 @@ end
 function CustomBuffs:SetHealthTexture(frame)
 	local healthBar = frame.healthBar;
 	if ( not healthBar or healthBar:IsForbidden() ) then return end
+
+	local absorbBar = frame.totalAbsorb;
+	if ( not absorbBar or absorbBar:IsForbidden()  ) then return end
+
 	if IsAddOnLoaded("WeakAuras") then
 		healthBar:GetStatusBarTexture():SetTexture("Interface\\AddOns\\WeakAuras\\Media\\Textures\\Statusbar_Clean", "BORDER");
+		absorbBar:SetTexture("Interface\\AddOns\\WeakAuras\\Media\\Textures\\Statusbar_Clean", "BORDER");
 	end
 end
 ----[[
