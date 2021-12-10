@@ -1236,6 +1236,8 @@ if ( count > 1 ) then
 
 	auraFrame.count:Show();
 	auraFrame.count:SetText(countText);
+	auraFrame.count:ClearAllPoints();
+	auraFrame.count:SetPoint("BOTTOMRIGHT",auraFrame,"BOTTOMRIGHT",1,0);
 else
 	auraFrame.count:Hide();
 end
@@ -1939,15 +1941,18 @@ function CustomBuffs:CleanName(unitGUID, backupFrame)
 end
 
 function CustomBuffs:SetHealthTexture(frame)
+	--if CustomBuffs.gameVersion == 1 or CustomBuffs.gameVersion == 2 then return; end
 	local healthBar = frame.healthBar;
-	if ( not healthBar or healthBar:IsForbidden() ) then return end
+	if ( not healthBar or healthBar:IsForbidden() ) then return; end
 
 	local absorbBar = frame.totalAbsorb;
-	if ( not absorbBar or absorbBar:IsForbidden()  ) then return end
+	if ( CustomBuffs.gameVersion ~= 1 and CustomBuffs.gameVersion ~= 2 and (not absorbBar or absorbBar:IsForbidden())  ) then return; end
 
 	if IsAddOnLoaded("WeakAuras") then
 		healthBar:GetStatusBarTexture():SetTexture("Interface\\AddOns\\WeakAuras\\Media\\Textures\\Statusbar_Clean", "BORDER");
-		absorbBar:SetTexture("Interface\\AddOns\\WeakAuras\\Media\\Textures\\Statusbar_Clean", "BORDER");
+		if CustomBuffs.gameVersion ~= 1 and CustomBuffs.gameVersion ~= 2 then
+			absorbBar:SetTexture("Interface\\AddOns\\WeakAuras\\Media\\Textures\\Statusbar_Clean", "BORDER");
+		end
 	end
 end
 ----[[
@@ -2047,6 +2052,8 @@ function CustomBuffs:OnUnitFrameHealPredictionUpdate(frame)
 end
 
 function CustomBuffs:CreateOverShield(frame)
+	if (CustomBuffs.gameVersion ~= 0) then return; end
+
 	if ( not frame or frame:IsForbidden()) then return; end
 
 	local healthBar = frame.healthBar;
@@ -2104,6 +2111,7 @@ function CustomBuffs:CreateOverShield(frame)
 end
 
 function CustomBuffs:UpdateOverShield(frame, reverse)
+	if CustomBuffs.gameVersion == 1 or CustomBuffs.gameVersion == 2 then return; end
 	local absorbBar = frame.totalAbsorb;
 	if ( not absorbBar or absorbBar:IsForbidden()  ) then return end
 
