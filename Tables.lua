@@ -43,18 +43,32 @@ CustomBuffs.INTERRUPTS = {
   [187707] = 		{ duration = 3 }, -- Muzzle (Hunter)
   [212619] = 		{ duration = 6 }, -- Call Felhunter (Warlock)
   [231665] = 		{ duration = 3 }, -- Avengers Shield (Paladin)
+  [347008] = 		{ duration = 4 }, -- Axe Toss (Warlock)
   ["Solar Beam"] = { duration = 5 },
 
   --Non player interrupts BETA FEATURE
   ["Quake"] = 				{ duration = 5 }, --240448
-  ["Deafening Crash"] = 		{ duration = 2 },
+  ["Deafening Crash"]={ duration = 2 },
   [296523] =			 		{ duration = 3 },
   [220543] =			 		{ duration = 3 },
-  [2676] =			 		{ duration = 2 },
+  [2676] =			 		  { duration = 2 },
   [335485] =			 		{ duration = 4 },
   [342135] =			 		{ duration = 3 },
   [351252] =			 		{ duration = 6 },
   [318995] =			 		{ duration = 3 },
+  [355638] =			 		{ duration = 4 },
+  [351226] =			 		{ duration = 6 },
+  [33871] =			 		  { duration = 8 },
+  [32747] =			 		  { duration = 3 },
+  [37470] =			 		  { duration = 3 },
+  [162617] =			 		{ duration = 1.5 },
+  [59111] =			 		  { duration = 8 },
+  [241687] =			 		{ duration = 6 },
+  [46036] =			 		  { duration = 6 },
+  [177150] =			 		{ duration = 6 },
+  [161220] =			 		{ duration = 1 },
+  [184381] =			 		{ duration = 1.5 },
+  [332693] =			 		{ duration = 2 },
   [355638] =			 		{ duration = 4 },
 };
 
@@ -507,6 +521,7 @@ CustomBuffs.BUFFS = {
   ["Blessing of Sacrifice"] =     	EPStandard,
 
   ["Frostrime"] =                   EPStandard,
+  ["Focused Growth"] =              EPStandard,
 
   --BFA procs
   ["Luminous Jellyweed"] =        	EPStandard,
@@ -650,6 +665,7 @@ CustomBuffs.THROUGHPUT_BUFFS = {
   ["Unbound Changling"] =             	ETCDNoFallthrough,
   [345805] =                          	ETCDNoFallthrough, --Soulletting Ruby
   ["First Strike"] =             	      ETCDNoFallthrough,
+  [323524] =                 	          ETCDStandard, --Necro CC immune
 
   --Other Stuff
   ["Earthen Wall"] =                  	ETCDPrioNoFallthrough,
