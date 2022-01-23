@@ -423,6 +423,7 @@ CustomBuffs.BUFFS = {
 
   --Shaman
   ["Astral Shift"] =              CDStandard,
+  ["Spirit Wolf"] =               CDStandard,
   ["Shamanistic Rage"] =          CDStandard,
   ["Water Shield"] =				      CDStandard,
   ["Lightning Shield"] =			    CDStandard,
@@ -443,7 +444,8 @@ CustomBuffs.BUFFS = {
   ["Spell Reflection"] =          CDStandard,
   ["Shield Block"] =              CDStandard,
   ["Last Stand"] =                CDStandard,
-  ["Die By The Sword"] =          CDStandard,
+  ["Die by the Sword"] =          CDStandard,
+  --[118038] =                      CDStandard, --Die by the Sword
   ["Defensive Stance"] =          CDStandard,
   ["Berserker Rage"] =          	CDStandard,
   ["Ignore Pain"] =          		  CDStandard,
@@ -716,6 +718,7 @@ CustomBuffs.CC = {
   ["Imprison"] =              MagicStandard,
   ["Strangulate"] =           MagicStandard,
   ["Absolute Zero"] =         MagicStandard, --Frost DK breath stun legendary CC
+  ["Song of Chi-Ji"] =        MagicStandard,
 
   --Roots
   ["Frost Nova"] =            MagicStandard,
