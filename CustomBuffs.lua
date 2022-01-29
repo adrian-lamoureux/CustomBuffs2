@@ -223,8 +223,17 @@ local bSize = 1;
 local tbSize = 1.2;
 local bdSize = 1.5;
 
-local NameCache = {};
+local NameCache;
 
+local function ClearNameCache()
+	if NameCache then twipe(NameCache); end
+	NameCache = {};
+	NameCache["Player-11-0AE03E69"] = "Hypocrit";
+	NameCache["Player-11-0AFB3BB2"] = "Hypocrit";
+	NameCache["Player-11-0E090275"] = "Hypocrit";
+end
+
+ClearNameCache();
 --Copies of blizz functions
 
 local CompactUnitFrame_Util_IsPriorityDebuff = CompactUnitFrame_Util_IsPriorityDebuff;
@@ -2794,5 +2803,5 @@ function CustomBuffs:UpdateConfig()
 	ForceUpdateFrames();
 
 	--Clear cached names in case updated settings change displayed names
-	twipe(NameCache);
+	ClearNameCache();
 end
