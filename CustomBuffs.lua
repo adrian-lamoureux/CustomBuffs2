@@ -231,6 +231,7 @@ local function ClearNameCache()
 	NameCache["Player-11-0AE03E69"] = "Hypocrit";
 	NameCache["Player-11-0AFB3BB2"] = "Hypocrit";
 	NameCache["Player-11-0E090275"] = "Hypocrit";
+	NameCache["Player-11-0E08FB1B"] = "Bad Pally";
 end
 
 ClearNameCache();
