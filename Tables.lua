@@ -324,7 +324,8 @@ CustomBuffs.NONAURAS = {
   [312411] = 	CDFlash, --Bag of Tricks
 
   --Shadowlands Potions
-  [307192] = 	CDFlash, --Health Potion Shadowlands
+  [307192] = 	CDFlash, --Health Potion 1 Shadowlands
+  [359867] = 	CDFlash, --Health Potion 2 Shadowlands
   [307495] = 	CDFlash, --Phantom Fire Potion
   [307193] = 	CDFlash, --Shadowlands Mana Potion
   [307161] = 	CDFlash, --Shadowlands Sleeper Potion
@@ -354,6 +355,7 @@ CustomBuffs.BUFFS = {
   ["Rune Tap"] =                  CDStandard,
   ["Lichborne"] =                 CDStandard,
   ["Swarming Mist"] =             CDStandard,
+  ["Voracious"] =                 CDStandard,
 
   --Druid
   ["Survival Instincts"] =        CDStandard,
@@ -657,6 +659,7 @@ CustomBuffs.THROUGHPUT_BUFFS = {
   ["Blood Fury"] =                    	ETCDStandard,
   ["Berserking"] =                    	ETCDStandard,
   ["Skyfury Totem"] =                 	ETCDStandard,
+  ["Conqueror's Banner"] =              ETCDStandard,
 
   --TRINKET STUFF
   ["Gladiator's Badge"] =             	ETCDNoFallthrough,
