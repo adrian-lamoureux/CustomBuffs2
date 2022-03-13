@@ -723,6 +723,11 @@ CustomBuffs.CC = {
   ["Absolute Zero"] =         MagicStandard, --Frost DK breath stun legendary CC
   ["Song of Chi-Ji"] =        MagicStandard,
 
+
+  ["Sparkling Driftglobe Core"] = MagicStandard,
+
+
+
   --Roots
   ["Frost Nova"] =            MagicStandard,
   ["Entangling Roots"] =      MagicStandard,
@@ -908,11 +913,17 @@ CustomBuffs.CC = {
   ["Biting Cold"] =                           CCStandard,
   ["Melt Soul"] =                             MagicStandard,
 
+  --Taz
+  ["Hyperlight Bomb"] =                       MagicStandard,
+  ["Purification Protocol"] =                 MagicStandard,
+
+
   --------------------
   -- Castle Nathria --
   --------------------
   [324982] =                                  CCStandard,
   ["Predator's Howl"] =                       MagicStandard,
+  ["Crushing Prism"] =                        MagicStandard,
 
 
   --["Vendetta"] =              {["dispelType"] = nil, ["sdPrio"] = 3, ["bdPrio"] = 4},

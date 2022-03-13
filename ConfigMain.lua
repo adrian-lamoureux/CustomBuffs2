@@ -218,7 +218,7 @@ function CustomBuffs:CreateGeneralOptions()
 				desc = "Adjust the scale of the raid frames and all of their contents",
 				min = 0.5,
 				max = 2,
-				step = 0.1,
+				step = 0.05,
 				get = function() return self.db.profile.frameScale end,
 				set = function(_, value)
 					self.db.profile.frameScale = value;
@@ -233,7 +233,7 @@ function CustomBuffs:CreateGeneralOptions()
 				desc = "Adjust the trasparency of the raid frames and all of their contents",
 				min = 0,
 				max = 1,
-				step = 0.1,
+				step = 0.05,
 				get = function() return self.db.profile.frameAlpha end,
 				set = function(_, value)
 					self.db.profile.frameAlpha = value;
@@ -248,7 +248,7 @@ function CustomBuffs:CreateGeneralOptions()
 				desc = "Adjust the scale of the standard buffs",
 				min = 0.5,
 				max = 2,
-				step = 0.1,
+				step = 0.05,
 				get = function() return self.db.profile.buffScale end,
 				set = function(_, value)
 					self.db.profile.buffScale = value;
@@ -263,7 +263,7 @@ function CustomBuffs:CreateGeneralOptions()
 				desc = "Adjust the scale of the standard debuffs",
 				min = 0.5,
 				max = 2,
-				step = 0.1,
+				step = 0.05,
 				get = function() return self.db.profile.debuffScale end,
 				set = function(_, value)
 					self.db.profile.debuffScale = value;
@@ -278,7 +278,7 @@ function CustomBuffs:CreateGeneralOptions()
 				desc = "Adjust the scale of two large aura slots at the top of each frame that track important auras and CC",
 				min = 0.5,
 				max = 2,
-				step = 0.1,
+				step = 0.05,
 				get = function() return self.db.profile.bossDebuffScale end,
 				set = function(_, value)
 					self.db.profile.bossDebuffScale = value;
@@ -293,7 +293,7 @@ function CustomBuffs:CreateGeneralOptions()
 				desc = "Adjust the scale of two special aura slots in the top right of each frame that track offensive cooldowns and healer cooldowns for the unit",
 				min = 0.5,
 				max = 2,
-				step = 0.1,
+				step = 0.05,
 				get = function() return self.db.profile.throughputBuffScale end,
 				set = function(_, value)
 					self.db.profile.throughputBuffScale = value;

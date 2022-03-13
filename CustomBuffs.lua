@@ -10,7 +10,7 @@ CustomBuffs.areWidgetsLoaded = LibStub:GetLibrary("AceGUISharedMediaWidgets-1.0"
 
 CustomBuffs.major = 2;
 CustomBuffs.mid = 2;
-CustomBuffs.minor = 0;
+CustomBuffs.minor = 1;
 CustomBuffs.version = CustomBuffs.minor + (100 * CustomBuffs.mid) + (10000 * CustomBuffs.major);
 
 if WOW_PROJECT_ID == WOW_PROJECT_CLASSIC then
@@ -2619,7 +2619,7 @@ function CustomBuffs:OnEnable()
 			--InterfaceOptionsFrame_OpenToCategory("CustomBuffs");
 			--InterfaceOptionsFrame_OpenToCategory("CustomBuffs");
 			CustomBuffs:OpenOptions();
-		elseif options == "weekly" and CustomBuffs.gameVersion == 0 then
+		elseif (options == "weekly" or options == "w") and CustomBuffs.gameVersion == 0 then
 			LoadAddOn("Blizzard_WeeklyRewards");
 			WeeklyRewardsFrame:Show();
 		elseif options == "test" then
