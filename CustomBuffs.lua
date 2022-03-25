@@ -10,7 +10,7 @@ CustomBuffs.areWidgetsLoaded = LibStub:GetLibrary("AceGUISharedMediaWidgets-1.0"
 
 CustomBuffs.major = 2;
 CustomBuffs.mid = 2;
-CustomBuffs.minor = 1;
+CustomBuffs.minor = 2;
 CustomBuffs.version = CustomBuffs.minor + (100 * CustomBuffs.mid) + (10000 * CustomBuffs.major);
 
 if WOW_PROJECT_ID == WOW_PROJECT_CLASSIC then
@@ -238,9 +238,9 @@ ClearNameCache();
 --Copies of blizz functions
 
 local CompactUnitFrame_Util_IsPriorityDebuff = CompactUnitFrame_Util_IsPriorityDebuff;
-local function isPrioDebuff(...)
+local function isPrioDebuff(spellID)
 	if CustomBuffs.gameVersion == 0 then
-		return CompactUnitFrame_Util_IsPriorityDebuff(...);
+		return CompactUnitFrame_Util_IsPriorityDebuff(spellID);
 	else
 		return false;
 	end
@@ -1595,7 +1595,9 @@ function CustomBuffs:UpdateAuras(frame)
 					["auraData"] = {icon, count, expirationTime, duration, debuffType},
 					["type"] = "debuff"
 				});
-			elseif isPrioDebuff(name, icon, count, debuffType, duration, expirationTime, unitCaster, nil, nil, spellID) then
+			--elseif isPrioDebuff(name, icon, count, debuffType, duration, expirationTime, unitCaster, nil, nil, spellID) then
+			elseif isPrioDebuff(spellID) then
+
 				--Add to debuffs
 				tinsert(debuffs, {
 					["index"] = index,
@@ -1872,7 +1874,8 @@ local function stripChars(str)
 	tableAccents["í"] = "i";
 	tableAccents["î"] = "i";
 	tableAccents["ï"] = "i";
-	tableAccents["ð"] = "eth";
+	--tableAccents["ð"] = "eth";
+	tableAccents["ð"] = "o";
 	tableAccents["ñ"] = "n";
 	tableAccents["ò"] = "o";
 	tableAccents["ó"] = "o";
