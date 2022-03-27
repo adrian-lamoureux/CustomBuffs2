@@ -142,6 +142,154 @@ UNUSED THROUGHPUT FRAMES ARE HIDDEN, NOT PADDED OUT
 
 --]]
 
+--Blizzard function copies to avoid taint
+local function CompactRaidFrameContainer_UpdateDisplayedUnits(self)
+	if ( IsInRaid() ) then
+		self.units = self.raidUnits;
+	else
+		self.units = self.partyUnits;
+	end
+end
+
+local RESIZE_HORIZONTAL_OUTSETS = 4;
+local RESIZE_VERTICAL_OUTSETS = 7;
+
+local function CompactRaidFrameManager_OnLoad(self)
+	self.container = CompactRaidFrameContainer;
+	self.container:SetParent(self);
+	self:RegisterEvent("DISPLAY_SIZE_CHANGED");
+	self:RegisterEvent("UI_SCALE_CHANGED");
+	self:RegisterEvent("GROUP_ROSTER_UPDATE");
+	self:RegisterEvent("UPDATE_ACTIVE_BATTLEFIELD");
+	self:RegisterEvent("UNIT_FLAGS");
+	self:RegisterEvent("PLAYER_FLAGS_CHANGED");
+	self:RegisterEvent("PLAYER_ENTERING_WORLD");
+	self:RegisterEvent("PARTY_LEADER_CHANGED");
+	self:RegisterEvent("RAID_TARGET_UPDATE");
+	self:RegisterEvent("PLAYER_TARGET_CHANGED");
+	self.containerResizeFrame:SetMinResize(self.container:GetWidth(), MINIMUM_RAID_CONTAINER_HEIGHT + RESIZE_VERTICAL_OUTSETS * 2 + 1);
+	self.dynamicContainerPosition = true;
+	CompactRaidFrameContainer_SetFlowFilterFunction(self.container, CRFFlowFilterFunc)
+	CompactRaidFrameContainer_SetGroupFilterFunction(self.container, CRFGroupFilterFunc)
+	CompactRaidFrameManager_UpdateContainerBounds(self);
+	CompactRaidFrameManager_ResizeFrame_Reanchor(self);
+	CompactRaidFrameManager_AttachPartyFrames(self);
+	CompactRaidFrameManager_Collapse(self);
+	--Set up the options flow container
+	FlowContainer_Initialize(self.displayFrame.optionsFlowContainer);
+end
+
+local function CompactRaidFrameManagerDisplayFrameProfileSelector_Initialize()
+	local info = UIDropDownMenu_CreateInfo();
+	for i=1, GetNumRaidProfiles() do
+		local name = GetRaidProfileName(i);
+		info.text = name;
+		info.value = name;
+		info.func = CompactRaidFrameManagerDisplayFrameProfileSelector_OnClick;
+		info.checked = GetActiveRaidProfile() == info.value;
+		UIDropDownMenu_AddButton(info);
+	end
+end
+
+local function CompactRaidFrameContainer_OnLoad(self)
+	FlowContainer_Initialize(self);	--Congrats! We are now a certified FlowContainer.
+
+	self:SetClampRectInsets(0, 200 - self:GetWidth(), 10, 0);
+
+	self.raidUnits = {--[["raid1", "raid2", "raid3", ..., "raid40"]]};
+	for i=1, MAX_RAID_MEMBERS do
+		tinsert(self.raidUnits, "raid"..i);
+	end
+	self.partyUnits = { "player" };
+	for i=1, MAX_PARTY_MEMBERS do
+		tinsert(self.partyUnits, "party"..i);
+	end
+	CompactRaidFrameContainer_UpdateDisplayedUnits(self);
+
+	self:RegisterEvent("GROUP_ROSTER_UPDATE");
+	self:RegisterEvent("UNIT_PET");
+
+	local unitFrameReleaseFunc = function(frame)
+													CompactUnitFrame_SetUnit(frame, nil);
+												end;
+	self.frameReservations = {
+		raid		= CompactRaidFrameReservation_NewManager(unitFrameReleaseFunc);
+		pet		= CompactRaidFrameReservation_NewManager(unitFrameReleaseFunc);
+		flagged	= CompactRaidFrameReservation_NewManager(unitFrameReleaseFunc);	--For Main Tank/Assist units
+		target	= CompactRaidFrameReservation_NewManager(unitFrameReleaseFunc);	--Target of target for Main Tank/Main Assist
+	}
+
+	self.frameUpdateList = {
+		normal = {},	--Groups are also in this normal list.
+		mini = {},
+		group = {},
+	}
+	self.unitFrameUnusedFunc = function(frame)
+													frame.inUse = false;
+												end;
+
+	self.displayPets = true;
+	self.displayFlaggedMembers = true;
+end
+
+local function CompactRaidFrameContainer_SetGroupMode(self, groupMode)
+	self.groupMode = groupMode;
+	CompactRaidFrameContainer_TryUpdate(self);
+end
+
+local function CompactRaidFrameContainer_SetFlowSortFunction(self, flowSortFunc)
+	--Usage: Takes two tokens, should work as a Lua sort function.
+	--The ordering must be well-defined, even across units that will be filtered out
+	self.flowSortFunc = flowSortFunc;
+	CompactRaidFrameContainer_TryUpdate(self);
+end
+
+local function CompactRaidFrameContainer_AddUnitFrame(self, unit, frameType)
+	local frame = CompactRaidFrameContainer_GetUnitFrame(self, unit, frameType);
+	CompactUnitFrame_SetUnit(frame, unit);
+	FlowContainer_AddObject(self, frame);
+
+	return frame;
+end
+
+
+CompactRaidFrameContainer_LayoutFrames = function(self) CustomBuffs:layoutFrames(self); end
+
+local function CompactRaidFrameContainer_LayoutFrames(self)
+	--First, mark everything we currently use as unused. We'll hide all the ones that are still unused at the end of this function. (On release)
+	for i=1, #self.flowFrames do
+		if ( type(self.flowFrames[i]) == "table" and self.flowFrames[i].unusedFunc ) then
+			self.flowFrames[i]:unusedFunc();
+		end
+	end
+	FlowContainer_RemoveAllObjects(self);
+
+	FlowContainer_PauseUpdates(self);	--We don't want to update it every time we add an item.
+
+
+	if ( self.displayFlaggedMembers ) then
+		CompactRaidFrameContainer_AddFlaggedUnits(self);
+		FlowContainer_AddLineBreak(self);
+	end
+
+	if ( self.groupMode == "discrete" ) then
+		CompactRaidFrameContainer_AddGroups(self);
+	elseif ( self.groupMode == "flush" ) then
+		CompactRaidFrameContainer_AddPlayers(self);
+	else
+		error("Unknown group mode");
+	end
+
+	if ( self.displayPets ) then
+		CompactRaidFrameContainer_AddPets(self);
+	end
+
+	FlowContainer_ResumeUpdates(self);
+
+	CompactRaidFrameContainer_UpdateBorder(self);
+
+	CompactRaidFrameContainer_ReleaseAllReservedFrames(self);
+end
 
 
 
@@ -236,6 +384,36 @@ end
 
 ClearNameCache();
 --Copies of blizz functions
+--[[
+local UpdateClassificationIndicator = CompactUnitFrame_UpdateClassificationIndicator;
+
+function CompactUnitFrame_UpdateClassificationIndicator(frame)
+	if not frame:IsForbidden() then
+		UpdateClassificationIndicator(frame);
+	end
+end
+--]]
+
+--fuck you blizzard
+--[[
+function NamePlateDriverMixin:OnLoad() end
+function NameplateBuffContainerMixin:OnLoad() end
+function NameplateBuffContainerMixin:OnEvent(event, ...) end
+function NamePlateDriverMixin:OnEvent(event, ...) end
+
+function NameplateBuffContainerMixin:UpdateBuffs(unit, filter, showAll) end
+function NamePlateBaseMixin:GetPreferredInsets() end
+
+function NamePlateDriverMixin:OnRaidTargetUpdate() end
+function NamePlateDriverMixin:OnNamePlateCreated(namePlateFrameBase) end
+function NamePlateDriverMixin:OnForbiddenNamePlateCreated(namePlateFrameBase) end
+function NamePlateDriverMixin:OnNamePlateCreatedInternal(namePlateFrameBase, template) end
+function NamePlateDriverMixin:AcquireUnitFrame(namePlateFrameBase) end
+function NamePlateDriverMixin:SetClassNameplateBar(frame) end
+function NamePlateDriverMixin:GetClassNameplateBar() end
+function NamePlateDriverMixin:UpdateNamePlateOptions() end
+function NamePlateBaseMixin:OnAdded(namePlateUnitToken, driverFrame) end
+--]]
 
 local CompactUnitFrame_Util_IsPriorityDebuff = CompactUnitFrame_Util_IsPriorityDebuff;
 local function isPrioDebuff(spellID)
@@ -889,8 +1067,11 @@ end
 
 --Deal with combat breaking frames by disabling CompactRaidFrameContainer's layoutFrames function
 --while in combat so players joining or leaving the group/raid in combat won't break anyone else's frames
-local oldUpdateLayout = CompactRaidFrameContainer_LayoutFrames;
-CompactRaidFrameContainer_LayoutFrames = function(self)
+----[[
+--local oldUpdateLayout = CompactRaidFrameContainer_LayoutFrames;
+
+
+function CustomBuffs:layoutFrames(self)
 	if InCombatLockdown() then
 		CustomBuffs.layoutNeedsUpdate = true;
 	else
@@ -904,12 +1085,12 @@ CompactRaidFrameContainer_LayoutFrames = function(self)
 			end
 		end
 
-		oldUpdateLayout(self);
+		CompactRaidFrameContainer_LayoutFrames(self);
 		--Make sure we update the frame numbers for each of our tracked units
 		handleRosterUpdate();
 	end
 end
-
+--]]
 
 
 --Establish player class and set up class based logic
@@ -1019,7 +1200,7 @@ CustomBuffs.CustomBuffsFrame:SetScript("OnEvent",function(self, event, ...)
 		--Update the layout when the player leaves combat if needed
 	elseif event == "PLAYER_REGEN_ENABLED" then
 		if CustomBuffs.layoutNeedsUpdate then
-			oldUpdateLayout(CompactRaidFrameContainer);
+			CompactRaidFrameContainer_LayoutFrames(CompactRaidFrameContainer);
 			CustomBuffs.layoutNeedsUpdate = false;
 		end
 		handleExitCombat();
@@ -1397,6 +1578,11 @@ end
 
 function CustomBuffs:UpdateAuras(frame)
 	if (not frame or not frame.displayedUnit or frame:IsForbidden() or not frame:IsShown() or not frame.debuffFrames or not frame:GetName():match("^Compact") or not frame.optionTable or not frame.optionTable.displayNonBossDebuffs) then return; end
+	--[[
+	if CustomBuffs.verbose then
+		print(frame:GetName())
+	end
+	--]]
 
 	--Handle pre calculation logic
 	if frame.optionTable.displayBuffs then frame.optionTable.displayBuffs = false; end                          --Tell buff frames to skip blizzard logic
@@ -1904,7 +2090,7 @@ function CustomBuffs:loadFrames()
 	if not InCombatLockdown() then
 		if not CompactRaidFrame1 then --Don't spam create new raid frames; causes a huge mess
 			CompactRaidFrameManager_OnLoad(CompactRaidFrameManager);
-			--CompactRaidFrameManagerDisplayFrameProfileSelector_Initialize();
+			CompactRaidFrameManagerDisplayFrameProfileSelector_Initialize();
 			CompactRaidFrameContainer_OnLoad(CompactRaidFrameContainer);
 			CompactRaidFrameContainer_SetGroupMode(CompactRaidFrameContainer, "flush");
 			CompactRaidFrameContainer_SetFlowSortFunction(CompactRaidFrameContainer, CRFSort_Role);
@@ -2746,6 +2932,7 @@ function CustomBuffs:Init()
 	self:SecureHook("CompactUnitFrameProfiles_UpdateCurrentPanel", function(frame) self:loadFrames(); end);
 	self:SecureHook("SetActiveRaidProfile", function(frame) self:loadFrames(); end);
 	self:SecureHook("CompactUnitFrameProfilesDropdownButton_OnClick", function(frame) self:loadFrames(); end);
+	--self:SecureHook("CompactRaidFrameContainer_LayoutFrames", function(frame) self:layoutFrames(CompactRaidFrameContainer); end);
 
 end
 
