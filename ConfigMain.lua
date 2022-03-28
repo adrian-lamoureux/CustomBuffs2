@@ -45,6 +45,7 @@ function CustomBuffs:CreateGeneralOptions()
 				name = "",
 				order = 3,
 			},
+			--[[
 			profileSelecter = {
 			type = 'select',
 			name = "Profile Selecter",
@@ -57,6 +58,7 @@ function CustomBuffs:CreateGeneralOptions()
 				SetCVar("activeCUFProfile", activeProf);
 				CompactUnitFrameProfiles_ApplyProfile(activeProf);
 				CustomBuffs:loadFrames();
+
 			end,
 			width = THIRD_WIDTH * 0.75,
 			order = 4,
@@ -80,6 +82,7 @@ function CustomBuffs:CreateGeneralOptions()
 				width = THIRD_WIDTH * 0.75,
 				order = 6,
 			},
+			--]]
 			testAurasButton = {
 				type = "toggle",
 				name = "Show test auras",
@@ -156,7 +159,7 @@ function CustomBuffs:CreateGeneralOptions()
 				width = THIRD_WIDTH,
 				order = 51,
 			},
-            cleanNames = {
+      cleanNames = {
 				type = "toggle",
 				name = "Clean Names",
 				desc = "Remove server names and shorten player names on raid frames",
@@ -375,6 +378,7 @@ function CustomBuffs:CreateGeneralOptions()
 				width = THIRD_WIDTH * 1.5,
 				order = 112,
 			},
+			--[[
 			alwaysShowFrames = {
 				type = "toggle",
 				name = "Always Show Frames",
@@ -387,6 +391,7 @@ function CustomBuffs:CreateGeneralOptions()
 				width = THIRD_WIDTH * 1.5,
 				order = 113,
 			},
+			--]]
 			showOverShield = {
 				type = "toggle",
 				name = "Show Shield Amount",

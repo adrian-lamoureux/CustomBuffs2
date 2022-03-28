@@ -5,7 +5,7 @@
 ## SavedVariables: CustomBuffsData
 
 Libs\embeds.xml
-
+XML\AuraTemplate.xml
 
 Tables.lua
 CustomBuffs.lua

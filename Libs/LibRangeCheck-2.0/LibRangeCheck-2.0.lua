@@ -1,6 +1,6 @@
 --[[
 Name: LibRangeCheck-2.0
-Revision: $Revision: 204 $
+Revision: $Revision: 212 $
 Author(s): mitch0
 Website: http://www.wowace.com/projects/librangecheck-2-0/
 Description: A range checking library based on interact distances and spell ranges
@@ -41,15 +41,14 @@ License: Public Domain
 -- @class file
 -- @name LibRangeCheck-2.0
 local MAJOR_VERSION = "LibRangeCheck-2.0"
-local MINOR_VERSION = tonumber(("$Revision: 204 $"):match("%d+")) + 100000
+local MINOR_VERSION = tonumber(("$Revision: 212 $"):match("%d+")) + 100000
 
 local lib, oldminor = LibStub:NewLibrary(MAJOR_VERSION, MINOR_VERSION)
 if not lib then
     return
 end
 
-local IsClassic = (WOW_PROJECT_ID == WOW_PROJECT_CLASSIC)
-local IsClassic_BCC = (WOW_PROJECT_ID == WOW_PROJECT_BURNING_CRUSADE_CLASSIC)
+local IsClassic = (WOW_PROJECT_ID == WOW_PROJECT_CLASSIC) or (WOW_PROJECT_ID == WOW_PROJECT_BURNING_CRUSADE_CLASSIC)
 
 -- << STATIC CONFIG
 
@@ -200,6 +199,9 @@ local FriendItems  = {
         136605, -- Solendra's Compassion
         63427, -- Worgsaw
     },
+    [6] = {
+        164766, -- Iwen's Enchanting Rod
+    },
     [7] = {
         61323, -- Ruby Seeds
     },
@@ -301,6 +303,9 @@ local HarmItems = {
         8149, -- Voodoo Charm
         136605, -- Solendra's Compassion
         63427, -- Worgsaw
+    },
+    [6] = {
+        164766, -- Iwen's Enchanting Rod
     },
     [7] = {
         61323, -- Ruby Seeds
@@ -416,7 +421,6 @@ local math_floor = math.floor
 local UnitIsVisible = UnitIsVisible
 
 -- temporary stuff
-
 
 local pendingItemRequest
 local itemRequestTimeoutAt
@@ -1074,7 +1078,7 @@ function lib:activate()
         self.frame = frame
         frame:RegisterEvent("LEARNED_SPELL_IN_TAB")
         frame:RegisterEvent("CHARACTER_POINTS_CHANGED")
-        if not IsClassic and not IsClassic_BCC then
+        if not IsClassic then
             frame:RegisterEvent("PLAYER_TALENT_UPDATE")
         end
         frame:RegisterEvent("SPELLS_CHANGED")

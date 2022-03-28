@@ -1,0 +1,57 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/ https://raw.githubusercontent.com/Gethe/wow-ui-source/live/FrameXML/UI.xsd">
+  <Button name="CustomDebuffTemplate" inherits="CompactAuraTemplate" virtual="true">
+    <Layers>
+      <Layer level="OVERLAY">
+        <Texture name="$parentBorder" parentKey="border" file="Interface\Buttons\UI-Debuff-Overlays">
+          <Anchors>
+            <Anchor point="TOPLEFT">
+              <Offset x="-1" y="1"/>
+            </Anchor>
+            <Anchor point="BOTTOMRIGHT">
+              <Offset x="1" y="-1"/>
+            </Anchor>
+          </Anchors>
+          <TexCoords left="0.296875" right="0.5703125" top="0" bottom="0.515625"/>
+        </Texture>
+      </Layer>
+    </Layers>
+    <Scripts>
+      <OnUpdate>
+        if ( GameTooltip:IsOwned(self) ) then
+          if ( self.isBossBuff ) then
+            GameTooltip:SetUnitBuff(self:GetParent().displayedUnit, self:GetID(), self.filter);
+          else
+            GameTooltip:SetUnitDebuff(self:GetParent().displayedUnit, self:GetID(), self.filter);
+          end
+        end
+      </OnUpdate>
+      <OnEnter>
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT", 0, 0);
+          if ( self.isBossBuff ) then
+            GameTooltip:SetUnitBuff(self:GetParent().displayedUnit, self:GetID(), self.filter);
+          else
+            GameTooltip:SetUnitDebuff(self:GetParent().displayedUnit, self:GetID(), self.filter);
+          end
+      </OnEnter>
+      <OnLeave>
+        GameTooltip:Hide();
+      </OnLeave>
+    </Scripts>
+  </Button>
+  <Button name="CustomBuffTemplate" inherits="CompactAuraTemplate" virtual="true">
+    <Scripts>
+      <OnUpdate>
+        if ( GameTooltip:IsOwned(self) ) then
+          GameTooltip:SetUnitBuff(self:GetParent().displayedUnit, self:GetID());
+        end
+      </OnUpdate>
+      <OnEnter>
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT", 0, 0);
+        GameTooltip:SetUnitBuff(self:GetParent().displayedUnit, self:GetID());
+      </OnEnter>
+      <OnLeave>
+        GameTooltip:Hide();
+      </OnLeave>
+    </Scripts>
+  </Button>
+</Ui>

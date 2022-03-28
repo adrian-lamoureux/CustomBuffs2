@@ -143,6 +143,7 @@ UNUSED THROUGHPUT FRAMES ARE HIDDEN, NOT PADDED OUT
 --]]
 
 --Blizzard function copies to avoid taint
+--[[
 local function CompactRaidFrameContainer_UpdateDisplayedUnits(self)
 	if ( IsInRaid() ) then
 		self.units = self.raidUnits;
@@ -196,7 +197,7 @@ local function CompactRaidFrameContainer_OnLoad(self)
 
 	self:SetClampRectInsets(0, 200 - self:GetWidth(), 10, 0);
 
-	self.raidUnits = {--[["raid1", "raid2", "raid3", ..., "raid40"]]};
+	self.raidUnits = {};
 	for i=1, MAX_RAID_MEMBERS do
 		tinsert(self.raidUnits, "raid"..i);
 	end
@@ -253,7 +254,7 @@ local function CompactRaidFrameContainer_AddUnitFrame(self, unit, frameType)
 end
 
 
-CompactRaidFrameContainer_LayoutFrames = function(self) CustomBuffs:layoutFrames(self); end
+--CompactRaidFrameContainer_LayoutFrames = function(self) CustomBuffs:layoutFrames(self); end
 
 local function CompactRaidFrameContainer_LayoutFrames(self)
 	--First, mark everything we currently use as unused. We'll hide all the ones that are still unused at the end of this function. (On release)
@@ -291,7 +292,7 @@ local function CompactRaidFrameContainer_LayoutFrames(self)
 	CompactRaidFrameContainer_ReleaseAllReservedFrames(self);
 end
 
-
+--]]
 
 
 
@@ -1235,14 +1236,19 @@ end
 -------------------------------
 
 local function setUpExtraDebuffFrames(frame)
-	if not frame then return; end
+	if not frame or frame:IsForbidden() then return; end
 
-	setMaxDebuffs(frame, CustomBuffs.MAX_DEBUFFS);
+	--setMaxDebuffs(frame, CustomBuffs.MAX_DEBUFFS);
 	local s = calcBuffSize(frame) * (dbSize or 1);
 
-	if not frame.debuffFrames[CustomBuffs.MAX_DEBUFFS] then
-		for i = 4, CustomBuffs.MAX_DEBUFFS do
-			local bf = CreateFrame("Button", frame:GetName().."Debuff"..i, frame, "CompactDebuffTemplate");
+	if ( not frame.customDebuffFrames ) then
+		frame.customDebuffFrames = {};
+	end
+	if not frame.customDebuffFrames[CustomBuffs.MAX_DEBUFFS] then
+		for i = 1, CustomBuffs.MAX_DEBUFFS do
+			local bf = CreateFrame("Button", frame:GetName().."CustomDebuff"..i, frame, "CustomDebuffTemplate");
+			bf:SetParent(frame);
+			frame.customDebuffFrames[i] = bf;
 			bf.baseSize=22;
 			bf:Hide();
 		end
@@ -1250,76 +1256,90 @@ local function setUpExtraDebuffFrames(frame)
 	end
 
 	--Set the size of default debuffs
+	--[[
 	for i = 1, 3 do
-		frame.debuffFrames[i]:SetSize(s, s);
+		frame.customDebuffFrames[i]:SetSize(s, s);
 	end
-
-	for i=4, CustomBuffs.MAX_DEBUFFS do
-		local bf = frame.debuffFrames[i];
+	--]]
+	for i = 1, CustomBuffs.MAX_DEBUFFS do
+		local bf = frame.customDebuffFrames[i];
 
 		bf:ClearAllPoints();
-		if i > 3 and i < 7 then
-			bf:SetPoint("BOTTOMRIGHT", frame.debuffFrames[i-3], "TOPRIGHT", 0, 0);
+		if i == 1 then
+			bf:SetPoint("BOTTOMLEFT", frame.healthBar, "BOTTOMLEFT", 0, 0);
+		elseif i > 1 and i < 4 then
+			bf:SetPoint("BOTTOMLEFT", frame.customDebuffFrames[i-1], "BOTTOMRIGHT", 0, 0);
+		elseif i > 3 and i < 7 then
+			bf:SetPoint("BOTTOMRIGHT", frame.customDebuffFrames[i-3], "TOPRIGHT", 0, 0);
 		elseif i > 6 and i < 10 then
-			bf:SetPoint("TOPRIGHT", frame.debuffFrames[1], "TOPRIGHT", -(s * (i - 6) + 5), 0);
+			bf:SetPoint("TOPRIGHT", frame.customDebuffFrames[1], "TOPRIGHT", -(s * (i - 6) + 1), 0);
 		elseif i > 9 then
-			bf:SetPoint("BOTTOMRIGHT", frame.debuffFrames[i-3], "TOPRIGHT", 0, 0);
+			bf:SetPoint("BOTTOMRIGHT", frame.customDebuffFrames[i-3], "TOPRIGHT", 0, 0);
 		else
-			bf:SetPoint("TOPRIGHT", frame.debuffFrames[1], "TOPRIGHT", -(s * (i - 3)), 0);
+			bf:SetPoint("TOPRIGHT", frame.customDebuffFrames[1], "TOPRIGHT", -(s * (i - 3)), 0);
 		end
-		frame.debuffFrames[i]:SetSize(s, s);
+		frame.customDebuffFrames[i]:SetSize(s, s);
 	end
 end
 
 local function setUpExtraBuffFrames(frame)
-	if not frame then return; end
+	if not frame or frame:IsForbidden() then return; end
 
-	setMaxBuffs(frame, CustomBuffs.MAX_BUFFS);
+	--setMaxBuffs(frame, CustomBuffs.MAX_BUFFS);
 	local s = calcBuffSize(frame) * (bSize or 1);
-
-	if not frame.buffFrames[CustomBuffs.MAX_BUFFS] then
-		for i = 4, CustomBuffs.MAX_BUFFS do
-			local bf = CreateFrame("Button", frame:GetName().."Buff"..i, frame, "CompactBuffTemplate");
+	if ( not frame.customBuffFrames ) then
+		frame.customBuffFrames = {};
+	end
+	if not frame.customBuffFrames[CustomBuffs.MAX_BUFFS] then
+		for i = 1, CustomBuffs.MAX_BUFFS do
+			local bf = CreateFrame("Button", frame:GetName().."CustomBuff"..i, frame, "CustomBuffTemplate");
+			bf:SetParent(frame);
+			frame.customBuffFrames[i] = bf;
 			bf.baseSize=22;
 			bf:Hide();
 		end
 	end
 
 	--Set the size of default buffs
+	--[[
 	for i = 1, 3 do
-		frame.buffFrames[i]:SetSize(s, s);
+		frame.customBuffFrames[i]:SetSize(s, s);
 	end
-
-	for i= 4, CustomBuffs.MAX_BUFFS do
-		local bf = frame.buffFrames[i];
+	--]]
+	for i= 1, CustomBuffs.MAX_BUFFS do
+		local bf = frame.customBuffFrames[i];
 
 		bf:ClearAllPoints();
-		if i > 3 and i < 7 then
-			bf:SetPoint("BOTTOMRIGHT", frame.buffFrames[i-3], "TOPRIGHT", 0, 0);
+		if i == 1 then
+			bf:SetPoint("BOTTOMRIGHT", frame.healthBar, "BOTTOMRIGHT", 0, 0);
+		elseif i > 1 and i < 4 then
+			bf:SetPoint("BOTTOMRIGHT", frame.customBuffFrames[i-1], "BOTTOMLEFT", 0, 0);
+		elseif i > 3 and i < 7 then
+			bf:SetPoint("BOTTOMRIGHT", frame.customBuffFrames[i-3], "TOPRIGHT", 0, 0);
 		elseif i > 6 and i < 10 then
-			bf:SetPoint("TOPRIGHT", frame.buffFrames[1], "TOPRIGHT", (s * (i - 6) + 5), 0);
+			bf:SetPoint("TOPRIGHT", frame.customBuffFrames[1], "TOPRIGHT", (s * (i - 6) + 1), 0);
 		elseif i > 9 then
-			bf:SetPoint("BOTTOMRIGHT", frame.buffFrames[i-3], "TOPRIGHT", 0, 0);
+			bf:SetPoint("BOTTOMRIGHT", frame.customBuffFrames[i-3], "TOPRIGHT", 0, 0);
 		else
-			bf:SetPoint("TOPRIGHT", frame.buffFrames[1], "TOPRIGHT", -(s * (i - 3)), 0);
+			bf:SetPoint("TOPRIGHT", frame.customBuffFrames[1], "TOPRIGHT", -(s * (i - 3)), 0);
 		end
-		frame.buffFrames[i]:SetSize(s, s);
+		frame.customBuffFrames[i]:SetSize(s, s);
 	end
 end
 
 local function setUpThroughputFrames(frame)
-	if not frame then return; end
+	if not frame or frame:IsForbidden() then return; end
 
 	local size = calcBuffSize(frame) * (tbSize or 1.2) * 1.1;
 
 	if not frame.throughputFrames then
-		local bfone = CreateFrame("Button", frame:GetName().."ThroughputBuff1", frame, "CompactBuffTemplate");
-		table.remove(frame.buffFrames);
+		local bfone = CreateFrame("Button", frame:GetName().."ThroughputBuff1", frame, "CustomBuffTemplate");
+		--table.remove(frame.customBuffFrames);
 		bfone.baseSize = size;
 		bfone:SetSize(size, size);
 
-		local bftwo = CreateFrame("Button", frame:GetName().."ThroughputBuff2", frame, "CompactBuffTemplate");
-		table.remove(frame.buffFrames);
+		local bftwo = CreateFrame("Button", frame:GetName().."ThroughputBuff2", frame, "CustomBuffTemplate");
+		--table.remove(frame.customBuffFrames);
 		bftwo.baseSize = size;
 		bftwo:SetSize(size, size);
 
@@ -1377,19 +1397,19 @@ local function updateBossDebuffs(frame)
 end
 
 local function setUpBossDebuffFrames(frame)
-	if not frame then return; end
+	if not frame or frame:IsForbidden() then return; end
 
 	if not frame.bossDebuffs then
-		local bfone = CreateFrame("Button", frame:GetName().."BossDebuff1", frame, "CompactDebuffTemplate");
-		table.remove(frame.debuffFrames);
-		bfone.baseSize = frame.buffFrames[1]:GetWidth() * 1.2;
-		bfone.maxHeight= frame.buffFrames[1]:GetWidth() * 1.5;
+		local bfone = CreateFrame("Button", frame:GetName().."BossDebuff1", frame, "CustomDebuffTemplate");
+		--table.remove(frame.customDebuffFrames);
+		bfone.baseSize = frame.customBuffFrames[1]:GetWidth() * 1.2;
+		bfone.maxHeight= frame.customBuffFrames[1]:GetWidth() * 1.5;
 		bfone:SetSize(frame:GetHeight() / 2, frame:GetHeight() / 2);
 
-		local bftwo = CreateFrame("Button", frame:GetName().."BossDebuff2", frame, "CompactDebuffTemplate");
-		table.remove(frame.debuffFrames);
-		bftwo.baseSize = frame.buffFrames[1]:GetWidth() * 1.2;
-		bftwo.maxHeight = frame.buffFrames[1]:GetWidth() * 1.5;
+		local bftwo = CreateFrame("Button", frame:GetName().."BossDebuff2", frame, "CustomDebuffTemplate");
+		--table.remove(frame.customDebuffFrames);
+		bftwo.baseSize = frame.customBuffFrames[1]:GetWidth() * 1.2;
+		bftwo.maxHeight = frame.customBuffFrames[1]:GetWidth() * 1.5;
 		bftwo:SetSize(frame:GetHeight() / 2, frame:GetHeight() / 2);
 
 		frame.bossDebuffs = {bfone,bftwo};
@@ -1577,20 +1597,17 @@ end
 
 
 function CustomBuffs:UpdateAuras(frame)
-	if (not frame or not frame.displayedUnit or frame:IsForbidden() or not frame:IsShown() or not frame.debuffFrames or not frame:GetName():match("^Compact") or not frame.optionTable or not frame.optionTable.displayNonBossDebuffs) then return; end
-	--[[
-	if CustomBuffs.verbose then
-		print(frame:GetName())
-	end
-	--]]
+	if (not frame or frame:IsForbidden() or not frame:IsShown() or frame:GetName() == nil or not frame:GetName():match("^Compact") or not frame.optionTable) then return; end
 
 	--Handle pre calculation logic
+	--[[
 	if frame.optionTable.displayBuffs then frame.optionTable.displayBuffs = false; end                          --Tell buff frames to skip blizzard logic
 	if frame.optionTable.displayDebuffs then frame.optionTable.displayDebuffs = false; end                      --Tell debuff frames to skip blizzard logic
 	if frame.optionTable.displayDispelDebuffs then frame.optionTable.displayDispelDebuffs = false; end          --Prevent blizzard frames from showing dispel debuff frames
 	if frame.optionTable.displayNameWhenSelected then frame.optionTable.displayNameWhenSelected = false; end    --Don't show names when the frame is selected to prevent bossDebuff overlap
+	--]]
 
-	if frame.auraNeedResize or not frame.debuffFrames[CustomBuffs.MAX_DEBUFFS] or not frame.buffFrames[CustomBuffs.MAX_BUFFS] or not frame.bossDebuffs or not frame.throughputFrames then
+	if frame.auraNeedResize or not frame.customDebuffFrames or not frame.customDebuffFrames[CustomBuffs.MAX_DEBUFFS] or not frame.customBuffFrames or not frame.customBuffFrames[CustomBuffs.MAX_BUFFS] or not frame.bossDebuffs or not frame.throughputFrames then
 		setUpExtraDebuffFrames(frame);
 		setUpExtraBuffFrames(frame);
 		setUpThroughputFrames(frame);
@@ -1940,15 +1957,15 @@ function CustomBuffs:UpdateAuras(frame)
 
 	--Standard Debuffs
 	frameNum = 1;
-	while(frameNum <= frame.maxDebuffs and debuffs[frameNum]) do
-		updateAura(frame.debuffFrames[frameNum], debuffs[frameNum].index, debuffs[frameNum].auraData);
+	while(frameNum <= CustomBuffs.MAX_DEBUFFS and debuffs[frameNum]) do
+		updateAura(frame.customDebuffFrames[frameNum], debuffs[frameNum].index, debuffs[frameNum].auraData);
 		frameNum = frameNum + 1;
 	end
 
 	--Standard Buffs
 	frameNum = 1;
-	while(frameNum <= frame.maxBuffs and buffs[frameNum]) do
-		updateAura(frame.buffFrames[frameNum], buffs[frameNum].index, buffs[frameNum].auraData);
+	while(frameNum <= CustomBuffs.MAX_BUFFS and buffs[frameNum]) do
+		updateAura(frame.customBuffFrames[frameNum], buffs[frameNum].index, buffs[frameNum].auraData);
 		frameNum = frameNum + 1;
 	end
 
@@ -1956,8 +1973,19 @@ function CustomBuffs:UpdateAuras(frame)
 
 
 	--Hide unused aura frames
-	for i = math.min(#debuffs + 1, frame.maxDebuffs + 1), 15 do
+
+	----[[
+	for i =1, 3 do
 		local auraFrame = frame.debuffFrames[i];
+		auraFrame:Hide();
+	end
+	for i =1, 3 do
+		local auraFrame = frame.buffFrames[i];
+		auraFrame:Hide();
+	end
+	--]]
+	for i = math.min(#debuffs + 1, CustomBuffs.MAX_DEBUFFS + 1), 15 do
+		local auraFrame = frame.customDebuffFrames[i];
 		--if auraFrame ~= frame.bossDebuffs[1] and auraFrame ~= frame.bossDebuffs[2] then auraFrame:Hide(); end
 		if auraFrame then
 			auraFrame:Hide();
@@ -1968,8 +1996,8 @@ function CustomBuffs:UpdateAuras(frame)
 		frame.bossDebuffs[i]:Hide();
 	end
 
-	for i = math.min(#buffs + 1, frame.maxBuffs + 1), 15 do
-		local auraFrame = frame.buffFrames[i];
+	for i = math.min(#buffs + 1, CustomBuffs.MAX_BUFFS + 1), 15 do
+		local auraFrame = frame.customBuffFrames[i];
 		--if auraFrame ~= frame.throughputFrames[1] and auraFrame ~= frame.throughputFrames[2] then auraFrame:Hide(); end
 		if auraFrame then
 			auraFrame:Hide();
@@ -2087,6 +2115,7 @@ end
 
 
 function CustomBuffs:loadFrames()
+	--[[
 	if not InCombatLockdown() then
 		if not CompactRaidFrame1 then --Don't spam create new raid frames; causes a huge mess
 			CompactRaidFrameManager_OnLoad(CompactRaidFrameManager);
@@ -2108,6 +2137,7 @@ function CustomBuffs:loadFrames()
 	else
 		CustomBuffs:RunOnExitCombat(CustomBuffs.loadFrames);
 	end
+	--]]
 end
 
 function CustomBuffs:CleanName(unitGUID, backupFrame)
@@ -2157,6 +2187,7 @@ end
 ----[[
 --Clean Up Names
 function CustomBuffs:SetName(frame)
+	----[[
 	if (not frame or frame:IsForbidden() or not frame:IsShown() or not frame.debuffFrames or not frame:GetName():match("^Compact")) then return; end
 	local name = "";
 	if (frame.optionTable and frame.optionTable.displayName) then
@@ -2187,11 +2218,12 @@ function CustomBuffs:SetName(frame)
 		frame.name:SetTextColor(r, g, b, 1);
 		--frame.name:SetTextColor(0, 0, 0, 1);
 	else
-		frame.name:SetFont(self.SM:Fetch('font', self.db.profile.nameFont), self.db.profile.nameSize + 1--[[, "OUTLINE"]]);
+		frame.name:SetFont(self.SM:Fetch('font', self.db.profile.nameFont), self.db.profile.nameSize + 1);
 		frame.name:SetShadowColor(0.5, 0.5, 0.5, 0.8);
 		frame.name:SetShadowOffset(1, -1);
 		frame.name:SetTextColor(0, 0, 0, 1);
 	end
+	--]]
 end--);
 --]]
 
@@ -2469,7 +2501,7 @@ end
 
 
 function CustomBuffs:UpdateRaidIcon(frame)
-	if (not frame or not frame:IsShown() or not frame.unit or not frame:GetName():match("^Compact")) then return; end
+	if (not frame or frame:IsForbidden() or not frame:IsShown() or not frame.unit or not frame:GetName():match("^Compact")) then return; end
 
 	if not frame.Icon then
 		frame.Icon = {};
