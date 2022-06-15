@@ -2159,6 +2159,7 @@ function CustomBuffs:loadFrames()
 				CompactRaidFrameManager:Show();
 				CompactRaidFrameContainer:Show();
 				handleRosterUpdate();
+				ForceUpdateFrames();
 				return true; --for BackoffRunIn
 		else
 			LoadAddOn("Blizzard_CompactRaidFrames");
