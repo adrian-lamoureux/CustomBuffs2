@@ -28,7 +28,7 @@ local PurgeStandard =   {["dispelType"] = "purge", ["sdPrio"] = 3, ["bdPrio"] = 
 
 CustomBuffs.DEF_COLORS = {
   --Major damage reduction or healing increase; applies to all damage types
-  {r = 1, g = 0.2, b = 0, a = 0.9}, --1
+  {r = 1, g = 0.2, b = 0, a = 0.7}, --1
   --Strong damage reduction or healing increase; potentially only physical or magic
   {r = 1, g = 0.4, b = 0, a = 0.6}, --2
   --Medium damage reduction or healing increase
