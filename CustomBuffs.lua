@@ -2882,6 +2882,8 @@ function CustomBuffs:OnEnable()
 
 	self:RegisterChatCommand("cb",function(options)
 		options = string.lower(options);
+		local args = CustomBuffs:Split(options);
+		options = args[1];
 
 		if options == "" then
 			--InterfaceOptionsFrame_OpenToCategory("CustomBuffs");
@@ -2901,6 +2903,11 @@ function CustomBuffs:OnEnable()
 			CustomBuffs:unlockFrames();
 		elseif options == "sync" then
 			CustomBuffs:sync();
+		elseif options == "link" or options == "l" then
+			for i = 2, #args do
+				local link = GetSpellLink(tonumber(args[i]));
+				print(args[i], ": ", link);
+			end
 		elseif options == "ints" then
 			print("Printing all unknown interrupts...");
 			if self.db.global.unknownInterrupts then

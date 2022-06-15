@@ -45,3 +45,14 @@ function CustomBuffs:RunOnExitCombat(func, ...)
 		tinsert(CustomBuffs.runOnExitCombat, {func = func, args = ...});
 	end
 end
+
+function CustomBuffs:Split(in, delim)
+        if not delim then delim = "%s"; end
+        local ret = {};
+
+        for i in string.gmatch(in, "([^"..delim.."]+)") do
+                table.insert(ret, i);
+        end
+        
+        return ret;
+end
