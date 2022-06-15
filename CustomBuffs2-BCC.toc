@@ -5,8 +5,10 @@
 ## SavedVariables: CustomBuffsData
 
 Libs\embeds.xml
+XML\AuraTemplate.xml
 
 BCC-Tables.lua
+Util.lua
 CustomBuffs.lua
 ConfigDefaults.lua
 

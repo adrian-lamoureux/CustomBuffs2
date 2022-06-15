@@ -8,6 +8,7 @@ Libs\embeds.xml
 XML\AuraTemplate.xml
 
 Tables.lua
+Util.lua
 CustomBuffs.lua
 ConfigDefaults.lua
 

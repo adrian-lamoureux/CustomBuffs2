@@ -4,7 +4,9 @@ local CustomBuffs = addonTable.CustomBuffs;
 
 local CDFlash = { duration = 1, tbPrio = -2, isFlash = true };
 local CDStandard = {["sbPrio"] = 4, ["sdPrio"] = nil, ["bdPrio"] = nil, ["tbPrio"] = nil};
+local DefStandard = {["sbPrio"] = 4, ["sdPrio"] = nil, ["bdPrio"] = nil, ["tbPrio"] = nil, isDefensive = true};
 local EStandard = {sbPrio = 4, sdPrio = nil, bdPrio = nil, tbPrio = nil};
+local EHighlightMine = {sbPrio = 4, sdPrio = nil, bdPrio = nil, tbPrio = nil, highlightMine = true};
 local ELow = {sbPrio = 5, sdPrio = nil, bdPrio = nil, tbPrio = nil};
 local EPStandard = {sbPrio = 5, sdPrio = nil, bdPrio = nil, tbPrio = nil, player = true}; --Only show if source is player
 local TCDStandard = {["sbPrio"] = 3, ["sdPrio"] = nil, ["bdPrio"] = nil, ["tbPrio"] = 2};
@@ -23,6 +25,33 @@ local DiseaseLow =      {["dispelType"] = "disease", ["sdPrio"] = 3, ["bdPrio"] 
 local PoisonStandard =  {["dispelType"] = "poison", ["sdPrio"] = 3, ["bdPrio"] = 4};
 local MDStandard =      {["dispelType"] = "massDispel", ["sdPrio"] = 3, ["bdPrio"] = 4};
 local PurgeStandard =   {["dispelType"] = "purge", ["sdPrio"] = 3, ["bdPrio"] = 4};
+
+CustomBuffs.DEF_COLORS = {
+  --Major damage reduction or healing increase; applies to all damage types
+  {r = 1, g = 0.2, b = 0, a = 0.9}, --1
+  --Strong damage reduction or healing increase; potentially only physical or magic
+  {r = 1, g = 0.4, b = 0, a = 0.6}, --2
+  --Medium damage reduction or healing increase
+  {r = 1, g = 0.6, b = 0, a = 0.4}, --3
+  --Weak damage reduction or healing increase
+  {r = 1, g = 0.8, b = 0, a = 0.4}, --4
+  --Rotational defensive buff (mostly tanks and healers)
+  {r = 1, g = 1, b = 0, a = 0.2},  --5
+  --Special coloring for magic damage only defensives
+  {r = 0.4, g = 0, b = 0.8, a = 0.8}, --6
+  --Special coloring for physical damage only defensives
+  {r = 1, g = 1, b = 0, a = 0.8},  --7
+
+};
+--Immunities
+CustomBuffs.DEF_COLORS[0] = {r = 1, g = 0, b = 0, a = 1};
+
+local function Def(level)
+  return {["sbPrio"] = 4, ["sdPrio"] = nil, ["bdPrio"] = nil, ["tbPrio"] = nil, isDefensive = true, defLevel = level};
+end
+local function EDef(level, high)
+  return {["sbPrio"] = 4, ["sdPrio"] = nil, ["bdPrio"] = nil, ["tbPrio"] = nil, isDefensive = true, highlightMine = high, defLevel = level};
+end
 
 CustomBuffs.INTERRUPTS = {
   [1766] =   		{ duration = 5 }, -- Kick (Rogue)
@@ -98,6 +127,7 @@ CustomBuffs.NONAURAS = {
   [111898] = { duration = 17, tbPrio = 1, type = "summon" }, --Grimoire: Felguard
   [265187] = { duration = 15, tbPrio = 1, type = "summon" }, --Summon Demonic Tyrant
   [111685] = { duration = 30, tbPrio = 1, type = "summon" }, --Summon Infernal
+  --[104317] = { duration = 20, tbPrio = 0, sbPrio = 5, type = "summon" }, --Imps
 
   --DRUID
   --[157982] = { duration = 1.5, tbPrio = 1 }, --Tranquility
@@ -107,6 +137,7 @@ CustomBuffs.NONAURAS = {
   [84714] = { duration = 10, tbPrio = 1 }, --Frozen Orb
   [342130] = { duration = 12, tbPrio = 7, type = "summon" }, --Rune of Power Auto Cast
   [116011] = { duration = 12, tbPrio = 7, type = "summon" }, --Rune of Power Real
+  [321686] = { duration = 40, tbPrio = 0, sbPrio = 5, type = "summon", defLevel = 2 }, --Mirror Images
 
   --PRIEST
   [200174] = { duration = 15, tbPrio = 7, type = "summon" }, --Mindbender
@@ -345,159 +376,167 @@ CustomBuffs.NONAURAS = {
 
 CustomBuffs.BUFFS = {
   --Death Knight
-  ["Icebound Fortitude"] =        CDStandard,
-  ["Anti-Magic Shell"] =          CDStandard,
-  ["Vampiric Blood"] =            CDStandard,
-  ["Corpse Shield"] =             CDStandard,
-  ["Bone Shield"] =               CDStandard,
-  ["Dancing Rune Weapon"] =       CDStandard,
-  ["Hemostasis"] =                CDStandard,
-  ["Rune Tap"] =                  CDStandard,
-  ["Lichborne"] =                 CDStandard,
-  ["Swarming Mist"] =             CDStandard,
-  ["Voracious"] =                 CDStandard,
+  ["Icebound Fortitude"] =        Def(1),
+  ["Anti-Magic Shell"] =          Def(6),
+  ["Vampiric Blood"] =            Def(1),
+  ["Corpse Shield"] =             Def(3),
+  ["Bone Shield"] =               Def(5),
+  ["Dancing Rune Weapon"] =       Def(7),
+  ["Hemostasis"] =                Def(5),
+  ["Rune Tap"] =                  Def(3),
+  ["Lichborne"] =                 Def(4),
+  ["Swarming Mist"] =             Def(7),
+  ["Voracious"] =                 Def(5),
 
   --Druid
-  ["Survival Instincts"] =        CDStandard,
-  ["Barkskin"] =                  CDStandard,
-  ["Ironfur"] =                   CDStandard,
-  ["Frenzied Regeneration"] =     CDStandard,
+  ["Survival Instincts"] =        Def(1),
+  ["Barkskin"] =                  Def(2),
+  ["Ironfur"] =                   Def(5),
+  ["Frenzied Regeneration"] =     Def(4),
   ["Dash"] =    	 				        CDStandard,
   ["Stampeding Roar"] =    	 			CDStandard,
 
   --Hunter
-  ["Aspect of the Turtle"] =      CDStandard,
-  ["Survival of the Fittest"] =   CDStandard,
+  ["Aspect of the Turtle"] =      Def(0),
+  ["Survival of the Fittest"] =   Def(3),
   ["Double Tap"] =   				      CDStandard,
   ["Sniper Shot"] =   			      CDStandard,
 
 
   --Mage
-  ["Ice Block"] =                 CDStandard,
+  ["Ice Block"] =                 Def(0),
   ["Evanesce"] =                  CDStandard,
-  ["Greater Invisibility"] =      CDStandard,
-  ["Alter Time"] =                CDStandard,
-  ["Temporal Shield"] =           CDStandard,
-  ["Blazing Barrier"] =           CDStandard,
-  ["Ice Barrier"] =           	  CDStandard,
-  ["Prismatic Barrier"] =         CDStandard,
+  ["Greater Invisibility"] =      Def(3),
+  ["Alter Time"] =                Def(4),
+  ["Temporal Shield"] =           Def(5),
+  ["Blazing Barrier"] =           Def(5),
+  ["Ice Barrier"] =           	  Def(5),
+  ["Prismatic Barrier"] =         Def(5),
   ["Slow Fall"] =                 CDStandard,
 
 
   --Monk
-  ["Zen Meditation"] =            CDStandard,
-  ["Diffuse Magic"] =             CDStandard,
-  ["Dampen Harm"] =               CDStandard,
-  ["Touch of Karma"] =            CDStandard,
-  ["Fortifying Brew"] =           CDStandard,
+  ["Zen Meditation"] =            Def(6),
+  ["Diffuse Magic"] =             Def(6),
+  ["Dampen Harm"] =               Def(3),
+  ["Touch of Karma"] =            Def(1),
+  ["Fortifying Brew"] =           Def(1),
 
   --Paladin
-  ["Divine Shield"] =             CDStandard,
-  ["Divine Protection"] =         CDStandard,
-  ["Ardent Defender"] =           CDStandard,
+  ["Divine Shield"] =             Def(0),
+  ["Divine Protection"] =         Def(0),
+  ["Ardent Defender"] =           Def(3),
   ["Aegis of Light"] =            CDStandard,
-  ["Eye for an Eye"] =            CDStandard,
-  ["Shield of Vengeance"] =       CDStandard,
-  ["Guardian of Ancient Kings"] = CDStandard,
+  ["Eye for an Eye"] =            Def(7),
+  ["Shield of Vengeance"] =       Def(3),
+  ["Guardian of Ancient Kings"] = Def(1),
   --["Seraphim"] =                  CDStandard, moved to throughput cds
-  ["Guardian of the Fortress"] =  CDStandard,
-  ["Shield of the Righteous"] =   CDStandard,
+  ["Guardian of the Fortress"] =  Def(1),
+  ["Shield of the Righteous"] =   Def(5),
   ["Blessing of Freedom"] =       CDStandard,
 
   --Priest
-  ["Dispersion"] =                CDStandard,
-  ["Fade"] =                      CDStandard,
-  ["Greater Fade"] =              CDStandard,
-  ["Desperate Prayer"] =          CDStandard,
+  ["Dispersion"] =                Def(1),
+  --["Fade"] =                      CDStandard,
+  [337661] =                      Def(4),
+  ["Greater Fade"] =              Def(0),
+  ["Desperate Prayer"] =          Def(3),
+  ["Masochism"] =                 Def(4),
   ["Shadowform"] =              	CDStandard,
   ["Levitate"] =              	  CDStandard,
 
   --Rogue
-  ["Evasion"] =                   CDStandard,
+  ["Evasion"] =                   Def(7),
   ["Sprint"] =                   	CDStandard,
-  ["Cloak of Shadows"] =          CDStandard,
-  ["Feint"] =                     CDStandard,
+  ["Cloak of Shadows"] =          Def(6),
+  ["Feint"] =                     Def(3),
   ["Readiness"] =                 CDStandard,
   ["Riposte"] =                   CDStandard,
-  ["Crimson Vial"] =              CDStandard,
+  ["Crimson Vial"] =              Def(4),
   ["Shroud of Concealment"] =     CDStandard,
 
 
   --Shaman
-  ["Astral Shift"] =              CDStandard,
-  ["Spirit Wolf"] =               CDStandard,
+  ["Astral Shift"] =              Def(1),
+  ["Spirit Wolf"] =               Def(4),
   ["Shamanistic Rage"] =          CDStandard,
   ["Water Shield"] =				      CDStandard,
   ["Lightning Shield"] =			    CDStandard,
-  ["Harden Skin"] =               CDStandard,
+  ["Harden Skin"] =               Def(1),
   ["Spiritwalker's Grace"] =      CDStandard,
   ["Water Walking"] =				      CDStandard,
   ["Ancestral Protection"] =			CDStandard,
   ["Chains of Devastation"] =			CDStandard,
+  [337984] =                      Def(2), --Earth ele health buff
 
   --Warlock
-  ["Unending Resolve"] =          CDStandard,
-  ["Dark Pact"] =                 CDStandard,
-  ["Nether Ward"] =               CDStandard,
+  ["Unending Resolve"] =          Def(1),
+  ["Dark Pact"] =                 Def(2),
+  ["Nether Ward"] =               Def(6),
   ["Fel Domination"] =            CDStandard,
 
   --Warrior
-  ["Shield Wall"] =               CDStandard,
-  ["Spell Reflection"] =          CDStandard,
-  ["Shield Block"] =              CDStandard,
-  ["Last Stand"] =                CDStandard,
-  ["Die by the Sword"] =          CDStandard,
+  ["Shield Wall"] =               Def(1),
+  ["Spell Reflection"] =          Def(6),
+  ["Shield Block"] =              Def(5),
+  ["Last Stand"] =                Def(1),
+  ["Die by the Sword"] =          Def(1),
+  ["Enraged Regeneration"] =      Def(1),
   --[118038] =                      CDStandard, --Die by the Sword
-  ["Defensive Stance"] =          CDStandard,
+  ["Defensive Stance"] =          Def(4),
   ["Berserker Rage"] =          	CDStandard,
-  ["Ignore Pain"] =          		  CDStandard,
+  ["Ignore Pain"] =          		  Def(5),
 
   --Demon Hunter
-  ["Netherwalk"] =                CDStandard,
-  ["Blur"] =                      CDStandard,
-  ["Darkness"] =                  CDStandard,
-  ["Demon Spikes"] =              CDStandard,
-  ["Soul Fragments"] =            CDStandard,
+  ["Netherwalk"] =                Def(0),
+  ["Blur"] =                      Def(7),
+  ["Darkness"] =                  Def(2),
+  ["Demon Spikes"] =              Def(5),
+  ["Soul Fragments"] =            Def(5),
   ["Immolation Aura"] =           CDStandard,
   ["Spectral Sight"] =           	CDStandard,
 
 
 
   --Major Externals
-  ["Ironbark"] =                  	EStandard,
-  ["Life Cocoon"] =               	EStandard,
-  ["Blessing of Protection"] =    	EStandard,
-  ["Blessing of Sacrifice"] =     	EStandard,
-  ["Blessing of Spellwarding"] =  	EStandard,
-  ["Pain Suppression"] =          	EStandard,
-  ["Guardian Spirit"] =           	EStandard,
-  ["Roar of Sacrifice"] =         	EStandard,
-  ["Innervate"] =                 	EStandard,
-  ["Cenarion Ward"] =             	EStandard,
-  ["Safeguard"] =                 	EStandard,
-  ["Vigilance"] =                 	EStandard,
-  ["Earth Shield"] =              	EStandard,
+  ["Ironbark"] =                  	EDef(3, false),
+  ["Life Cocoon"] =               	EDef(3, false),
+  ["Blessing of Protection"] =    	EDef(7, false),
+  ["Blessing of Sacrifice"] =     	EDef(2, false),
+  ["Blessing of Spellwarding"] =  	EDef(6, false),
+  ["Pain Suppression"] =          	EDef(1, false),
+  ["Guardian Spirit"] =           	EDef(1, false),
+  ["Roar of Sacrifice"] =         	EDef(3, false),
+  ["Innervate"] =                 	EHighlightMine,
+  ["Cenarion Ward"] =             	EHighlightMine,
+  ["Safeguard"] =                 	Def(7),
+  ["Vigilance"] =                 	Def(7),
+  ["Earth Shield"] =              	EHighlightMine,
   ["Tiger's Lust"] =              	EStandard,
-  ["Beacon of Virtue"] =          	EStandard,
-  ["Beacon of Faith"] =           	EStandard,
-  ["Beacon of Light"] =           	EStandard,
-  ["Lifebloom"] =                 	EStandard,
+  ["Beacon of Virtue"] =          	EHighlightMine,
+  ["Beacon of Faith"] =           	EHighlightMine,
+  ["Beacon of Light"] =           	EHighlightMine,
+  ["Lifebloom"] =                 	EHighlightMine,
   ["Spirit Mend"] =               	EStandard,
-  ["Misdirection"] =              	EStandard,
-  ["Tricks of the Trade"] =       	EStandard,
+  ["Misdirection"] =              	EHighlightMine,
+  ["Tricks of the Trade"] =       	EHighlightMine,
   ["Rallying Cry"] =              	EStandard,
-  ["Anti-Magic Zone"] =           	EStandard,
-  ["Power Word: Shield"] = 			    EStandard,
+  ["Power Word: Shield"] = 			    EDef(5, false),
+  --[356968] = 			                  EDef(2, false), --Fae wall buffed
+  [327694] = 			                  EDef(2, false), --Fae wall baseline
 
-  ["Stoneform"] =                 	EStandard,
+  ["Stoneform"] =                 	Def(7),
   ["Fireblood"] =                 	EStandard,
   ["Soulstone"] =                 	EStandard,
 
 
-  ["Gladiator's Emblem"] =        	EStandard,
+  ["Gladiator's Emblem"] =        	Def(3),
+  ["Gladiator's Eternal Aegis"] =   Def(6),
+
+  [8178] = 			                    EDef(6, false), --grounding totem buff
 
   --Minor Externals worth tracking
-  ["Enveloping Mist"] =           	EStandard,
+  ["Enveloping Mist"] =           	EHighlightMine,
   ["Hold Your Ground"] =        	  EStandard,
   ["Survivor's Rally"] =        	  EStandard,
 
@@ -506,6 +545,7 @@ CustomBuffs.BUFFS = {
   ["Stealth"] =                   	EStandard,
   ["Vanish"] =                    	EStandard,
   ["Prowl"] =                     	EStandard,
+  ["Camouflage"] =                  EStandard,
 
   ["Food"] =              			    EStandard,
   ["Food & Drink"] =              	EStandard,
@@ -518,11 +558,11 @@ CustomBuffs.BUFFS = {
 
   ["Cultivation"] =               	EPStandard,
   ["Spring Blossoms"] =           	EPStandard,
-  [290754] =                      	EPStandard, --Lifebloom from early spring honor talent
+  [290754] =                      	EHighlightMine, --Lifebloom from early spring honor talent
   ["Glimmer of Light"] =          	EPStandard,
-  ["Ancestral Vigor"] =           	EPStandard,
-  ["Anti-Magic Zone"] =           	EPStandard,
-  ["Blessing of Sacrifice"] =     	EPStandard,
+  ["Ancestral Vigor"] =           	EDef(5, true),
+  ["Anti-Magic Zone"] =           	EDef(6, false),
+  ["Blessing of Sacrifice"] =     	EDef(3, true),
 
   ["Frostrime"] =                   EPStandard,
   ["Focused Growth"] =              EPStandard,
@@ -542,22 +582,18 @@ CustomBuffs.BUFFS = {
   ["Dream Delver"] =        	      EPStandard,
   [352938] =        	              EPStandard, --kyr soulbind power
 
-  [344227] =                      	EStandard, --Consumptive Infusion
+  [344227] =                      	EDef(5, true), --Consumptive Infusion
 
-  ["Fleshcraft"] =                	EStandard,
+  ["Fleshcraft"] =                	Def(2),
   ["Soulshape"] =                		EStandard,
 
-  ["Stoneform"] =                 	EStandard,
-  ["Fireblood"] =                 	EStandard,
-
-  ["Gladiator's Emblem"] =        	EStandard,
-
-  [344388] =                      	EStandard, --Huntsman trinket
-  [344384] =                      	EStandard, --Huntsman trinket target
-  ["Tuft of Smoldering Plumage"] = 	EStandard,
+  [344388] =                      	EDef(2, true), --Huntsman trinket
+  [344384] =                      	EDef(2, true), --Huntsman trinket target
+  ["Tuft of Smoldering Plumage"] = 	EDef(1, true),
   ["Potion of the Hidden Spirit"] = EStandard,
   ["Nitro Boosts"] = 					      EStandard,
   ["Goblin Glider"] = 				      EStandard,
+  ["Angelic Feather"] = 					  EStandard,
 };
 
 
@@ -582,6 +618,7 @@ CustomBuffs.THROUGHPUT_BUFFS = {
   --Hunter
   ["Aspect of the Wild"] =                TCDStandard,
   ["Aspect of the Eagle"] =               TCDStandard,
+  ["Coordinated Assault"] =               TCDStandard,
   ["Bestial Wrath"] =                     TCDStandard,
   ["Trueshot"] =                          TCDStandard,
   ["Volley"] =                            TCDStandard,
@@ -620,11 +657,13 @@ CustomBuffs.THROUGHPUT_BUFFS = {
   [109964] =                              TCDStandard, --Spirit Shell
   ["Shadow Covenant"] =                   TCDStandard,
   ["Vampiric Embrace"] = 					        TCDStandard,
+  ["Boon of the Ascended"] = 					    TCDStandard,
   [327710] =                              TCDStandard,
 
   --Rogue
   ["Shadow Blades"] =                     TCDStandard,
   ["Shadow Dance"] =                      TCDStandard,
+  [345569] =                              TCDStandard, --Flag
   ["Shadowy Duel"] =                      TCDStandard,
   ["Adrenaline Rush"] =                   TCDStandard,
   ["Blade Flurry"] =                      TCDStandard,
@@ -751,6 +790,7 @@ CustomBuffs.CC = {
   ["Gladiator's Maledict"] =  MagicStandard,
 
   ["Mirrors of Torment"] =    CCStandard,
+  ["Sepsis"] =                CCStandard,
 
   --[[ BFA STUFF
   ["Obsidian Claw"] =         MagicStandard,

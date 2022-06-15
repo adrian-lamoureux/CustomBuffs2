@@ -18,20 +18,26 @@
     <Scripts>
       <OnUpdate>
         if ( GameTooltip:IsOwned(self) ) then
-          if ( self.isBossBuff ) then
-            GameTooltip:SetUnitBuff(self:GetParent().displayedUnit, self:GetID(), self.filter);
-          else
-            GameTooltip:SetUnitDebuff(self:GetParent().displayedUnit, self:GetID(), self.filter);
-          end
-        end
+					if self.ID then
+						GameTooltip:SetSpellByID(self.ID);
+					else
+						local id = self:GetID();
+						if id then
+							GameTooltip:SetUnitAura(self:GetParent().displayedUnit, id, self.filter);
+						end
+					end
+				end
       </OnUpdate>
       <OnEnter>
-        GameTooltip:SetOwner(self, "ANCHOR_RIGHT", 0, 0);
-          if ( self.isBossBuff ) then
-            GameTooltip:SetUnitBuff(self:GetParent().displayedUnit, self:GetID(), self.filter);
-          else
-            GameTooltip:SetUnitDebuff(self:GetParent().displayedUnit, self:GetID(), self.filter);
-          end
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
+        if self.ID then
+					GameTooltip:SetSpellByID(self.ID);
+				else
+					local id = self:GetID();
+					if id then
+						GameTooltip:SetUnitAura(self:GetParent().displayedUnit, id, self.filter);
+					end
+				end
       </OnEnter>
       <OnLeave>
         GameTooltip:Hide();
@@ -39,15 +45,44 @@
     </Scripts>
   </Button>
   <Button name="CustomBuffTemplate" inherits="CompactAuraTemplate" virtual="true">
+    <Layers>
+      <Layer level="OVERLAY">
+        <Texture name="$parentBorder" parentKey="border" file="Interface\Buttons\UI-Debuff-Overlays">
+          <Anchors>
+            <Anchor point="TOPLEFT">
+              <Offset x="-1" y="1"/>
+            </Anchor>
+            <Anchor point="BOTTOMRIGHT">
+              <Offset x="1" y="-1"/>
+            </Anchor>
+          </Anchors>
+          <TexCoords left="0.296875" right="0.5703125" top="0" bottom="0.515625"/>
+        </Texture>
+      </Layer>
+    </Layers>
     <Scripts>
       <OnUpdate>
         if ( GameTooltip:IsOwned(self) ) then
-          GameTooltip:SetUnitBuff(self:GetParent().displayedUnit, self:GetID());
-        end
+					if self.ID then
+						GameTooltip:SetSpellByID(self.ID);
+					else
+						local id = self:GetID();
+						if id then
+							GameTooltip:SetUnitAura(self:GetParent().displayedUnit, id, self.filter);
+						end
+					end
+				end
       </OnUpdate>
       <OnEnter>
-        GameTooltip:SetOwner(self, "ANCHOR_RIGHT", 0, 0);
-        GameTooltip:SetUnitBuff(self:GetParent().displayedUnit, self:GetID());
+        GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
+        if self.ID then
+					GameTooltip:SetSpellByID(self.ID);
+				else
+					local id = self:GetID();
+					if id then
+						GameTooltip:SetUnitAura(self:GetParent().displayedUnit, id, self.filter);
+					end
+				end
       </OnEnter>
       <OnLeave>
         GameTooltip:Hide();

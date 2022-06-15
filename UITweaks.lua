@@ -89,33 +89,38 @@ function CustomBuffs:UITweaksRetail()
         pathetic:SetAttribute("type", "macro");
         pathetic:SetAttribute("macrotext", "/run ID=GetInventoryItemID(\"player\",14);if ID then _,a,b=GetItemCooldown(ID);if not UnitCastingInfo(\"player\") and a==0 and b==1 then PlaySound(17046,true);end end");
 
+        local cds = CreateFrame("Button", "cds", UIParent, "SecureActionButtonTemplate");
+        cds:SetAttribute("type", "macro");
+        cds:SetAttribute("macrotext", "/click MultiBarRightButton1\n/cast Fireblood\n/cast Bloodfury\n/cast Ancestral Call\n/cast Berserking\n/click trink");
 
-        local toy1 = CreateFrame("Button", "toy1", UIParent, "SecureActionButtonTemplate");
-        toy1:SetAttribute("type", "macro");
-        toy1:SetAttribute("macrotext", "/use Apexis Focusing Shard\n/use Autographed Hearthstone Card\n/use Azeroth Mini Collection: Mechagon\n/use Brazier of Dancing Flames\n/use Brewfest Keg Pony\n/use Bubble Wand\n/use Chalice of the Mountain Kings\n/use Croak Crock\n/click toy2");
+        local trinkets = CreateFrame("Button", "trink", UIParent, "SecureActionButtonTemplate");
+        trinkets:SetAttribute("type", "macro");
+        trinkets:SetAttribute("macrotext", "/use First Sigil\n/use Inscrutable Quantum Device\n/use Soulletting Ruby\n/use Sunblood Amethyst\n/use Cosmic Gladiator's Badge of Ferocity");
 
-        local toy2 = CreateFrame("Button", "toy2", UIParent, "SecureActionButtonTemplate");
-        toy2:SetAttribute("type", "macro");
-        toy2:SetAttribute("macrotext", "/use Desert Flute\n/use Echoes of Rezan\n/use Enchanted Stone Whistle\n/use Everlasting Darkmoon Firework\n/use Everlasting Horde Firework\n/use Fire-Eater's Vial\n/use Foul Belly\n/use Fruit Basket\n/click toy3");
+        local shamcov = CreateFrame("Button", "shmc", UIParent, "SecureActionButtonTemplate");
+        shamcov:SetAttribute("type", "macro");
+        shamcov:SetAttribute("macrotext", "/cast [@cursor] Vesper Totem\n/cast Chain Harvest\n/cast Primordial Wave\n/cast [@cursor] Fae Transfusion");
 
-        local toy3 = CreateFrame("Button", "toy3", UIParent, "SecureActionButtonTemplate");
-        toy3:SetAttribute("type", "macro");
-        toy3:SetAttribute("macrotext", "/use Hearthstone Board\n/use Hourglass of Eternity\n/use Hot Buttered Popcorn\n/use Kaldorei Wind Chimes\n/use Ley Spider Eggs\n/use Panflute of Pandaria\n/use Pendant of the Scarab Storm\n/click toy4");
+        local priestcov = CreateFrame("Button", "prc", UIParent, "SecureActionButtonTemplate");
+        priestcov:SetAttribute("type", "macro");
+        priestcov:SetAttribute("macrotext", "/cast Boon of the Ascended\n/cast Mindgames\n/cast Unholy Nova\n/cast Fae Guardians");
 
-        local toy4 = CreateFrame("Button", "toy4", UIParent, "SecureActionButtonTemplate");
-        toy4:SetAttribute("type", "macro");
-        toy4:SetAttribute("macrotext", "/use Rainbow Generator\n/use Seafarer's Slidewhistle\n/use Slightly-Chewed Insult Book\n/use Spirit of Bashiok\n/use Stackable Stag\n/use Sylvanas' Music Box\n/use Tear of the Green Aspect\n/click toy5");
+        --[[ Cov Macros:
+        sham:
+        #showtooltip
+/click [mod] cds
+/click shmc
+/run local G=GetSpellInfo SetMacroSpell(GetRunningMacro(), G"Vesper Totem" or G"Chain Harvest" or G"Primordial Wave"or G"Fae Transfusion")
 
-        local toy5 = CreateFrame("Button", "toy5", UIParent, "SecureActionButtonTemplate");
-        toy5:SetAttribute("type", "macro");
-        toy5:SetAttribute("macrotext", "/use Titanium Seal of Dalaran\n/use Verdant Throwing Sphere\n/use Void Totem\n/use Void-Touched Souvenir Totem\n/use Words of Akunda\n/use Wisp in a Bottle\n/use Worn Doll\n/use Winning Hand\n/click toy5");
+        priest:
+        #showtooltip
+/click [mod] cds
+/click prc
+/run local G=GetSpellInfo SetMacroSpell(GetRunningMacro(), G"Boon of the Ascended" or G"Mindgames" or G"Unholy Nova"or G"Fae Guardians")
 
-        local toy6 = CreateFrame("Button", "toy6", UIParent, "SecureActionButtonTemplate");
-        toy6:SetAttribute("type", "macro");
-        toy6:SetAttribute("macrotext", "/use Xan'tish's Flute\n");
+        --]]
 
-
-
+        
         --Clean up pet frame
         PetName:SetAlpha(0);
         PetFrameHealthBarTextLeft:SetAlpha(0);

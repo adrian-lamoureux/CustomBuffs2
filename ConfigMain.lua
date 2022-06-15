@@ -45,7 +45,7 @@ function CustomBuffs:CreateGeneralOptions()
 				name = "",
 				order = 3,
 			},
-			--[[
+			----[[
 			profileSelecter = {
 			type = 'select',
 			name = "Profile Selecter",
@@ -378,7 +378,7 @@ function CustomBuffs:CreateGeneralOptions()
 				width = THIRD_WIDTH * 1.5,
 				order = 112,
 			},
-			--[[
+			----[[
 			alwaysShowFrames = {
 				type = "toggle",
 				name = "Always Show Frames",

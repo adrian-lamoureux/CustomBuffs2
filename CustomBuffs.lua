@@ -73,7 +73,7 @@ CustomBuffs.inRaidGroup = CustomBuffs.inRaidGroup or true;
 CustomBuffs.optionsOpen = CustomBuffs.optionsOpen or false;
 CustomBuffs.runOnExitCombat = CustomBuffs.runOnExitCombat or {};
 CustomBuffs.hasNotified = CustomBuffs.hasNotified or false;
-
+CustomBuffs.hideExtraAuras = CustomBuffs.hideExtraAuras or true;
 
 --Set up values for dispel types; used to quickly
 --determine whether a spell is dispellable by the player class
@@ -253,8 +253,8 @@ local function CompactRaidFrameContainer_AddUnitFrame(self, unit, frameType)
 	return frame;
 end
 
-
---CompactRaidFrameContainer_LayoutFrames = function(self) CustomBuffs:layoutFrames(self); end
+--]]
+CompactRaidFrameContainer_LayoutFrames = function(self) CustomBuffs:layoutFrames(self); end
 
 local function CompactRaidFrameContainer_LayoutFrames(self)
 	--First, mark everything we currently use as unused. We'll hide all the ones that are still unused at the end of this function. (On release)
@@ -374,6 +374,10 @@ local bdSize = 1.5;
 
 local NameCache;
 
+--Map raid frame components to raid frames without taint (hopefully)
+CustomBuffs.frameAdditions = CustomBuffs.frameAdditions or {};
+local F = CustomBuffs.frameAdditions;
+
 local function ClearNameCache()
 	if NameCache then twipe(NameCache); end
 	NameCache = {};
@@ -433,7 +437,7 @@ local function shouldDisplayDebuff(...)
 		return true;
 	end
 end --= CompactUnitFrame_Util_ShouldDisplayDebuff;
-local  function shouldDisplayBuff(...)
+local function shouldDisplayBuff(...)
 	local name, icon, count, debuffType, duration, expirationTime, unitCaster, canStealOrPurge, _, spellId, canApplyAura = ...;
 
 	if(CustomBuffs.BuffBlacklist[name] or CustomBuffs.BuffBlacklist[spellId]) then
@@ -464,10 +468,14 @@ local function ForceUpdateFrames()
 	for index, frame in ipairs(_G.CompactRaidFrameContainer.flowFrames) do
 		if frame and frame.debuffFrames then
 			if CustomBuffs.verbose then print("Forcing frame update for frame", frame); end
-			frame.auraNeedResize = true;
+			if not F[frame] then
+				F[frame] = {};
+			end
+			F[frame].auraNeedResize = true;
 			CustomBuffs:UpdateAuras(frame);
 			--if CustomBuffs.db.profile.useClassColors then
-			CompactUnitFrame_UpdateStatusText(frame);
+			--CompactUnitFrame_UpdateStatusText(frame);
+			CustomBuffs:SetStatusText(frame);
 			--end
 		end
 	end
@@ -476,20 +484,9 @@ end
 CustomBuffs.trackedSummons = CustomBuffs.trackedSummons or {};
 CustomBuffs.trackedOwners = CustomBuffs.trackedOwners or {};
 CustomBuffs.petToOwner = CustomBuffs.petToOwner or {};
+CustomBuffs.hasImages = CustomBuffs.hasImages or {};
 
---[[
-local function vprint(...)
-if CustomBuffs.verbose then
-local txt = "";
-for _, text in ipairs(...) do
-if text then
-txt = txt..text;
-end
-end
-print(txt);
-end
-end
---]]
+
 
 function CustomBuffs:sync()
 	print("CustomBuffs2 performing sync...");
@@ -583,8 +580,11 @@ function CustomBuffs:UpdateUnits()
 end
 
 local function addTrackedSummon(casterGUID, spellID, spellName, destGUID, daisyChainOwner)
+	CustomBuffs.hasImages = CustomBuffs.hasImages or {};
 	local owner = casterGUID;
 
+	--Make sure we correctly identify the owner of the summon (deals with odd cases
+	--where one summon summons another summon like old earth ele totem and fire ele totem)
 	if daisyChainOwner then
 		if (NONAURAS[spellID] or NONAURAS[spellName]).owner then
 			CustomBuffs.trackedOwners[spellID] = {destGUID, casterGUID = casterGUID};
@@ -593,8 +593,17 @@ local function addTrackedSummon(casterGUID, spellID, spellName, destGUID, daisyC
 		end
 	end
 
-
 	if CustomBuffs.verbose then print("Added summon: ", destGUID, " from owner ", owner); end
+
+	--Special case mirror images because images die when the caster is hit
+	if spellID == 321686 then
+		CustomBuffs.hasImages[casterGUID] = (CustomBuffs.hasImages[casterGUID] or 0) + 1;
+		if CustomBuffs.hasImages[casterGUID] < 1 then CustomBuffs.hasImages[casterGUID] = 1; end
+	end
+
+	--track the number of this type of summon we currently have active
+	local count = (CustomBuffs and CustomBuffs.units and CustomBuffs.units[casterGUID] and CustomBuffs.units[casterGUID].nauras and CustomBuffs.units[casterGUID].nauras[spellID] and
+				CustomBuffs.units[casterGUID].nauras[spellID].count or 0) + 1;
 
 	local duration = (NONAURAS[spellID] or NONAURAS[spellName]).duration;
 	CustomBuffs.trackedSummons[destGUID] = {owner, spellID = spellID, owner = owner};
@@ -608,6 +617,7 @@ local function addTrackedSummon(casterGUID, spellID, spellName, destGUID, daisyC
 
 	CustomBuffs.units[casterGUID].nauras = CustomBuffs.units[casterGUID].nauras or {};
 	CustomBuffs.units[casterGUID].nauras[spellID] = CustomBuffs.units[casterGUID].nauras[spellID] or {};
+	CustomBuffs.units[casterGUID].nauras[spellID].count = count;
 	CustomBuffs.units[casterGUID].nauras[spellID].expires = GetTime() + duration;
 	CustomBuffs.units[casterGUID].nauras[spellID].spellID = spellID;
 	CustomBuffs.units[casterGUID].nauras[spellID].duration = duration;
@@ -620,7 +630,15 @@ local function addTrackedSummon(casterGUID, spellID, spellName, destGUID, daisyC
 	-- Make sure we clear it after the duration
 	C_Timer.After(duration + CustomBuffs.UPDATE_DELAY_TOLERANCE, function()
 		if CustomBuffs.units[casterGUID] and CustomBuffs.units[casterGUID].nauras and CustomBuffs.units[casterGUID].nauras[spellID] then
-			CustomBuffs.units[casterGUID].nauras[spellID] = nil;
+			if CustomBuffs.units[casterGUID].nauras[spellID].count and CustomBuffs.units[casterGUID].nauras[spellID].count > 1 then
+				CustomBuffs.units[casterGUID].nauras[spellID].count = CustomBuffs.units[casterGUID].nauras[spellID].count - 1;
+				if spellID == 321686 and CustomBuffs.hasImages[casterGUID] then
+					CustomBuffs.hasImages[casterGUID] = 0;
+					CustomBuffs.units[casterGUID].nauras[spellID].count = 0;
+				end
+			else
+				CustomBuffs.units[casterGUID].nauras[spellID] = nil;
+			end
 			ForceUpdateFrame(CustomBuffs.units[casterGUID].frameNum);
 		end
 	end);
@@ -630,6 +648,14 @@ end
 local function removeTrackedSummon(summonGUID)
 	if CustomBuffs.trackedSummons and CustomBuffs.trackedSummons[summonGUID] and not CustomBuffs.trackedSummons[summonGUID].invalid and CustomBuffs.trackedSummons[summonGUID][1] then
 		local ownerGUID = CustomBuffs.trackedSummons[summonGUID][1] or summonGUID;
+		--Special case mirror images since damage to caster kills one of them
+		if CustomBuffs.trackedSummons[summonGUID].spellID == 321686 and CustomBuffs.hasImages[ownerGUID] then
+			CustomBuffs.hasImages[ownerGUID] = CustomBuffs.hasImages[ownerGUID] - 1;
+			if CustomBuffs.units[ownerGUID] and CustomBuffs.units[ownerGUID].nauras and CustomBuffs.units[ownerGUID].nauras[321686] and CustomBuffs.units[ownerGUID].nauras[321686].count then
+				CustomBuffs.units[ownerGUID].nauras[321686].count = CustomBuffs.units[ownerGUID].nauras[321686].count - 1;
+				ForceUpdateFrame(CustomBuffs.units[ownerGUID].frameNum);
+			end
+		end
 		if CustomBuffs.verbose then print("Removing dead summon:", summonGUID, "from owner", ownerGUID); end
 		if CustomBuffs.trackedSummons[summonGUID] and CustomBuffs.trackedSummons[summonGUID].spellID then
 			local spellID = CustomBuffs.trackedSummons[summonGUID].spellID;
@@ -637,7 +663,9 @@ local function removeTrackedSummon(summonGUID)
 			CustomBuffs.trackedSummons[summonGUID].invalid = true;
 			CustomBuffs.trackedSummons[summonGUID] = nil;
 			if CustomBuffs.units[ownerGUID] and CustomBuffs.units[ownerGUID].nauras and CustomBuffs.units[ownerGUID].nauras[spellID] then
-				CustomBuffs.units[ownerGUID].nauras[spellID] = nil;
+				if not (CustomBuffs.units[ownerGUID].nauras[spellID].count and CustomBuffs.units[ownerGUID].nauras[spellID].count >= 1) then
+					CustomBuffs.units[ownerGUID].nauras[spellID] = nil;
+				end
 			end
 			ForceUpdateFrame(CustomBuffs.units[ownerGUID].frameNum);
 		end
@@ -751,8 +779,8 @@ local function handleRosterUpdate()
 				CustomBuffs.MAX_DEBUFFS = 15;
 				for index, frame in ipairs(_G.CompactRaidFrameContainer.flowFrames) do
 					--index 1 is a string for some reason so we skip it
-					if index ~= 1 and frame and frame.debuffFrames then
-						frame.debuffNeedUpdate = true;
+					if F[frame] and F[frame].debuffFrames then
+						F[frame].debuffNeedUpdate = true;
 					end
 				end
 			end
@@ -761,8 +789,8 @@ local function handleRosterUpdate()
 				CustomBuffs.MAX_BUFFS = 15;
 				for index, frame in ipairs(_G.CompactRaidFrameContainer.flowFrames) do
 					--index 1 is a string for some reason so we skip it
-					if index ~= 1 and frame and frame.debuffFrames then
-						frame.buffNeedUpdate = true;
+					if F[frame] and F[frame].debuffFrames then
+						F[frame].buffNeedUpdate = true;
 					end
 				end
 			end
@@ -772,8 +800,8 @@ local function handleRosterUpdate()
 				CustomBuffs.MAX_DEBUFFS = 6;
 				for index, frame in ipairs(_G.CompactRaidFrameContainer.flowFrames) do
 					--index 1 is a string for some reason so we skip it
-					if index ~= 1 and frame and frame.debuffFrames then
-						frame.debuffNeedUpdate = true;
+					if F[frame] and F[frame].debuffFrames then
+						F[frame].debuffNeedUpdate = true;
 					end
 				end
 			end
@@ -782,8 +810,8 @@ local function handleRosterUpdate()
 				CustomBuffs.MAX_BUFFS = 6;
 				for index, frame in ipairs(_G.CompactRaidFrameContainer.flowFrames) do
 					--index 1 is a string for some reason so we skip it
-					if index ~= 1 and frame and frame.debuffFrames then
-						frame.buffNeedUpdate = true;
+					if F[frame] and F[frame].debuffFrames then
+						F[frame].buffNeedUpdate = true;
 					end
 				end
 			end
@@ -802,8 +830,8 @@ local function handleRosterUpdate()
 
 	for index, frame in ipairs(_G.CompactRaidFrameContainer.flowFrames) do
 		--index 1 is a string for some reason so we skip it
-		if index ~= 1 and frame and frame.debuffFrames then
-			frame.auraNeedResize = true;
+		if F[frame] and F[frame].debuffFrames then
+			F[frame].auraNeedResize = true;
 		end
 	end
 
@@ -823,8 +851,8 @@ function CustomBuffs:hideExtraAuraFrames(type)
 		CustomBuffs.MAX_DEBUFFS = 6;
 		for index, frame in ipairs(_G.CompactRaidFrameContainer.flowFrames) do
 			--index 1 is a string for some reason so we skip it
-			if index ~= 1 and frame and frame.debuffFrames then
-				frame.debuffNeedUpdate = true;
+			if F[frame] and F[frame].debuffFrames then
+				F[frame].debuffNeedUpdate = true;
 			end
 		end
 	end
@@ -832,8 +860,8 @@ function CustomBuffs:hideExtraAuraFrames(type)
 		CustomBuffs.MAX_BUFFS = 6;
 		for index, frame in ipairs(_G.CompactRaidFrameContainer.flowFrames) do
 			--index 1 is a string for some reason so we skip it
-			if index ~= 1 and frame and frame.debuffFrames then
-				frame.buffNeedUpdate = true;
+			if F[frame] and F[frame].debuffFrames then
+				F[frame].buffNeedUpdate = true;
 			end
 		end
 	end
@@ -919,10 +947,13 @@ function CustomBuffs:BCC_UNIT_SPELLCAST_SUCCEEDED(self, unit, castID, spellID)
 end
 
 
-function CustomBuffs:RunOnExitCombat(func, ...)
-	CustomBuffs.runOnExitCombat = CustomBuffs.runOnExitCombat or {};
 
-	tinsert(CustomBuffs.runOnExitCombat, {func = func, args = ...});
+
+local function hideBlizzAuras(frame)
+	if not CustomBuffs.hideExtraAuras then return; end
+	CompactUnitFrame_HideAllBuffs(frame);
+	CompactUnitFrame_HideAllDebuffs(frame);
+	CompactUnitFrame_HideAllDispelDebuffs(frame);
 end
 
 local function handleExitCombat()
@@ -1038,6 +1069,39 @@ local function handleCLEU()
 				end
 			end
 		end
+	elseif (event == "SPELL_DAMAGE" and (CustomBuffs.trackedSummons[destGUID])) then
+		local overkill = select(16, CombatLogGetCurrentEventInfo());
+		--print("Overkill =", overkill);
+		if overkill ~= -1 then
+			if CustomBuffs.verbose then print("unit ", destGUID, " died to damage"); end
+			removeTrackedSummon(destGUID);
+		end
+	elseif (event == "SWING_DAMAGE" and (CustomBuffs.trackedSummons[destGUID])) then
+		local overkill = select(13, CombatLogGetCurrentEventInfo());
+		--print("Overkill =", overkill);
+		if overkill ~= -1 then
+			if CustomBuffs.verbose then print("unit ", destGUID, " died to damage"); end
+			removeTrackedSummon(destGUID);
+		end
+	elseif (event == "SPELL_DAMAGE" or event == "SWING_DAMAGE" or event == "SPELL_ABSORBED" or event == "SWING_ABSORBED") and CustomBuffs.hasImages[destGUID] then
+			--print("Attempting to remove image", CustomBuffs.hasImages[destGUID]);
+			--print(CombatLogGetCurrentEventInfo());
+			CustomBuffs.hasImages[destGUID] = CustomBuffs.hasImages[destGUID] - 1;
+			if CustomBuffs.units[destGUID] and CustomBuffs.units[destGUID].nauras and CustomBuffs.units[destGUID].nauras[321686] and CustomBuffs.units[destGUID].nauras[321686].count then
+				--print("Removing Image", CustomBuffs.units[destGUID].nauras[321686].count);
+				CustomBuffs.units[destGUID].nauras[321686].count = CustomBuffs.units[destGUID].nauras[321686].count - 1;
+				--We counted something we shouldn't have; wait for buff to fall off to remove aura
+				if CustomBuffs.units[destGUID].nauras[321686].count < 1 then CustomBuffs.units[destGUID].nauras[321686].count = 1; end
+				ForceUpdateFrame(CustomBuffs.units[destGUID].frameNum);
+			end
+	elseif (event == "SPELL_AURA_REMOVED") and CustomBuffs.hasImages[destGUID] then
+			if spellID == 55342 then
+				CustomBuffs.hasImages[destGUID] = nil;
+				if CustomBuffs.units[destGUID] and CustomBuffs.units[destGUID].nauras and CustomBuffs.units[destGUID].nauras[321686] and CustomBuffs.units[destGUID].nauras[321686].count then
+					CustomBuffs.units[destGUID].nauras[321686] = nil;
+					ForceUpdateFrame(CustomBuffs.units[destGUID].frameNum);
+				end
+			end
 	elseif (event == "SPELL_SUMMON") then
 		handleSummon(spellID, spellName, casterGUID, destGUID);
 	end
@@ -1081,8 +1145,8 @@ function CustomBuffs:layoutFrames(self)
 		--each of the frames to override blizzard's overriding of their size on the next update
 		for index, frame in ipairs(_G.CompactRaidFrameContainer.flowFrames) do
 			--index 1 is a string for some reason so we skip it
-			if index ~= 1 and frame and frame.debuffFrames then
-				frame.auraNeedResize = true;
+			if F[frame] and F[frame].debuffFrames then
+				F[frame].auraNeedResize = true;
 			end
 		end
 
@@ -1228,7 +1292,7 @@ CustomBuffs.CustomBuffsFrame:RegisterEvent("GROUP_ROSTER_UPDATE");
 
 local function calcBuffSize(frame)
 	if not frame then return 14; end
-	return CustomBuffs.BUFF_SCALE_FACTOR * min(frame:GetHeight() / 36, frame:GetWidth() / 72);
+	return floor(min(frame:GetHeight() / 3.5, frame:GetWidth() / 6.5));
 end
 
 -------------------------------
@@ -1241,14 +1305,18 @@ local function setUpExtraDebuffFrames(frame)
 	--setMaxDebuffs(frame, CustomBuffs.MAX_DEBUFFS);
 	local s = calcBuffSize(frame) * (dbSize or 1);
 
-	if ( not frame.customDebuffFrames ) then
-		frame.customDebuffFrames = {};
+	if not F[frame] then
+		F[frame] = {};
 	end
-	if not frame.customDebuffFrames[CustomBuffs.MAX_DEBUFFS] then
+
+	if ( not F[frame].customDebuffFrames ) then
+		F[frame].customDebuffFrames = {};
+	end
+	if not F[frame].customDebuffFrames[CustomBuffs.MAX_DEBUFFS] then
 		for i = 1, CustomBuffs.MAX_DEBUFFS do
 			local bf = CreateFrame("Button", frame:GetName().."CustomDebuff"..i, frame, "CustomDebuffTemplate");
 			bf:SetParent(frame);
-			frame.customDebuffFrames[i] = bf;
+			F[frame].customDebuffFrames[i] = bf;
 			bf.baseSize=22;
 			bf:Hide();
 		end
@@ -1262,23 +1330,23 @@ local function setUpExtraDebuffFrames(frame)
 	end
 	--]]
 	for i = 1, CustomBuffs.MAX_DEBUFFS do
-		local bf = frame.customDebuffFrames[i];
+		local bf = F[frame].customDebuffFrames[i];
 
 		bf:ClearAllPoints();
 		if i == 1 then
 			bf:SetPoint("BOTTOMLEFT", frame.healthBar, "BOTTOMLEFT", 0, 0);
 		elseif i > 1 and i < 4 then
-			bf:SetPoint("BOTTOMLEFT", frame.customDebuffFrames[i-1], "BOTTOMRIGHT", 0, 0);
+			bf:SetPoint("BOTTOMLEFT", F[frame].customDebuffFrames[i-1], "BOTTOMRIGHT", 0, 0);
 		elseif i > 3 and i < 7 then
-			bf:SetPoint("BOTTOMRIGHT", frame.customDebuffFrames[i-3], "TOPRIGHT", 0, 0);
+			bf:SetPoint("BOTTOMRIGHT", F[frame].customDebuffFrames[i-3], "TOPRIGHT", 0, 0);
 		elseif i > 6 and i < 10 then
-			bf:SetPoint("TOPRIGHT", frame.customDebuffFrames[1], "TOPRIGHT", -(s * (i - 6) + 1), 0);
+			bf:SetPoint("TOPRIGHT", F[frame].customDebuffFrames[1], "TOPRIGHT", -(s * (i - 6) + 1), 0);
 		elseif i > 9 then
-			bf:SetPoint("BOTTOMRIGHT", frame.customDebuffFrames[i-3], "TOPRIGHT", 0, 0);
+			bf:SetPoint("BOTTOMRIGHT", F[frame].customDebuffFrames[i-3], "TOPRIGHT", 0, 0);
 		else
-			bf:SetPoint("TOPRIGHT", frame.customDebuffFrames[1], "TOPRIGHT", -(s * (i - 3)), 0);
+			bf:SetPoint("TOPRIGHT", F[frame].customDebuffFrames[1], "TOPRIGHT", -(s * (i - 3)), 0);
 		end
-		frame.customDebuffFrames[i]:SetSize(s, s);
+		F[frame].customDebuffFrames[i]:SetSize(s, s);
 	end
 end
 
@@ -1287,14 +1355,20 @@ local function setUpExtraBuffFrames(frame)
 
 	--setMaxBuffs(frame, CustomBuffs.MAX_BUFFS);
 	local s = calcBuffSize(frame) * (bSize or 1);
-	if ( not frame.customBuffFrames ) then
-		frame.customBuffFrames = {};
+
+	if not F[frame] then
+		F[frame] = {};
 	end
-	if not frame.customBuffFrames[CustomBuffs.MAX_BUFFS] then
+
+	if ( not F[frame].customBuffFrames ) then
+		F[frame].customBuffFrames = {};
+	end
+
+	if not F[frame].customBuffFrames[CustomBuffs.MAX_BUFFS] then
 		for i = 1, CustomBuffs.MAX_BUFFS do
 			local bf = CreateFrame("Button", frame:GetName().."CustomBuff"..i, frame, "CustomBuffTemplate");
 			bf:SetParent(frame);
-			frame.customBuffFrames[i] = bf;
+			F[frame].customBuffFrames[i] = bf;
 			bf.baseSize=22;
 			bf:Hide();
 		end
@@ -1307,23 +1381,23 @@ local function setUpExtraBuffFrames(frame)
 	end
 	--]]
 	for i= 1, CustomBuffs.MAX_BUFFS do
-		local bf = frame.customBuffFrames[i];
+		local bf = F[frame].customBuffFrames[i];
 
 		bf:ClearAllPoints();
 		if i == 1 then
 			bf:SetPoint("BOTTOMRIGHT", frame.healthBar, "BOTTOMRIGHT", 0, 0);
 		elseif i > 1 and i < 4 then
-			bf:SetPoint("BOTTOMRIGHT", frame.customBuffFrames[i-1], "BOTTOMLEFT", 0, 0);
+			bf:SetPoint("BOTTOMRIGHT", F[frame].customBuffFrames[i-1], "BOTTOMLEFT", 0, 0);
 		elseif i > 3 and i < 7 then
-			bf:SetPoint("BOTTOMRIGHT", frame.customBuffFrames[i-3], "TOPRIGHT", 0, 0);
+			bf:SetPoint("BOTTOMRIGHT", F[frame].customBuffFrames[i-3], "TOPRIGHT", 0, 0);
 		elseif i > 6 and i < 10 then
-			bf:SetPoint("TOPRIGHT", frame.customBuffFrames[1], "TOPRIGHT", (s * (i - 6) + 1), 0);
+			bf:SetPoint("TOPRIGHT", F[frame].customBuffFrames[1], "TOPRIGHT", (s * (i - 6) + 1), 0);
 		elseif i > 9 then
-			bf:SetPoint("BOTTOMRIGHT", frame.customBuffFrames[i-3], "TOPRIGHT", 0, 0);
+			bf:SetPoint("BOTTOMRIGHT", F[frame].customBuffFrames[i-3], "TOPRIGHT", 0, 0);
 		else
-			bf:SetPoint("TOPRIGHT", frame.customBuffFrames[1], "TOPRIGHT", -(s * (i - 3)), 0);
+			bf:SetPoint("TOPRIGHT", F[frame].customBuffFrames[1], "TOPRIGHT", -(s * (i - 3)), 0);
 		end
-		frame.customBuffFrames[i]:SetSize(s, s);
+		F[frame].customBuffFrames[i]:SetSize(s, s);
 	end
 end
 
@@ -1332,7 +1406,11 @@ local function setUpThroughputFrames(frame)
 
 	local size = calcBuffSize(frame) * (tbSize or 1.2) * 1.1;
 
-	if not frame.throughputFrames then
+	if not F[frame] then
+		F[frame] = {};
+	end
+
+	if not F[frame].throughputFrames then
 		local bfone = CreateFrame("Button", frame:GetName().."ThroughputBuff1", frame, "CustomBuffTemplate");
 		--table.remove(frame.customBuffFrames);
 		bfone.baseSize = size;
@@ -1343,10 +1421,10 @@ local function setUpThroughputFrames(frame)
 		bftwo.baseSize = size;
 		bftwo:SetSize(size, size);
 
-		frame.throughputFrames = {bfone,bftwo};
+		F[frame].throughputFrames = {bfone,bftwo};
 	end
 
-	local buffs = frame.throughputFrames;
+	local buffs = F[frame].throughputFrames;
 
 	buffs[1]:SetSize(size, size);
 	buffs[2]:SetSize(size, size);
@@ -1374,7 +1452,8 @@ local function setUpThroughputFrames(frame)
 end
 
 local function updateBossDebuffs(frame)
-	local debuffs = frame.bossDebuffs;
+	local debuffs = F[frame].bossDebuffs;
+	if not debuffs then return; end
 	--local size = frame.buffFrames[1]:GetWidth() * (bdSize or 1.5);
 	local size = calcBuffSize(frame) * (bdSize or 1.5);
 
@@ -1399,20 +1478,24 @@ end
 local function setUpBossDebuffFrames(frame)
 	if not frame or frame:IsForbidden() then return; end
 
-	if not frame.bossDebuffs then
+	if not F[frame] then
+		F[frame] = {};
+	end
+
+	if not F[frame].bossDebuffs then
 		local bfone = CreateFrame("Button", frame:GetName().."BossDebuff1", frame, "CustomDebuffTemplate");
 		--table.remove(frame.customDebuffFrames);
-		bfone.baseSize = frame.customBuffFrames[1]:GetWidth() * 1.2;
-		bfone.maxHeight= frame.customBuffFrames[1]:GetWidth() * 1.5;
+		bfone.baseSize = F[frame].customBuffFrames[1]:GetWidth() * 1.2;
+		bfone.maxHeight= F[frame].customBuffFrames[1]:GetWidth() * 1.5;
 		bfone:SetSize(frame:GetHeight() / 2, frame:GetHeight() / 2);
 
 		local bftwo = CreateFrame("Button", frame:GetName().."BossDebuff2", frame, "CustomDebuffTemplate");
 		--table.remove(frame.customDebuffFrames);
-		bftwo.baseSize = frame.customBuffFrames[1]:GetWidth() * 1.2;
-		bftwo.maxHeight = frame.customBuffFrames[1]:GetWidth() * 1.5;
+		bftwo.baseSize = F[frame].customBuffFrames[1]:GetWidth() * 1.2;
+		bftwo.maxHeight = F[frame].customBuffFrames[1]:GetWidth() * 1.5;
 		bftwo:SetSize(frame:GetHeight() / 2, frame:GetHeight() / 2);
 
-		frame.bossDebuffs = {bfone,bftwo};
+		F[frame].bossDebuffs = {bfone,bftwo};
 
 		bfone:Hide();
 		bftwo:Hide();
@@ -1430,136 +1513,71 @@ end
 --If debuffType is not specified in auraData then the aura is considered a buff
 local function updateAura(auraFrame, index, auraData)
 	local icon, count, expirationTime, duration, debuffType, spellID, isBuff = auraData[1], auraData[2], auraData[3], auraData[4], auraData[5], auraData[6], auraData[7];
+	local highlight = auraData.highlight;
+	local defLevel = auraData.defLevel;
+	local isDef = (defLevel ~= nil) or false;
+	local isDebuff = auraData.isDebuff or false;
 
-	--[[
-	if CustomBuffs.verbose and debuffType then
-	local link = GetSpellLink(spellID);
-	print("Added spell:",link, "dispelType:", debuffType);
-end
---]]
-
-auraFrame.icon:SetTexture(icon);
-if ( count > 1 ) then
-	local countText = count;
-	if ( count >= 100 ) then
-		countText = BUFF_STACKS_OVERFLOW;
-	end
-
-	auraFrame.count:Show();
-	auraFrame.count:SetText(countText);
-	auraFrame.count:ClearAllPoints();
-	auraFrame.count:SetPoint("BOTTOMRIGHT",auraFrame,"BOTTOMRIGHT",1,0);
-else
-	auraFrame.count:Hide();
-end
-
---If the aura is a buff or debuff then set the ID of the frame and let
---Blizzard handle the tooltip; if the aura is custom, handle the tooltip ourselves
---Currently supported custom auras:
---[-1]: Lockout tracker for an interrupt
-if index > 0 then
-	--Standard Blizzard aura
-	auraFrame:SetID(index);
-	if auraFrame.ID then
-		auraFrame.ID = nil;
-	end
-
-elseif index == -1 then
-	auraFrame.ID = spellID;
-	--if CUSTOM_BUFFS_TEST_ENABLED then
-	--Aura is a lockout tracker for an interrupt; use tooltip for the
-	--interrupt responsible for the lockout
-	if not auraFrame.custTooltip then
-		----[[  We update scripts as required
-		auraFrame.custTooltip = true;
-		--Set an OnEnter handler to show the custom tooltip
-		auraFrame:SetScript("OnEnter", function(self)
-			if self.ID then
-				GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
-				GameTooltip:SetSpellByID(self.ID);
-			else
-				GameTooltip:SetOwner(self, "ANCHOR_RIGHT");
-				local id = self:GetID();
-				if id then
-					--[[
-					if self.filter and self.filter == "HELPFUL" then
-					GameTooltip:SetUnitBuff(frame, id);
-				else
-				GameTooltip:SetUnitDebuff(frame, id);
-			end
-			--]]
-			GameTooltip:SetUnitAura(self:GetParent().displayedUnit, id, self.filter);
+	auraFrame.icon:SetTexture(icon);
+	if ( count > 1 ) then
+		local countText = count;
+		if ( count >= 100 ) then
+			countText = BUFF_STACKS_OVERFLOW;
 		end
 
+		auraFrame.count:Show();
+		auraFrame.count:SetText(countText);
+		auraFrame.count:ClearAllPoints();
+		auraFrame.count:SetPoint("BOTTOMRIGHT",auraFrame,"BOTTOMRIGHT",1,0);
+	else
+		auraFrame.count:Hide();
 	end
-end);
 
-
-auraFrame:SetScript("OnUpdate", function(self)
-	if ( GameTooltip:IsOwned(self) ) then
-		if self.ID then
-			GameTooltip:SetSpellByID(self.ID);
-		else
-			local id = self:GetID();
-			if id then
-				--[[
-				if self.filter and self.filter == "HELPFUL" then
-				GameTooltip:SetUnitBuff(frame, id);
-			else
-			GameTooltip:SetUnitDebuff(frame, id);
+	--If the aura is a buff or debuff then set the ID of the frame and let
+	--Blizzard handle the tooltip; if the aura is custom, handle the tooltip ourselves
+	--Currently supported custom auras:
+	--[-1]: Lockout tracker for an interrupt or non-aura spell tracker
+	if index > 0 then
+		--Standard Blizzard aura
+		auraFrame:SetID(index);
+		if auraFrame.ID then
+			auraFrame.ID = nil;
 		end
-		--]]
-		GameTooltip:SetUnitAura(self:GetParent().displayedUnit, id, self.filter);
+	elseif index == -1 then
+		--Custom Fake aura (interrupt or non aura tracker)
+		auraFrame.ID = spellID;
 	end
 
-end
-end
-end);
-
---Set an OnExit handler to hide the custom tooltip
-auraFrame:SetScript("OnLeave", function(self)
-	if GameTooltip:IsOwned(self) then
-		GameTooltip:Hide();
+	if ((expirationTime and expirationTime ~= 0) or (auraData and auraData.summon and auraData.trackedSummon and not CustomBuffs.trackedSummons[auraData.trackedSummon])) then
+		local startTime = expirationTime - duration;
+		setCooldownFrame(auraFrame.cooldown, startTime, duration, true);
+		--auraFrame.cooldown:SetAlpha(0.4);
+	else
+		clearCooldownFrame(auraFrame.cooldown);
 	end
-end);
-end
---]]
---[[
-C_Timer.After(duration + 1, function()
-auraFrame:SetScript("OnEnter", function(self)
-GameTooltip:SetOwner(self, "ANCHOR_BOTTOMLEFT");
---GameTooltip:SetFrameLevel(self:GetFrameLevel() + 2);
-GameTooltip:SetUnitAura(frame, self:GetID(), self.filter);
-end);
-end);
---]]
 
---end
-end
+	auraFrame.filter = (isDebuff) and "HARMFUL" or "HELPFUL";
 
-if ((expirationTime and expirationTime ~= 0) or (auraData and auraData.summon and auraData.trackedSummon and not CustomBuffs.trackedSummons[auraData.trackedSummon])) then
-	local startTime = expirationTime - duration;
-	setCooldownFrame(auraFrame.cooldown, startTime, duration, true);
-	--auraFrame.cooldown:SetAlpha(0.4);
-else
-	clearCooldownFrame(auraFrame.cooldown);
-end
+	--If the aura is a debuff then we have some more work to do
+	if isDebuff then
+		--We know that the frame is a debuff frame but it might contain some form
+		--of bossBuff which should be flagged as a buff instead of a debuff
+		--auraFrame.filter = (isBuff) and "HELPFUL" or "HARMFUL";
+		auraFrame.isBossBuff = isBuff;
 
---If the aura is a debuff then we have some more work to do
-if auraFrame.border then
-	--We know that the frame is a debuff frame but it might contain some form
-	--of bossBuff which should be flagged as a buff instead of a debuff
-	auraFrame.filter = (isBuff) and "HELPFUL" or "HARMFUL";
-	auraFrame.isBossBuff = isBuff;
-
-	--Either way we need to either color the debuff border or hide it
-	local color = DebuffTypeColor[debuffType] or DebuffTypeColor["none"];
-	auraFrame.border:SetVertexColor(color.r, color.g, color.b);
-end
-
-auraFrame:Show();
-
-
+		--Either way we need to either color the debuff border or hide it
+		local color = DebuffTypeColor[debuffType] or DebuffTypeColor["none"];
+		auraFrame.border:SetVertexColor(color.r, color.g, color.b, 1);
+	elseif highlight then
+		auraFrame.border:SetVertexColor(0, 0.9, 1, 1);
+	elseif isDef then
+		local color = CustomBuffs.DEF_COLORS[defLevel];
+		auraFrame.border:SetVertexColor(color.r, color.g, color.b, color.a);
+	else
+		local color = DebuffTypeColor["none"];
+		auraFrame.border:SetVertexColor(color.r, color.g, color.b, 0);
+	end
+	auraFrame:Show();
 end
 
 
@@ -1607,21 +1625,25 @@ function CustomBuffs:UpdateAuras(frame)
 	if frame.optionTable.displayNameWhenSelected then frame.optionTable.displayNameWhenSelected = false; end    --Don't show names when the frame is selected to prevent bossDebuff overlap
 	--]]
 
-	if frame.auraNeedResize or not frame.customDebuffFrames or not frame.customDebuffFrames[CustomBuffs.MAX_DEBUFFS] or not frame.customBuffFrames or not frame.customBuffFrames[CustomBuffs.MAX_BUFFS] or not frame.bossDebuffs or not frame.throughputFrames then
+	if not F[frame] then
+		F[frame] = {};
+	end
+
+	if F[frame].auraNeedResize or not F[frame].customDebuffFrames or not F[frame].customDebuffFrames[CustomBuffs.MAX_DEBUFFS] or not F[frame].customBuffFrames or not F[frame].customBuffFrames[CustomBuffs.MAX_BUFFS] or not F[frame].bossDebuffs or not F[frame].throughputFrames then
 		setUpExtraDebuffFrames(frame);
 		setUpExtraBuffFrames(frame);
 		setUpThroughputFrames(frame);
 		setUpBossDebuffFrames(frame);
-		frame.auraNeedResize = false;
+		F[frame].auraNeedResize = false;
 	end
 
 	--If our custom aura frames have not yet loaded do nothing
-	if --[[not frame.debuffsLoaded or]] not frame.bossDebuffs or not frame.throughputFrames then return; end
+	if --[[not frame.debuffsLoaded or]] not F[frame].bossDebuffs or not F[frame].throughputFrames then return; end
 
-	if frame.debuffNeedUpdate then
+	if F[frame].debuffNeedUpdate then
 		setUpExtraDebuffFrames(frame);
 	end
-	if frame.buffNeedUpdate then
+	if F[frame].buffNeedUpdate then
 		setUpExtraBuffFrames(frame);
 	end
 
@@ -1735,25 +1757,29 @@ function CustomBuffs:UpdateAuras(frame)
 							tinsert(throughputBuffs, { index = -1, tbPrio = prioData.tbPrio or 7, sbPrio = prioData.sbPrio or nil, auraData = {
 								--{icon, count, expirationTime, duration}
 								texture,
-								1,
+								data.count or 1,
 								data.expires,
 								data.duration,
 								nil,                             --no dispel type
 								data.spellID,                    --Need a special field containing the spellID
 								summon = data.summon or false,
 								trackedUnit = data.trackedUnit or nil,
+								highlight = (prioData.highlightMine and guid == UnitGUID("player")),
+								defLevel = prioData.defLevel
 							}});
 						elseif prioData.tbPrio == 0 and prioData.sbPrio then
 							tinsert(buffs, { index = -1, sbPrio = prioData.sbPrio, auraData = {
 								--{icon, count, expirationTime, duration}
 								texture,
-								1,
+								data.count or 1,
 								data.expires,
 								data.duration,
 								nil,                             --no dispel type
 								data.spellID,                    --Need a special field containing the spellID
 								summon = data.summon or false,
 								trackedUnit = data.trackedUnit or nil,
+								highlight = (prioData.highlightMine and guid == UnitGUID("player")),
+								defLevel = prioData.defLevel
 							}});
 						end
 					end
@@ -1778,7 +1804,7 @@ function CustomBuffs:UpdateAuras(frame)
 					["index"] = index,
 					["bdPrio"] = 2,
 					["sdPrio"] = 1,
-					["auraData"] = {icon, count, expirationTime, duration, debuffType},
+					["auraData"] = {icon, count, expirationTime, duration, debuffType, isDebuff = true},
 					["type"] = "debuff"
 				});
 			elseif (CC[name] or CC[spellID]) then
@@ -1795,7 +1821,7 @@ function CustomBuffs:UpdateAuras(frame)
 					["index"] = index,
 					["bdPrio"] = bdPrio,
 					["sdPrio"] = sdPrio,
-					["auraData"] = {icon, count, expirationTime, duration, debuffType},
+					["auraData"] = {icon, count, expirationTime, duration, debuffType, isDebuff = true},
 					["type"] = "debuff"
 				});
 			--elseif isPrioDebuff(name, icon, count, debuffType, duration, expirationTime, unitCaster, nil, nil, spellID) then
@@ -1805,7 +1831,7 @@ function CustomBuffs:UpdateAuras(frame)
 				tinsert(debuffs, {
 					["index"] = index,
 					["sdPrio"] = 4,
-					["auraData"] = {icon, count, expirationTime, duration, debuffType},
+					["auraData"] = {icon, count, expirationTime, duration, debuffType, isDebuff = true},
 					["type"] = "debuff"
 				});
 			elseif shouldDisplayDebuff(name, icon, count, debuffType, duration, expirationTime, unitCaster, nil, nil, spellID, canApplyAura, isBossAura) then
@@ -1813,7 +1839,7 @@ function CustomBuffs:UpdateAuras(frame)
 				tinsert(debuffs, {
 					["index"] = index,
 					["sdPrio"] = 5,
-					["auraData"] = {icon, count, expirationTime, duration, debuffType},
+					["auraData"] = {icon, count, expirationTime, duration, debuffType, isDebuff = true},
 					["type"] = "debuff"
 				});
 			end
@@ -1844,19 +1870,19 @@ function CustomBuffs:UpdateAuras(frame)
 				local auraData = THROUGHPUT_BUFFS[name] or THROUGHPUT_BUFFS[spellID];
 				tinsert(throughputBuffs, {
 					["index"] = index,
-					["tbPrio"] = auraData.tbPrio;
+					["tbPrio"] = auraData.tbPrio,
 					["sbPrio"] = auraData.sbPrio,
-					["auraData"] = {icon, count, expirationTime, duration}
+					["auraData"] = {icon, count, expirationTime, duration, highlight = (auraData.highlightMine and unitCaster == "player"), defLevel = auraData.defLevel},
 				});
 			elseif (BUFFS[name] or BUFFS[spellID]) then
 				--Add to buffs
 				local auraData = BUFFS[name] or BUFFS[spellID];
-				if CustomBuffs.verbose then print(unitCaster); end
+				--if CustomBuffs.verbose then print(unitCaster); end
 				if not auraData.player or unitCaster == "player" then
 					tinsert(buffs, {
 						["index"] = index,
 						["sbPrio"] = auraData.sbPrio,
-						["auraData"] = {icon, count, expirationTime, duration}
+						["auraData"] = {icon, count, expirationTime, duration, highlight = (auraData.highlightMine and unitCaster == "player"), defLevel = auraData.defLevel},
 					});
 				end
 			elseif shouldDisplayBuff(name, icon, count, debuffType, duration, expirationTime, unitCaster, nil, nil, spellID, canApplyAura, isBossAura) then
@@ -1944,28 +1970,28 @@ function CustomBuffs:UpdateAuras(frame)
 	--Boss Debuffs
 	local frameNum = 1;
 	while(frameNum <= 2 and bossDebuffs[frameNum]) do
-		updateAura(frame.bossDebuffs[frameNum], bossDebuffs[frameNum].index, bossDebuffs[frameNum].auraData);
+		updateAura(F[frame].bossDebuffs[frameNum], bossDebuffs[frameNum].index, bossDebuffs[frameNum].auraData);
 		frameNum = frameNum + 1;
 	end
 
 	--Throughput Frames
 	frameNum = 1;
 	while(frameNum <= 2 and throughputBuffs[frameNum]) do
-		updateAura(frame.throughputFrames[frameNum], throughputBuffs[frameNum].index, throughputBuffs[frameNum].auraData);
+		updateAura(F[frame].throughputFrames[frameNum], throughputBuffs[frameNum].index, throughputBuffs[frameNum].auraData);
 		frameNum = frameNum + 1;
 	end
 
 	--Standard Debuffs
 	frameNum = 1;
 	while(frameNum <= CustomBuffs.MAX_DEBUFFS and debuffs[frameNum]) do
-		updateAura(frame.customDebuffFrames[frameNum], debuffs[frameNum].index, debuffs[frameNum].auraData);
+		updateAura(F[frame].customDebuffFrames[frameNum], debuffs[frameNum].index, debuffs[frameNum].auraData);
 		frameNum = frameNum + 1;
 	end
 
 	--Standard Buffs
 	frameNum = 1;
 	while(frameNum <= CustomBuffs.MAX_BUFFS and buffs[frameNum]) do
-		updateAura(frame.customBuffFrames[frameNum], buffs[frameNum].index, buffs[frameNum].auraData);
+		updateAura(F[frame].customBuffFrames[frameNum], buffs[frameNum].index, buffs[frameNum].auraData);
 		frameNum = frameNum + 1;
 	end
 
@@ -1975,17 +2001,10 @@ function CustomBuffs:UpdateAuras(frame)
 	--Hide unused aura frames
 
 	----[[
-	for i =1, 3 do
-		local auraFrame = frame.debuffFrames[i];
-		auraFrame:Hide();
-	end
-	for i =1, 3 do
-		local auraFrame = frame.buffFrames[i];
-		auraFrame:Hide();
-	end
+	hideBlizzAuras(frame);
 	--]]
 	for i = math.min(#debuffs + 1, CustomBuffs.MAX_DEBUFFS + 1), 15 do
-		local auraFrame = frame.customDebuffFrames[i];
+		local auraFrame = F[frame].customDebuffFrames[i];
 		--if auraFrame ~= frame.bossDebuffs[1] and auraFrame ~= frame.bossDebuffs[2] then auraFrame:Hide(); end
 		if auraFrame then
 			auraFrame:Hide();
@@ -1993,11 +2012,11 @@ function CustomBuffs:UpdateAuras(frame)
 	end
 
 	for i = #bossDebuffs + 1, 2 do
-		frame.bossDebuffs[i]:Hide();
+		F[frame].bossDebuffs[i]:Hide();
 	end
 
 	for i = math.min(#buffs + 1, CustomBuffs.MAX_BUFFS + 1), 15 do
-		local auraFrame = frame.customBuffFrames[i];
+		local auraFrame = F[frame].customBuffFrames[i];
 		--if auraFrame ~= frame.throughputFrames[1] and auraFrame ~= frame.throughputFrames[2] then auraFrame:Hide(); end
 		if auraFrame then
 			auraFrame:Hide();
@@ -2005,12 +2024,12 @@ function CustomBuffs:UpdateAuras(frame)
 	end
 
 	for i = #throughputBuffs + 1, 2 do
-		frame.throughputFrames[i]:Hide();
+		F[frame].throughputFrames[i]:Hide();
 	end
 
 
 	--Hide the name text for frames with active bossDebuffs
-	if frame.bossDebuffs[1]:IsShown() then
+	if F[frame].bossDebuffs[1]:IsShown() then
 		frame.name:Hide();
 	else
 		frame.name:Show();
@@ -2115,8 +2134,9 @@ end
 
 
 function CustomBuffs:loadFrames()
-	--[[
+	----[[
 	if not InCombatLockdown() then
+		--[[
 		if not CompactRaidFrame1 then --Don't spam create new raid frames; causes a huge mess
 			CompactRaidFrameManager_OnLoad(CompactRaidFrameManager);
 			CompactRaidFrameManagerDisplayFrameProfileSelector_Initialize();
@@ -2134,8 +2154,21 @@ function CustomBuffs:loadFrames()
 		CompactRaidFrameManager:Show();
 		CompactRaidFrameContainer:Show();
 		handleRosterUpdate();
+		--]]
+		if IsAddOnLoaded("Blizzard_CompactRaidFrames") and IsAddOnLoaded("Blizzard_CUFProfiles") then
+				CompactRaidFrameManager:Show();
+				CompactRaidFrameContainer:Show();
+				handleRosterUpdate();
+				return true; --for BackoffRunIn
+		else
+			LoadAddOn("Blizzard_CompactRaidFrames");
+			LoadAddOn("Blizzard_CUFProfiles");
+			CustomBuffs:BackoffRunIn(5, CustomBuffs.loadFrames);
+			return false; --for BackoffRunIn
+		end
 	else
 		CustomBuffs:RunOnExitCombat(CustomBuffs.loadFrames);
+		return true; --for BackoffRunIn
 	end
 	--]]
 end
@@ -2188,15 +2221,20 @@ end
 --Clean Up Names
 function CustomBuffs:SetName(frame)
 	----[[
+	if not F[frame] then
+		F[frame] = {};
+	end
+
 	if (not frame or frame:IsForbidden() or not frame:IsShown() or not frame.debuffFrames or not frame:GetName():match("^Compact")) then return; end
 	local name = "";
 	if (frame.optionTable and frame.optionTable.displayName) then
-		if frame.bossDebuffs and frame.bossDebuffs[1] and frame.bossDebuffs[1]:IsShown() then
+		if F[frame].bossDebuffs and F[frame].bossDebuffs[1] and F[frame].bossDebuffs[1]:IsShown() then
 			frame.name:Hide();
 			return;
 		end
 
 		CustomBuffs:SetHealthTexture(frame);
+		CustomBuffs:SetStatusText(frame)
 
 		name = CustomBuffs:CleanName(UnitGUID(frame.unit), frame);
 		if not name then frame.name:Hide(); return; end
@@ -2480,17 +2518,19 @@ end
 function CustomBuffs:SetStatusText(frame)
 	if (not frame or not frame.displayedUnit or frame:IsForbidden() or not frame:IsShown() or not frame.debuffFrames or not frame:GetName():match("^Compact") or not frame.optionTable or not frame.optionTable.displayNonBossDebuffs) then return; end
 	local statusText = frame.statusText;
-	if CustomBuffs.verbose then print("Inside SetStatusText",statusText,statusText:IsShown()); end
+	--if CustomBuffs.verbose then print("Inside SetStatusText",statusText,statusText:IsShown()); end
 	if statusText and statusText:IsShown() then
 		if self.db.profile.useClassColors then
 			if CustomBuffs.verbose then print("Setting Status Text to class colors"); end
 			local _, className, _ = UnitClass(frame.unit);
 			local r, g, b, _ = GetClassColor(className);
+			--statusText:SetFont(self.SM:Fetch('font', self.db.profile.nameFont), self.db.profile.nameSize, "OUTLINE");
 			statusText:SetShadowColor(0, 0, 0, 0.5);
 			statusText:SetShadowOffset(1, -1);
 			statusText:SetTextColor(r, g, b, 1);
 		else
 			if CustomBuffs.verbose then print("Setting Status Text to default colors"); end
+			--statusText:SetFont(self.SM:Fetch('font', self.db.profile.nameFont), self.db.profile.nameSize, "OUTLINE");
 			statusText:SetShadowColor(0, 0, 0, 0.5);
 			statusText:SetShadowOffset(1, -1);
 			statusText:SetTextColor(0.5, 0.5, 0.5, 1);
@@ -2535,9 +2575,15 @@ function CustomBuffs:UpdateRaidIcon(frame)
 	local index = GetRaidTargetIndex(frame.unit);
 
 	if index and index >= 1 and index <= 8 then
-		--the icons are stored in a single image, and UnitPopupButtons["RAID_TARGET_#"] is a table that contains the information for the texture and coords for each icon sub-texture
-		local iconTable = UnitPopupButtons["RAID_TARGET_"..index];
-		local texture = iconTable.icon;
+		local texture;
+		local iconTable;
+		if CustomBuffs.gameVersion == 0 then
+				texture = UnitPopupRaidTarget1ButtonMixin:GetIcon();
+				iconTable = _G["UnitPopupRaidTarget"..index.."ButtonMixin"]:GetTextureCoords();
+		else
+				iconTable = UnitPopupButtons["RAID_TARGET_"..index];
+				texture = iconTable.icon;
+		end
 		local leftTexCoord = iconTable.tCoordLeft;
 		local rightTexCoord = iconTable.tCoordRight;
 		local topTexCoord = iconTable.tCoordTop;
@@ -2875,11 +2921,23 @@ function CustomBuffs:OnEnable()
 					print(k);
 				end
 			end
+		elseif options == "f" then
+			print("Printing frameAdditions...")
+			if CustomBuffs.frameAdditions then
+				for k, v in pairs(CustomBuffs.frameAdditions) do
+					print("Frame:",k:GetName(),"\n");
+					for i, j in pairs(CustomBuffs.frameAdditions[k]) do
+						print("\t", i," : ", j);
+					end
+				end
+			end
 		elseif options == "verbose" then
 			CustomBuffs.verbose = not CustomBuffs.verbose;
 			print("CustomBuffs verbose mode", CustomBuffs.verbose and "enabled" or "disabled");
 		elseif options == "recover" or options == "reload" or options == "rl" then
-			print("Attempting to recover from broken state.");
+			if CustomBuffs.verbose then
+				print("Attempting to recover from broken state.");
+			end
 			UpdateUnits();
 			ForceUpdateFrames();
 		elseif options == "announce" then
@@ -2905,11 +2963,9 @@ function CustomBuffs:OnEnable()
 					print(k, ": ", v[1], " from spell", v.spellID);
 				end
 			end
-		elseif options == "test ints" then
-			print("setting test value")
-			if self.db.global.unknownInterrupts then
-				self.db.global.unknownInterrupts[00002] = "fake";
-			end
+		elseif options == "hide auras" then
+			CustomBuffs.hideExtraAuras = not CustomBuffs.hideExtraAuras;
+			ForceUpdateFrames();
 		elseif options == "wipe ints" then
 			self.db.global.unknownInterrupts = {};
 		end
