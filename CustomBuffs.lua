@@ -1034,8 +1034,8 @@ local function handleCLEU()
 
 				--Print a message with the spell's name and ID to make it easier to add new interrupts
 				--in the future
-				local link = GetSpellLink(spellID);
-				print("Detected unknown interrupt: ", spellID, "/", link);
+				--local link = GetSpellLink(spellID);
+				print("Detected unknown interrupt: ", CustomBuffs:PrintSpell(spellID, true));
 				--CustomBuffs.db.global.unknownInterrupts = CustomBuffs.db.global.unknownInterrupts or {};
 
 				CustomBuffs.db.global.unknownInterrupts[spellID] = spellName;
@@ -2905,8 +2905,8 @@ function CustomBuffs:OnEnable()
 			CustomBuffs:sync();
 		elseif options == "link" or options == "l" then
 			for i = 2, #args do
-				local link = GetSpellLink(tonumber(args[i]));
-				print(args[i], ": ", link);
+				local id = tonumber(args[i]);
+				CustomBuffs:PrintSpell(id);
 			end
 		elseif options == "ints" then
 			print("Printing all unknown interrupts...");
@@ -2914,8 +2914,7 @@ function CustomBuffs:OnEnable()
 				for k, v in pairs(self.db.global.unknownInterrupts) do
 					spellName, _, _, _, _, _, _ = GetSpellInfo(spellID);
 					if not (INTERRUPTS[k] or INTERRUPTS[spellName]) then
-						local link = GetSpellLink(k);
-						print(k, ": ", link);
+						CustomBuffs:PrintSpell(k);
 					else
 						self.db.global.unknownInterrupts[k] = nil;
 					end

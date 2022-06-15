@@ -46,13 +46,34 @@ function CustomBuffs:RunOnExitCombat(func, ...)
 	end
 end
 
-function CustomBuffs:Split(in, delim)
+function CustomBuffs:Split(str, delim)
         if not delim then delim = "%s"; end
         local ret = {};
 
-        for i in string.gmatch(in, "([^"..delim.."]+)") do
+        for i in string.gmatch(str, "([^"..delim.."]+)") do
                 table.insert(ret, i);
         end
-        
+
         return ret;
+end
+
+function CustomBuffs:PrintSpell(spellID, ret)
+  --Verify input
+  if type(spellID) == "string" then
+    spellID = tonumber(spellID);
+  end
+  if type(spellID) ~= "number" then
+    error(("Usage: CustomBuffs:PrintSpell(spellID, ret): 'spellID' - number expected, got '%s'."):format(type(spellID)), 2);
+  end
+
+  local link = GetSpellLink(spellID);
+  local _, _, icon = GetSpellInfo(spellID);
+  local i = "";
+  if icon then
+    i = "|T"..icon..":0|t";
+  end
+  if ret then
+    return spellID.." :  "..i..link;
+  end
+  print(spellID, ": ", i, link);
 end
