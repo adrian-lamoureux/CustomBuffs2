@@ -2812,54 +2812,89 @@ function CustomBuffs:loaded()
 
 end
 
-function createOptionsTab(self, container)
-	local tab1 = self.gui:Create("Label");
-	tab1:SetFullWidth(true);
-	self.dialog:Open("CustomBuffs", container);
-	container:AddChild(tab1);
-end
+function CustomBuffs:SlashCMDs(options)
+	options = string.lower(options);
+	local args = CustomBuffs:Split(options);
+	options = args[1];
 
-function createProfilesTab(self, container)
-	local tab2 = self.gui:Create("Label");
-	self.dialog:Open("CustomBuffs Profiles", container);
-	tab2:SetFullWidth(true);
-	container:AddChild(tab2);
-end
-
-function CustomBuffs:OpenOptions()
-	if not CustomBuffs.optionsOpen then
-		CustomBuffs.optionsOpen = true;
-		local frame = self.gui:Create("Window");
-		frame:SetLayout("Fill");
-		frame:SetWidth(670);
-		frame:SetTitle("CustomBuffs2 Options");
-		frame:SetCallback("OnClose", function(widget)
-			self.gui:Release(widget);
-			CustomBuffs.optionsOpen = false;
-		end);
-
-		local tab =  self.gui:Create("TabGroup");
-		tab:SetLayout("Flow");
-		tab:SetCallback("OnGroupSelected", function(container, event, group)
-			--if CustomBuffs.verbose then print(container); end
-			container:ReleaseChildren();
-			if group == "tab1" then
-				createOptionsTab(self, container);
-			elseif group == "tab2" then
-				createProfilesTab(self, container);
+	if options == "" then
+		--InterfaceOptionsFrame_OpenToCategory("CustomBuffs");
+		--InterfaceOptionsFrame_OpenToCategory("CustomBuffs");
+		CustomBuffs:OpenOptions();
+	elseif (options == "weekly" or options == "w") and CustomBuffs.gameVersion == 0 then
+		LoadAddOn("Blizzard_WeeklyRewards");
+		WeeklyRewardsFrame:Show();
+	elseif options == "test" then
+		CustomBuffs:loadFrames();
+		debugAuras();
+	elseif options == "show" then
+		CustomBuffs:loadFrames();
+	elseif options == "lock" then
+		CustomBuffs:unlockFrames();
+	elseif options == "sync" then
+		CustomBuffs:sync();
+	elseif options == "link" or options == "l" then
+		for i = 2, #args do
+			local id = tonumber(args[i]);
+			CustomBuffs:PrintSpell(id);
+		end
+	elseif options == "ints" then
+		print("Printing all unknown interrupts...");
+		if self.db.global.unknownInterrupts then
+			for k, v in pairs(self.db.global.unknownInterrupts) do
+				spellName, _, _, _, _, _, _ = GetSpellInfo(spellID);
+				if not (INTERRUPTS[k] or INTERRUPTS[spellName]) then
+					CustomBuffs:PrintSpell(k);
+				else
+					self.db.global.unknownInterrupts[k] = nil;
+				end
 			end
-		end);
+		end
+	elseif options == "units" then
+		print("Printing Current Units...")
+		if CustomBuffs.units then
+			for k, v in pairs(CustomBuffs.units) do
 
-		tab:SetTabs({{text="Options", value="tab1"}, {text="Profiles", value="tab2"}});
-		tab:SelectTab("tab1");
-		tab:SetFullWidth(true);
-
-		frame:AddChild(tab);
-		-- Add the frame as a global variable under the name `CustomBuffsOptionsFrame`
-		_G["CustomBuffsOptionsFrame"] = frame;
-		-- Register the global variable `CustomBuffsOptionsFrame` as a "special frame"
-		-- so that it is closed when the escape key is pressed.
-		tinsert(UISpecialFrames, "CustomBuffsOptionsFrame");
+				print(k);
+			end
+		end
+	elseif options == "f" then
+		print("Printing frameAdditions...")
+		if CustomBuffs.frameAdditions then
+			for k, v in pairs(CustomBuffs.frameAdditions) do
+				print("Frame:",k:GetName(),"\n");
+				for i, j in pairs(CustomBuffs.frameAdditions[k]) do
+					print("\t", i," : ", j);
+				end
+			end
+		end
+	elseif options == "verbose" then
+		CustomBuffs.verbose = not CustomBuffs.verbose;
+		print("CustomBuffs verbose mode", CustomBuffs.verbose and "enabled" or "disabled");
+	elseif options == "recover" or options == "reload" or options == "rl" then
+		if CustomBuffs.verbose then
+			print("Attempting to recover from broken state.");
+		end
+		UpdateUnits();
+		ForceUpdateFrames();
+	elseif options == "announce" and args[2] == "sums" then
+		CustomBuffs.announceSums = not CustomBuffs.announceSums;
+		print("CustomBuffs announce summons", CustomBuffs.announceSums and "enabled" or "disabled");
+	elseif options == "announce" and args[2] == "spells" then
+		CustomBuffs.announceSpells = not CustomBuffs.announceSpells;
+		print("CustomBuffs announce spells", CustomBuffs.announceSpells and "enabled" or "disabled");
+	elseif options == "announce" then
+		if CustomBuffs.announceSums and CustomBuffs.announceSpells then
+			CustomBuffs.announceSums = false;
+			CustomBuffs.announceSpells = false;
+		elseif not CustomBuffs.announceSums and not CustomBuffs.announceSpells then
+			CustomBuffs.announceSums = true;
+			CustomBuffs.announceSpells = true;
+		end
+		print("CustomBuffs announce spells", CustomBuffs.announceSpells and "enabled" or "disabled");
+		print("CustomBuffs announce summons", CustomBuffs.announceSums and "enabled" or "disabled");
+	elseif options == "wipe" then
+		self.db.global.unknownInterrupts = {};
 	end
 end
 
@@ -2880,103 +2915,7 @@ function CustomBuffs:OnEnable()
 	-- Hook raid icon updates
 	self:RegisterBucketEvent({"RAID_TARGET_UPDATE", "RAID_ROSTER_UPDATE"}, 0.1, "UpdateRaidIcons");
 
-	self:RegisterChatCommand("cb",function(options)
-		options = string.lower(options);
-		local args = CustomBuffs:Split(options);
-		options = args[1];
-
-		if options == "" then
-			--InterfaceOptionsFrame_OpenToCategory("CustomBuffs");
-			--InterfaceOptionsFrame_OpenToCategory("CustomBuffs");
-			CustomBuffs:OpenOptions();
-		elseif (options == "weekly" or options == "w") and CustomBuffs.gameVersion == 0 then
-			LoadAddOn("Blizzard_WeeklyRewards");
-			WeeklyRewardsFrame:Show();
-		elseif options == "test" then
-			CustomBuffs:loadFrames();
-			debugAuras();
-		elseif options == "test old version" then
-			oldVersion();
-		elseif options == "show" then
-			CustomBuffs:loadFrames();
-		elseif options == "lock" then
-			CustomBuffs:unlockFrames();
-		elseif options == "sync" then
-			CustomBuffs:sync();
-		elseif options == "link" or options == "l" then
-			for i = 2, #args do
-				local id = tonumber(args[i]);
-				CustomBuffs:PrintSpell(id);
-			end
-		elseif options == "ints" then
-			print("Printing all unknown interrupts...");
-			if self.db.global.unknownInterrupts then
-				for k, v in pairs(self.db.global.unknownInterrupts) do
-					spellName, _, _, _, _, _, _ = GetSpellInfo(spellID);
-					if not (INTERRUPTS[k] or INTERRUPTS[spellName]) then
-						CustomBuffs:PrintSpell(k);
-					else
-						self.db.global.unknownInterrupts[k] = nil;
-					end
-				end
-			end
-		elseif options == "units" then
-			print("Printing Current Units...")
-			if CustomBuffs.units then
-				for k, v in pairs(CustomBuffs.units) do
-
-					print(k);
-				end
-			end
-		elseif options == "f" then
-			print("Printing frameAdditions...")
-			if CustomBuffs.frameAdditions then
-				for k, v in pairs(CustomBuffs.frameAdditions) do
-					print("Frame:",k:GetName(),"\n");
-					for i, j in pairs(CustomBuffs.frameAdditions[k]) do
-						print("\t", i," : ", j);
-					end
-				end
-			end
-		elseif options == "verbose" then
-			CustomBuffs.verbose = not CustomBuffs.verbose;
-			print("CustomBuffs verbose mode", CustomBuffs.verbose and "enabled" or "disabled");
-		elseif options == "recover" or options == "reload" or options == "rl" then
-			if CustomBuffs.verbose then
-				print("Attempting to recover from broken state.");
-			end
-			UpdateUnits();
-			ForceUpdateFrames();
-		elseif options == "announce" then
-			if CustomBuffs.announceSums and CustomBuffs.announceSpells then
-				CustomBuffs.announceSums = false;
-				CustomBuffs.announceSpells = false;
-			elseif not CustomBuffs.announceSums and not CustomBuffs.announceSpells then
-				CustomBuffs.announceSums = true;
-				CustomBuffs.announceSpells = true;
-			end
-			print("CustomBuffs announce spells", CustomBuffs.announceSpells and "enabled" or "disabled");
-			print("CustomBuffs announce summons", CustomBuffs.announceSums and "enabled" or "disabled");
-		elseif options == "announce sums" then
-			CustomBuffs.announceSums = not CustomBuffs.announceSums;
-			print("CustomBuffs announce summons", CustomBuffs.announceSums and "enabled" or "disabled");
-		elseif options == "announce spells" then
-			CustomBuffs.announceSpells = not CustomBuffs.announceSpells;
-			print("CustomBuffs announce spells", CustomBuffs.announceSpells and "enabled" or "disabled");
-		elseif options == "test sums" then
-			print("Printing CustomBuffs.trackedSummons table...");
-			for k, v in pairs(CustomBuffs.trackedSummons) do
-				if v and not v.invalid then
-					print(k, ": ", v[1], " from spell", v.spellID);
-				end
-			end
-		elseif options == "hide auras" then
-			CustomBuffs.hideExtraAuras = not CustomBuffs.hideExtraAuras;
-			ForceUpdateFrames();
-		elseif options == "wipe ints" then
-			self.db.global.unknownInterrupts = {};
-		end
-	end);
+	self:RegisterChatCommand("cb", function(options) CustomBuffs:SlashCMDs(options); end);
 
 	self:RegisterEvent("UNIT_PET", "UpdateUnits");
 	if not self:IsHooked("CompactUnitFrame_UpdateName", function(frame) self:SetName(frame); end) then

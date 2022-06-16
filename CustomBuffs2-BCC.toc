@@ -7,11 +7,13 @@
 Libs\embeds.xml
 XML\AuraTemplate.xml
 
-BCC-Tables.lua
-Util.lua
+Tables\BCC-Tables.lua
+Util\Util.lua
+Options\OptionsPanel.lua
+
 CustomBuffs.lua
-ConfigDefaults.lua
 
-UITweaks.lua
+Util\UITweaks.lua
 
-ConfigMain.lua
+Options\ConfigDefaults.lua
+Options\ConfigMain.lua
