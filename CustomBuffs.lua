@@ -2817,7 +2817,7 @@ function CustomBuffs:SlashCMDs(options)
 	local args = CustomBuffs:Split(options);
 	options = args[1];
 
-	if options == "" then
+	if options == nil then
 		--InterfaceOptionsFrame_OpenToCategory("CustomBuffs");
 		--InterfaceOptionsFrame_OpenToCategory("CustomBuffs");
 		CustomBuffs:OpenOptions();
