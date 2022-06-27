@@ -1,4 +1,4 @@
-## Interface: 90200
+## Interface: 90205
 ## Author: Hypocrit
 ## Title: CustomBuffs
 ## DefaultState: enabled
@@ -7,6 +7,7 @@
 Libs\embeds.xml
 XML\AuraTemplate.xml
 
+Util\Constants.lua
 Tables\Tables.lua
 Util\Util.lua
 Options\OptionsPanel.lua

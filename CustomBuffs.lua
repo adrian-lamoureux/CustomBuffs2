@@ -8,20 +8,7 @@ local CustomBuffs = addonTable.CustomBuffs;
 local LibAceSerializer = LibStub:GetLibrary("AceSerializer-3.0");
 CustomBuffs.areWidgetsLoaded = LibStub:GetLibrary("AceGUISharedMediaWidgets-1.0", true);
 
-CustomBuffs.major = 2;
-CustomBuffs.mid = 2;
-CustomBuffs.minor = 2;
-CustomBuffs.version = CustomBuffs.minor + (100 * CustomBuffs.mid) + (10000 * CustomBuffs.major);
 
-if WOW_PROJECT_ID == WOW_PROJECT_CLASSIC then
-	CustomBuffs.gameVersion = 1; --Classic
-elseif WOW_PROJECT_ID == WOW_PROJECT_BURNING_CRUSADE_CLASSIC then
-	CustomBuffs.gameVersion = 2; --BC
-else
-	CustomBuffs.gameVersion = 0; --Retail
-end
-
-_G.CustomBuffs = CustomBuffs;
 --[[
 CustomBuffsFrame        :   Frame
 
@@ -75,16 +62,7 @@ CustomBuffs.runOnExitCombat = CustomBuffs.runOnExitCombat or {};
 CustomBuffs.hasNotified = CustomBuffs.hasNotified or false;
 CustomBuffs.hideExtraAuras = CustomBuffs.hideExtraAuras or true;
 
---Set up values for dispel types; used to quickly
---determine whether a spell is dispellable by the player class
-CustomBuffs.dispelValues = CustomBuffs.dispelValues or {
-	["magic"] = 0x1,
-	["curse"] = 0x2,
-	["poison"] = 0x4,
-	["disease"] = 0x8,
-	["massDispel"] = 0x10,
-	["purge"] = 0x20    --Tracked for things like MC
-};
+
 
 --Set Max Debuffs
 CustomBuffs.MAX_DEBUFFS = CustomBuffs.MAX_DEBUFFS or 6;
@@ -1083,24 +1061,19 @@ local function handleCLEU()
 			if CustomBuffs.verbose then print("unit ", destGUID, " died to damage"); end
 			removeTrackedSummon(destGUID);
 		end
-	elseif (event == "SPELL_DAMAGE" or event == "SWING_DAMAGE" or event == "SPELL_ABSORBED" or event == "SWING_ABSORBED") and CustomBuffs.hasImages[destGUID] then
-			--print("Attempting to remove image", CustomBuffs.hasImages[destGUID]);
-			--print(CombatLogGetCurrentEventInfo());
+	elseif CustomBuffs.hasImages[destGUID] and (event == "SPELL_AURA_REMOVED_DOSE" and spellID == 55342) then
 			CustomBuffs.hasImages[destGUID] = CustomBuffs.hasImages[destGUID] - 1;
 			if CustomBuffs.units[destGUID] and CustomBuffs.units[destGUID].nauras and CustomBuffs.units[destGUID].nauras[321686] and CustomBuffs.units[destGUID].nauras[321686].count then
-				--print("Removing Image", CustomBuffs.units[destGUID].nauras[321686].count);
 				CustomBuffs.units[destGUID].nauras[321686].count = CustomBuffs.units[destGUID].nauras[321686].count - 1;
 				--We counted something we shouldn't have; wait for buff to fall off to remove aura
 				if CustomBuffs.units[destGUID].nauras[321686].count < 1 then CustomBuffs.units[destGUID].nauras[321686].count = 1; end
 				ForceUpdateFrame(CustomBuffs.units[destGUID].frameNum);
 			end
-	elseif (event == "SPELL_AURA_REMOVED") and CustomBuffs.hasImages[destGUID] then
-			if spellID == 55342 then
-				CustomBuffs.hasImages[destGUID] = nil;
-				if CustomBuffs.units[destGUID] and CustomBuffs.units[destGUID].nauras and CustomBuffs.units[destGUID].nauras[321686] and CustomBuffs.units[destGUID].nauras[321686].count then
-					CustomBuffs.units[destGUID].nauras[321686] = nil;
-					ForceUpdateFrame(CustomBuffs.units[destGUID].frameNum);
-				end
+	elseif CustomBuffs.hasImages[destGUID] and (event == "SPELL_AURA_REMOVED"  and spellID == 55342) then
+			CustomBuffs.hasImages[destGUID] = nil;
+			if CustomBuffs.units[destGUID] and CustomBuffs.units[destGUID].nauras and CustomBuffs.units[destGUID].nauras[321686] and CustomBuffs.units[destGUID].nauras[321686].count then
+				CustomBuffs.units[destGUID].nauras[321686] = nil;
+				ForceUpdateFrame(CustomBuffs.units[destGUID].frameNum);
 			end
 	elseif (event == "SPELL_SUMMON") then
 		handleSummon(spellID, spellName, casterGUID, destGUID);

@@ -91,7 +91,7 @@ function CustomBuffs:UITweaksRetail()
 
         local cds = CreateFrame("Button", "cds", UIParent, "SecureActionButtonTemplate");
         cds:SetAttribute("type", "macro");
-        cds:SetAttribute("macrotext", "/click MultiBarRightButton1\n/cast Fireblood\n/cast Bloodfury\n/cast Ancestral Call\n/cast Berserking\n/click trink");
+        cds:SetAttribute("macrotext", "/click MultiBarRightButton1\n/cast Bloodfury\n/cast Ancestral Call\n/cast Berserking\n/click trink");
 
         local trinkets = CreateFrame("Button", "trink", UIParent, "SecureActionButtonTemplate");
         trinkets:SetAttribute("type", "macro");
@@ -120,7 +120,7 @@ function CustomBuffs:UITweaksRetail()
 
         --]]
 
-        
+
         --Clean up pet frame
         PetName:SetAlpha(0);
         PetFrameHealthBarTextLeft:SetAlpha(0);

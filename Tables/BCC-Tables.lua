@@ -1,6 +1,6 @@
-local addonName, addonTable = ...; --make use of the default addon namespace
-addonTable.CustomBuffs = LibStub("AceAddon-3.0"):NewAddon("CustomBuffs", "AceTimer-3.0", "AceHook-3.0", "AceEvent-3.0", "AceBucket-3.0", "AceConsole-3.0", "AceComm-3.0");
+local _, addonTable = ...;
 local CustomBuffs = addonTable.CustomBuffs;
+
 
 local CDFlash = { duration = 1, tbPrio = -2, isFlash = true };
 local CDStandard = {["sbPrio"] = 4, ["sdPrio"] = nil, ["bdPrio"] = nil, ["tbPrio"] = nil};
@@ -23,26 +23,6 @@ local DiseaseLow =      {["dispelType"] = "disease", ["sdPrio"] = 3, ["bdPrio"] 
 local PoisonStandard =  {["dispelType"] = "poison", ["sdPrio"] = 3, ["bdPrio"] = 4};
 local MDStandard =      {["dispelType"] = "massDispel", ["sdPrio"] = 3, ["bdPrio"] = 4};
 local PurgeStandard =   {["dispelType"] = "purge", ["sdPrio"] = 3, ["bdPrio"] = 4};
-
-CustomBuffs.DEF_COLORS = {
-  --Major damage reduction or healing increase; applies to all damage types
-  {r = 1, g = 0.2, b = 0, a = 0.7}, --1
-  --Strong damage reduction or healing increase; potentially only physical or magic
-  {r = 1, g = 0.4, b = 0, a = 0.6}, --2
-  --Medium damage reduction or healing increase
-  {r = 1, g = 0.6, b = 0, a = 0.4}, --3
-  --Weak damage reduction or healing increase
-  {r = 1, g = 0.8, b = 0, a = 0.4}, --4
-  --Rotational defensive buff (mostly tanks and healers)
-  {r = 1, g = 1, b = 0, a = 0.2},  --5
-  --Special coloring for magic damage only defensives
-  {r = 0.4, g = 0, b = 0.8, a = 0.8}, --6
-  --Special coloring for physical damage only defensives
-  {r = 1, g = 1, b = 0, a = 0.8},  --7
-
-};
---Immunities
-CustomBuffs.DEF_COLORS[0] = {r = 1, g = 0, b = 0, a = 1};
 
 
 local function Def(level)

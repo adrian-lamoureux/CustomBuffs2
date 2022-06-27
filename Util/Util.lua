@@ -46,6 +46,18 @@ function CustomBuffs:RunOnExitCombat(func, ...)
 	end
 end
 
+--returns CB game version id, name of expansion string
+function CustomBuffs:GetGameVersion()
+  return CustomBuffs.gameVersion, CustomBuffs.GAME_VERSION[CustomBuffs.gameVersion];
+end
+
+--Technically returns true for any type of arena or battleground regardless of rated
+--TODO: figure out how to determine if a bg is normal or rated
+function CustomBuffs:InRatedPVP()
+  local inst, type = IsInInstance();
+  return inst and type == "arena" or type == "pvp";
+end
+
 function CustomBuffs:Split(str, delim)
         if not delim then delim = "%s"; end
         local ret = {};
