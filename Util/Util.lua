@@ -32,6 +32,7 @@ function CustomBuffs:BackoffRunIn(timer, func, ...)
 	elseif timer < 1 then
 			error(("Usage: CustomBuffs:BackoffRunIn(timer, func, ...): 'timer' - initial timer must be a number >= 1, got '%s'"):format(timer), 2);
 	else
+			--divide by two so the first time it runs after the input amount of time since we multiply by 2 every time
 			backoffHelper(0, timer / 2, func, ...);
 	end
 end
@@ -56,6 +57,21 @@ end
 function CustomBuffs:InRatedPVP()
   local inst, type = IsInInstance();
   return inst and type == "arena" or type == "pvp";
+end
+
+function CustomBuffs:InDungOrRaid()
+  local inst, type = IsInInstance();
+  return inst and type == "party" or type == "raid";
+end
+
+function CustomBuffs:CheckAndHideNameplates()
+	if CustomBuffs:InDungOrRaid() then
+		SetCVar("nameplateShowFriends", 0);
+		SetCVar("nameplateShowFriendlyNPCs", 0);
+	else
+		SetCVar("nameplateShowFriends", 1);
+		--SetCVar("nameplateShowFriendlyNPCs", 1);
+	end
 end
 
 function CustomBuffs:Split(str, delim)

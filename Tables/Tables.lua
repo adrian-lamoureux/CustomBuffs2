@@ -79,6 +79,7 @@ CustomBuffs.INTERRUPTS = {
   [184381] =			 		{ duration = 1.5 },
   [332693] =			 		{ duration = 2 },
   [355638] =			 		{ duration = 4 },
+  [344776] =			 		{ duration = 4 },
 };
 
 
@@ -576,6 +577,7 @@ CustomBuffs.BUFFS = {
   ["Nitro Boosts"] = 					      EStandard,
   ["Goblin Glider"] = 				      EStandard,
   ["Angelic Feather"] = 					  EStandard,
+  [368510] =                        EPStandard, --So'leah's
 };
 
 
@@ -875,6 +877,7 @@ CustomBuffs.CC = {
   ["Venompiercer"] =                          PoisonStandard,
   ["Gripping Infection"] =                    MagicStandard,
   ["Corrosive Gunk"] =                        DiseaseStandard,
+  ["Blightbeak"] =                            DiseaseStandard,
 
   --Sanguine Depths
   ["Juggernaut Rush"] =                       CCStandard,
@@ -940,6 +943,33 @@ CustomBuffs.CC = {
   ["Hyperlight Bomb"] =                       MagicStandard,
   ["Purification Protocol"] =                 MagicStandard,
 
+  --Mechagon
+  [284219] =                                  MagicStandard, --Shrink
+  [300764] =                                  PoisonStandard, --Slime Bolt
+  [300650] =                                  DiseaseStandard, --Suffocating Smog
+  [298259] =                                  DiseaseStandard, --Gooped
+  [298669] =                                  CCStandard, --Taze
+  [300436] =                                  CurseStandard, --Grasping Hex
+  [302274] =                                  CCStandard, --Fulminating Zap
+
+  [294929] =                                  MagicStandard, --Blazing Chomp
+  [294195] =                                  MagicStandard, --Arcing Zap
+
+  --Grimrail
+  [162066] =                                  CCStandard, --Freezing Snare
+
+  --Iron Docks
+  [172889] =                                  CCStandard, --Charging Slash
+  [172771] =                                  MagicStandard, --Incendiary Slug
+
+  --Kara
+  [230297] =                                  CurseStandard, --Incendiary Slug
+  [228277] =                                  MagicStandard, --Shackles of Servitude
+  [228526] =                                  MagicStandard, --Flirt
+  [228610] =                                  CCStandard, --Burning Brand
+  [227742] =                                  CCStandard, --Garrote
+
+  [229693] =                                  PoisonStandard, --Poison Fang
 
   --------------------
   -- Castle Nathria --

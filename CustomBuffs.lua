@@ -2225,12 +2225,26 @@ function CustomBuffs:SetName(frame)
 	if not (CustomBuffs.inRaidGroup and self.db.profile.colorNames and CustomBuffs.partyUnits[guid]) then
 		--if CustomBuffs.verbose then print("Changing color for unit",guid,r,g,b); end
 		frame.name:SetFont(self.SM:Fetch('font', self.db.profile.nameFont), self.db.profile.nameSize, "OUTLINE");
+		frame.name:ClearAllPoints();
+		frame.name:SetPoint("TOP", frame, "TOP", 0, -2);
+		if frame.roleIcon then
+			frame.roleIcon:ClearAllPoints();
+			frame.roleIcon:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -1, -2);
+			frame.roleIcon:SetScale(1.2);
+		end
 		frame.name:SetShadowColor(r * 0.5, g * 0.5, b * 0.5, 0.5);
 		frame.name:SetShadowOffset(1, -1);
 		frame.name:SetTextColor(r, g, b, 1);
 		--frame.name:SetTextColor(0, 0, 0, 1);
 	else
 		frame.name:SetFont(self.SM:Fetch('font', self.db.profile.nameFont), self.db.profile.nameSize + 1);
+		frame.name:ClearAllPoints();
+		frame.name:SetPoint("TOP", frame, "TOP", 0, -2);
+		if frame.roleIcon then
+			frame.roleIcon:ClearAllPoints();
+			frame.roleIcon:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -1, -2);
+			frame.roleIcon:SetScale(1.2);
+		end
 		frame.name:SetShadowColor(0.5, 0.5, 0.5, 0.8);
 		frame.name:SetShadowOffset(1, -1);
 		frame.name:SetTextColor(0, 0, 0, 1);
@@ -2930,6 +2944,11 @@ function CustomBuffs:Init()
 		self:RegisterEvent("PLAYER_ENTERING_WORLD", "loadFrames");
 		self:RegisterEvent("GROUP_ROSTER_UPDATE", "loadFrames");
 	end
+
+	self:RegisterEvent("PLAYER_ENTERING_WORLD", "CheckAndHideNameplates");
+	self:RegisterEvent("ZONE_CHANGED", "CheckAndHideNameplates");
+	self:RegisterEvent("ZONE_CHANGED_INDOORS", "CheckAndHideNameplates");
+	self:RegisterEvent("ZONE_CHANGED_NEW_AREA", "CheckAndHideNameplates");
 
 	self:RegisterEvent("GROUP_JOINED", "sync");
 	self:SecureHook("CompactUnitFrameProfiles_CheckAutoActivation", function(frame) self:loadFrames(); end);
