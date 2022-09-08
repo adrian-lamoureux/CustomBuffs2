@@ -73,6 +73,7 @@ CustomBuffs.NONAURAS = {
     [6554] =  CDFlash, -- Pummel (Warrior)
     [19644] = CDFlash, -- Spell Lock (Warlock)
     [19647] = CDFlash, -- Spell Lock (Warlock)
+    --[[
     [8042] =  CDFlash, -- Earth Shock (Shaman)
     [8044] =  CDFlash, -- Earth Shock (Shaman)
     [8045] =  CDFlash, -- Earth Shock (Shaman)
@@ -81,6 +82,8 @@ CustomBuffs.NONAURAS = {
     [10413] = CDFlash, -- Earth Shock (Shaman)
     [10414] = CDFlash, -- Earth Shock (Shaman)
     [25454] = CDFlash, -- Earth Shock (Shaman)
+    [57994] = CDFlash, -- Shear
+    --]]
     [16979] = CDFlash, -- Feral Charge (Feral)
 
     --SHAMAN
@@ -142,15 +145,13 @@ CustomBuffs.NONAURAS = {
     [6554] =   { duration = 4 }, -- Pummel (Warrior)
     [19644] =  { duration = 6 }, -- Spell Lock (Warlock)
     [19647] =  { duration = 6 }, -- Spell Lock (Warlock)
-    [8042] =  { duration = 2 }, -- Earth Shock (Shaman)
-    [8044] =  { duration = 2 }, -- Earth Shock (Shaman)
-    [8045] =  { duration = 2 }, -- Earth Shock (Shaman)
-    [8046] =  { duration = 2 }, -- Earth Shock (Shaman)
-    [10412] =  { duration = 2 }, -- Earth Shock (Shaman)
-    [10413] =  { duration = 2 }, -- Earth Shock (Shaman)
-    [10414] =  { duration = 2 }, -- Earth Shock (Shaman)
-    [25454] =  { duration = 2 }, -- Earth Shock (Shaman)
     [16979] = { duration = 4 }, -- Feral Charge (Feral)
+    [57994] = { duration = 2 }, --Shear
+    [47528] = { duration = 4 }, --Mind Freeze
+    [29586] = { duration = 5 }, --Kick
+    [72] =    { duration = 6 }, --Shield Bash
+    [15614] = { duration = 6 }, --Kick
+
 
     --Non Player
     [13281] = { duration = 2 },
@@ -231,8 +232,8 @@ CustomBuffs.NONAURAS = {
     --Major Externals
     ["Ironbark"] =                    EStandard,
     ["Life Cocoon"] =                 EStandard,
-    ["Blessing of Protection"] =      Def(7),
-    ["Blessing of Sacrifice"] =       EStandard,
+    ["Hand of Protection"] =          Def(7),
+    ["Hand of Sacrifice"] =           Def(2),
     ["Blessing of Spellwarding"] =    EStandard,
     ["Pain Suppression"] =            EStandard,
     ["Guardian Spirit"] =             EStandard,
@@ -246,6 +247,7 @@ CustomBuffs.NONAURAS = {
     ["Beacon of Virtue"] =            EStandard,
     ["Beacon of Faith"] =             EStandard,
     ["Beacon of Light"] =             EStandard,
+    ["Sacred Shield"] =               EStandard,
     ["Lifebloom"] =                   EStandard,
     ["Spirit Mend"] =                 EStandard,
     ["Misdirection"] =                EStandard,
@@ -255,7 +257,8 @@ CustomBuffs.NONAURAS = {
     ["Power Word: Shield"] = 		      EStandard,
 
     ["Stoneform"] =                   EStandard,
-    ["Fireblood"] =                   EStandard,
+    ["Sacrifice"] =                   EStandard,
+    ["Hand of Freedom"] =             EStandard,
 
 
     --Minor Externals worth tracking
@@ -267,6 +270,7 @@ CustomBuffs.NONAURAS = {
     ["Stealth"] =                   EStandard,
 
     ["Cultivation"] =               EPStandard,
+    ["Earthliving"] =               EPStandard,
     ["Spring Blossoms"] =           EPStandard,
     [290754] =                      EPStandard, --Lifebloom from early spring honor talent
     ["Glimmer of Light"] =          EPStandard,
@@ -374,6 +378,7 @@ CustomBuffs.NONAURAS = {
     ["Haste"] =								ETCDLow,
     ["Spell Haste"] =						ETCDLow,
     [35165] =								ETCDLow,
+    [18803] =								ETCDLow, --meta gem haste
 
   };
 
@@ -385,6 +390,7 @@ CustomBuffs.NONAURAS = {
 
     ["Polymorph"] =             MagicStandard,
     ["Freezing Trap"] =         MagicStandard,
+    ["Deep Freeze"] =           MagicStandard,
     ["Fear"] =                  MagicStandard,
     ["Howl of Terror"] =        MagicStandard,
     ["Death Coil"] =           	MagicStandard,
@@ -396,6 +402,7 @@ CustomBuffs.NONAURAS = {
     ["Hammer of Justice"] =     MagicStandard,
     ["Silence"] =               MagicStandard,
     ["Silencing Shot"] =        MagicStandard,
+    ["Strangulate"] =           MagicStandard,
     [18469] =                   MagicStandard, --Mage Blanket
     [24259] =                   MagicStandard, --Lock Blanket
     [18425] =          			MagicStandard, --Improved Kick
@@ -434,7 +441,8 @@ CustomBuffs.NONAURAS = {
     -- Not Dispelable --
     --------------------
 
-    ["Counterattack"] =      	CCStandard,
+    ["Counterattack"] =      	  CCStandard,
+    ["Gnaw"] =      	         CCStandard,
     [12809] =                   CCStandard, --Concussion Blow
     [7922] =                    CCStandard, --Charge Stun
     [16922] =                 	CCStandard, --Starfire Stun
@@ -483,6 +491,7 @@ CustomBuffs.NONAURAS = {
     ["Wrath of Air Totem"] = true,
     ["Mana Spring"] = true,
     ["Tranquil Air"] = true,
+    ["Flametongue Totem"] = true,
   };
 
   CustomBuffs.testBuffs = {

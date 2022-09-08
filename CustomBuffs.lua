@@ -77,6 +77,11 @@ CustomBuffs.UPDATE_DELAY_TOLERANCE = CustomBuffs.UPDATE_DELAY_TOLERANCE or 0.01;
 
 CustomBuffs.debugMode = CustomBuffs.debugMode or false;
 
+--TODO TMP beta workaround
+if select(4, GetBuildInfo()) == 100000 then
+	CustomBuffs.isBeta = 1;
+end
+
 ----------------------
 ----    Tables    ----
 ----------------------
@@ -123,112 +128,112 @@ UNUSED THROUGHPUT FRAMES ARE HIDDEN, NOT PADDED OUT
 --Blizzard function copies to avoid taint
 --[[
 local function CompactRaidFrameContainer_UpdateDisplayedUnits(self)
-	if ( IsInRaid() ) then
-		self.units = self.raidUnits;
-	else
-		self.units = self.partyUnits;
-	end
+if ( IsInRaid() ) then
+self.units = self.raidUnits;
+else
+self.units = self.partyUnits;
+end
 end
 
 local RESIZE_HORIZONTAL_OUTSETS = 4;
 local RESIZE_VERTICAL_OUTSETS = 7;
 
 local function CompactRaidFrameManager_OnLoad(self)
-	self.container = CompactRaidFrameContainer;
-	self.container:SetParent(self);
-	self:RegisterEvent("DISPLAY_SIZE_CHANGED");
-	self:RegisterEvent("UI_SCALE_CHANGED");
-	self:RegisterEvent("GROUP_ROSTER_UPDATE");
-	self:RegisterEvent("UPDATE_ACTIVE_BATTLEFIELD");
-	self:RegisterEvent("UNIT_FLAGS");
-	self:RegisterEvent("PLAYER_FLAGS_CHANGED");
-	self:RegisterEvent("PLAYER_ENTERING_WORLD");
-	self:RegisterEvent("PARTY_LEADER_CHANGED");
-	self:RegisterEvent("RAID_TARGET_UPDATE");
-	self:RegisterEvent("PLAYER_TARGET_CHANGED");
-	self.containerResizeFrame:SetMinResize(self.container:GetWidth(), MINIMUM_RAID_CONTAINER_HEIGHT + RESIZE_VERTICAL_OUTSETS * 2 + 1);
-	self.dynamicContainerPosition = true;
-	CompactRaidFrameContainer_SetFlowFilterFunction(self.container, CRFFlowFilterFunc)
-	CompactRaidFrameContainer_SetGroupFilterFunction(self.container, CRFGroupFilterFunc)
-	CompactRaidFrameManager_UpdateContainerBounds(self);
-	CompactRaidFrameManager_ResizeFrame_Reanchor(self);
-	CompactRaidFrameManager_AttachPartyFrames(self);
-	CompactRaidFrameManager_Collapse(self);
-	--Set up the options flow container
-	FlowContainer_Initialize(self.displayFrame.optionsFlowContainer);
+self.container = CompactRaidFrameContainer;
+self.container:SetParent(self);
+self:RegisterEvent("DISPLAY_SIZE_CHANGED");
+self:RegisterEvent("UI_SCALE_CHANGED");
+self:RegisterEvent("GROUP_ROSTER_UPDATE");
+self:RegisterEvent("UPDATE_ACTIVE_BATTLEFIELD");
+self:RegisterEvent("UNIT_FLAGS");
+self:RegisterEvent("PLAYER_FLAGS_CHANGED");
+self:RegisterEvent("PLAYER_ENTERING_WORLD");
+self:RegisterEvent("PARTY_LEADER_CHANGED");
+self:RegisterEvent("RAID_TARGET_UPDATE");
+self:RegisterEvent("PLAYER_TARGET_CHANGED");
+self.containerResizeFrame:SetMinResize(self.container:GetWidth(), MINIMUM_RAID_CONTAINER_HEIGHT + RESIZE_VERTICAL_OUTSETS * 2 + 1);
+self.dynamicContainerPosition = true;
+CompactRaidFrameContainer_SetFlowFilterFunction(self.container, CRFFlowFilterFunc)
+CompactRaidFrameContainer_SetGroupFilterFunction(self.container, CRFGroupFilterFunc)
+CompactRaidFrameManager_UpdateContainerBounds(self);
+CompactRaidFrameManager_ResizeFrame_Reanchor(self);
+CompactRaidFrameManager_AttachPartyFrames(self);
+CompactRaidFrameManager_Collapse(self);
+--Set up the options flow container
+FlowContainer_Initialize(self.displayFrame.optionsFlowContainer);
 end
 
 local function CompactRaidFrameManagerDisplayFrameProfileSelector_Initialize()
-	local info = UIDropDownMenu_CreateInfo();
-	for i=1, GetNumRaidProfiles() do
-		local name = GetRaidProfileName(i);
-		info.text = name;
-		info.value = name;
-		info.func = CompactRaidFrameManagerDisplayFrameProfileSelector_OnClick;
-		info.checked = GetActiveRaidProfile() == info.value;
-		UIDropDownMenu_AddButton(info);
-	end
+local info = UIDropDownMenu_CreateInfo();
+for i=1, GetNumRaidProfiles() do
+local name = GetRaidProfileName(i);
+info.text = name;
+info.value = name;
+info.func = CompactRaidFrameManagerDisplayFrameProfileSelector_OnClick;
+info.checked = GetActiveRaidProfile() == info.value;
+UIDropDownMenu_AddButton(info);
+end
 end
 
 local function CompactRaidFrameContainer_OnLoad(self)
-	FlowContainer_Initialize(self);	--Congrats! We are now a certified FlowContainer.
+FlowContainer_Initialize(self);	--Congrats! We are now a certified FlowContainer.
 
-	self:SetClampRectInsets(0, 200 - self:GetWidth(), 10, 0);
+self:SetClampRectInsets(0, 200 - self:GetWidth(), 10, 0);
 
-	self.raidUnits = {};
-	for i=1, MAX_RAID_MEMBERS do
-		tinsert(self.raidUnits, "raid"..i);
-	end
-	self.partyUnits = { "player" };
-	for i=1, MAX_PARTY_MEMBERS do
-		tinsert(self.partyUnits, "party"..i);
-	end
-	CompactRaidFrameContainer_UpdateDisplayedUnits(self);
+self.raidUnits = {};
+for i=1, MAX_RAID_MEMBERS do
+tinsert(self.raidUnits, "raid"..i);
+end
+self.partyUnits = { "player" };
+for i=1, MAX_PARTY_MEMBERS do
+tinsert(self.partyUnits, "party"..i);
+end
+CompactRaidFrameContainer_UpdateDisplayedUnits(self);
 
-	self:RegisterEvent("GROUP_ROSTER_UPDATE");
-	self:RegisterEvent("UNIT_PET");
+self:RegisterEvent("GROUP_ROSTER_UPDATE");
+self:RegisterEvent("UNIT_PET");
 
-	local unitFrameReleaseFunc = function(frame)
-													CompactUnitFrame_SetUnit(frame, nil);
-												end;
-	self.frameReservations = {
-		raid		= CompactRaidFrameReservation_NewManager(unitFrameReleaseFunc);
-		pet		= CompactRaidFrameReservation_NewManager(unitFrameReleaseFunc);
-		flagged	= CompactRaidFrameReservation_NewManager(unitFrameReleaseFunc);	--For Main Tank/Assist units
-		target	= CompactRaidFrameReservation_NewManager(unitFrameReleaseFunc);	--Target of target for Main Tank/Main Assist
-	}
+local unitFrameReleaseFunc = function(frame)
+CompactUnitFrame_SetUnit(frame, nil);
+end;
+self.frameReservations = {
+raid		= CompactRaidFrameReservation_NewManager(unitFrameReleaseFunc);
+pet		= CompactRaidFrameReservation_NewManager(unitFrameReleaseFunc);
+flagged	= CompactRaidFrameReservation_NewManager(unitFrameReleaseFunc);	--For Main Tank/Assist units
+target	= CompactRaidFrameReservation_NewManager(unitFrameReleaseFunc);	--Target of target for Main Tank/Main Assist
+}
 
-	self.frameUpdateList = {
-		normal = {},	--Groups are also in this normal list.
-		mini = {},
-		group = {},
-	}
-	self.unitFrameUnusedFunc = function(frame)
-													frame.inUse = false;
-												end;
+self.frameUpdateList = {
+normal = {},	--Groups are also in this normal list.
+mini = {},
+group = {},
+}
+self.unitFrameUnusedFunc = function(frame)
+frame.inUse = false;
+end;
 
-	self.displayPets = true;
-	self.displayFlaggedMembers = true;
+self.displayPets = true;
+self.displayFlaggedMembers = true;
 end
 
 local function CompactRaidFrameContainer_SetGroupMode(self, groupMode)
-	self.groupMode = groupMode;
-	CompactRaidFrameContainer_TryUpdate(self);
+self.groupMode = groupMode;
+CompactRaidFrameContainer_TryUpdate(self);
 end
 
 local function CompactRaidFrameContainer_SetFlowSortFunction(self, flowSortFunc)
-	--Usage: Takes two tokens, should work as a Lua sort function.
-	--The ordering must be well-defined, even across units that will be filtered out
-	self.flowSortFunc = flowSortFunc;
-	CompactRaidFrameContainer_TryUpdate(self);
+--Usage: Takes two tokens, should work as a Lua sort function.
+--The ordering must be well-defined, even across units that will be filtered out
+self.flowSortFunc = flowSortFunc;
+CompactRaidFrameContainer_TryUpdate(self);
 end
 
 local function CompactRaidFrameContainer_AddUnitFrame(self, unit, frameType)
-	local frame = CompactRaidFrameContainer_GetUnitFrame(self, unit, frameType);
-	CompactUnitFrame_SetUnit(frame, unit);
-	FlowContainer_AddObject(self, frame);
+local frame = CompactRaidFrameContainer_GetUnitFrame(self, unit, frameType);
+CompactUnitFrame_SetUnit(frame, unit);
+FlowContainer_AddObject(self, frame);
 
-	return frame;
+return frame;
 end
 
 --]]
@@ -371,9 +376,9 @@ ClearNameCache();
 local UpdateClassificationIndicator = CompactUnitFrame_UpdateClassificationIndicator;
 
 function CompactUnitFrame_UpdateClassificationIndicator(frame)
-	if not frame:IsForbidden() then
-		UpdateClassificationIndicator(frame);
-	end
+if not frame:IsForbidden() then
+UpdateClassificationIndicator(frame);
+end
 end
 --]]
 
@@ -581,7 +586,7 @@ local function addTrackedSummon(casterGUID, spellID, spellName, destGUID, daisyC
 
 	--track the number of this type of summon we currently have active
 	local count = (CustomBuffs and CustomBuffs.units and CustomBuffs.units[casterGUID] and CustomBuffs.units[casterGUID].nauras and CustomBuffs.units[casterGUID].nauras[spellID] and
-				CustomBuffs.units[casterGUID].nauras[spellID].count or 0) + 1;
+	CustomBuffs.units[casterGUID].nauras[spellID].count or 0) + 1;
 
 	local duration = (NONAURAS[spellID] or NONAURAS[spellName]).duration;
 	CustomBuffs.trackedSummons[destGUID] = {owner, spellID = spellID, owner = owner};
@@ -1062,19 +1067,19 @@ local function handleCLEU()
 			removeTrackedSummon(destGUID);
 		end
 	elseif CustomBuffs.hasImages[destGUID] and (event == "SPELL_AURA_REMOVED_DOSE" and spellID == 55342) then
-			CustomBuffs.hasImages[destGUID] = CustomBuffs.hasImages[destGUID] - 1;
-			if CustomBuffs.units[destGUID] and CustomBuffs.units[destGUID].nauras and CustomBuffs.units[destGUID].nauras[321686] and CustomBuffs.units[destGUID].nauras[321686].count then
-				CustomBuffs.units[destGUID].nauras[321686].count = CustomBuffs.units[destGUID].nauras[321686].count - 1;
-				--We counted something we shouldn't have; wait for buff to fall off to remove aura
-				if CustomBuffs.units[destGUID].nauras[321686].count < 1 then CustomBuffs.units[destGUID].nauras[321686].count = 1; end
-				ForceUpdateFrame(CustomBuffs.units[destGUID].frameNum);
-			end
+		CustomBuffs.hasImages[destGUID] = CustomBuffs.hasImages[destGUID] - 1;
+		if CustomBuffs.units[destGUID] and CustomBuffs.units[destGUID].nauras and CustomBuffs.units[destGUID].nauras[321686] and CustomBuffs.units[destGUID].nauras[321686].count then
+			CustomBuffs.units[destGUID].nauras[321686].count = CustomBuffs.units[destGUID].nauras[321686].count - 1;
+			--We counted something we shouldn't have; wait for buff to fall off to remove aura
+			if CustomBuffs.units[destGUID].nauras[321686].count < 1 then CustomBuffs.units[destGUID].nauras[321686].count = 1; end
+			ForceUpdateFrame(CustomBuffs.units[destGUID].frameNum);
+		end
 	elseif CustomBuffs.hasImages[destGUID] and (event == "SPELL_AURA_REMOVED"  and spellID == 55342) then
-			CustomBuffs.hasImages[destGUID] = nil;
-			if CustomBuffs.units[destGUID] and CustomBuffs.units[destGUID].nauras and CustomBuffs.units[destGUID].nauras[321686] and CustomBuffs.units[destGUID].nauras[321686].count then
-				CustomBuffs.units[destGUID].nauras[321686] = nil;
-				ForceUpdateFrame(CustomBuffs.units[destGUID].frameNum);
-			end
+		CustomBuffs.hasImages[destGUID] = nil;
+		if CustomBuffs.units[destGUID] and CustomBuffs.units[destGUID].nauras and CustomBuffs.units[destGUID].nauras[321686] and CustomBuffs.units[destGUID].nauras[321686].count then
+			CustomBuffs.units[destGUID].nauras[321686] = nil;
+			ForceUpdateFrame(CustomBuffs.units[destGUID].frameNum);
+		end
 	elseif (event == "SPELL_SUMMON") then
 		handleSummon(spellID, spellName, casterGUID, destGUID);
 	end
@@ -1299,28 +1304,28 @@ local function setUpExtraDebuffFrames(frame)
 	--Set the size of default debuffs
 	--[[
 	for i = 1, 3 do
-		frame.customDebuffFrames[i]:SetSize(s, s);
-	end
-	--]]
-	for i = 1, CustomBuffs.MAX_DEBUFFS do
-		local bf = F[frame].customDebuffFrames[i];
+	frame.customDebuffFrames[i]:SetSize(s, s);
+end
+--]]
+for i = 1, CustomBuffs.MAX_DEBUFFS do
+	local bf = F[frame].customDebuffFrames[i];
 
-		bf:ClearAllPoints();
-		if i == 1 then
-			bf:SetPoint("BOTTOMLEFT", frame.healthBar, "BOTTOMLEFT", 0, 0);
-		elseif i > 1 and i < 4 then
-			bf:SetPoint("BOTTOMLEFT", F[frame].customDebuffFrames[i-1], "BOTTOMRIGHT", 0, 0);
-		elseif i > 3 and i < 7 then
-			bf:SetPoint("BOTTOMRIGHT", F[frame].customDebuffFrames[i-3], "TOPRIGHT", 0, 0);
-		elseif i > 6 and i < 10 then
-			bf:SetPoint("TOPRIGHT", F[frame].customDebuffFrames[1], "TOPRIGHT", -(s * (i - 6) + 1), 0);
-		elseif i > 9 then
-			bf:SetPoint("BOTTOMRIGHT", F[frame].customDebuffFrames[i-3], "TOPRIGHT", 0, 0);
-		else
-			bf:SetPoint("TOPRIGHT", F[frame].customDebuffFrames[1], "TOPRIGHT", -(s * (i - 3)), 0);
-		end
-		F[frame].customDebuffFrames[i]:SetSize(s, s);
+	bf:ClearAllPoints();
+	if i == 1 then
+		bf:SetPoint("BOTTOMLEFT", frame.healthBar, "BOTTOMLEFT", 0, 0);
+	elseif i > 1 and i < 4 then
+		bf:SetPoint("BOTTOMLEFT", F[frame].customDebuffFrames[i-1], "BOTTOMRIGHT", 0, 0);
+	elseif i > 3 and i < 7 then
+		bf:SetPoint("BOTTOMRIGHT", F[frame].customDebuffFrames[i-3], "TOPRIGHT", 0, 0);
+	elseif i > 6 and i < 10 then
+		bf:SetPoint("TOPRIGHT", F[frame].customDebuffFrames[1], "TOPRIGHT", -(s * (i - 6) + 1), 0);
+	elseif i > 9 then
+		bf:SetPoint("BOTTOMRIGHT", F[frame].customDebuffFrames[i-3], "TOPRIGHT", 0, 0);
+	else
+		bf:SetPoint("TOPRIGHT", F[frame].customDebuffFrames[1], "TOPRIGHT", -(s * (i - 3)), 0);
 	end
+	F[frame].customDebuffFrames[i]:SetSize(s, s);
+end
 end
 
 local function setUpExtraBuffFrames(frame)
@@ -1350,28 +1355,28 @@ local function setUpExtraBuffFrames(frame)
 	--Set the size of default buffs
 	--[[
 	for i = 1, 3 do
-		frame.customBuffFrames[i]:SetSize(s, s);
-	end
-	--]]
-	for i= 1, CustomBuffs.MAX_BUFFS do
-		local bf = F[frame].customBuffFrames[i];
+	frame.customBuffFrames[i]:SetSize(s, s);
+end
+--]]
+for i= 1, CustomBuffs.MAX_BUFFS do
+	local bf = F[frame].customBuffFrames[i];
 
-		bf:ClearAllPoints();
-		if i == 1 then
-			bf:SetPoint("BOTTOMRIGHT", frame.healthBar, "BOTTOMRIGHT", 0, 0);
-		elseif i > 1 and i < 4 then
-			bf:SetPoint("BOTTOMRIGHT", F[frame].customBuffFrames[i-1], "BOTTOMLEFT", 0, 0);
-		elseif i > 3 and i < 7 then
-			bf:SetPoint("BOTTOMRIGHT", F[frame].customBuffFrames[i-3], "TOPRIGHT", 0, 0);
-		elseif i > 6 and i < 10 then
-			bf:SetPoint("TOPRIGHT", F[frame].customBuffFrames[1], "TOPRIGHT", (s * (i - 6) + 1), 0);
-		elseif i > 9 then
-			bf:SetPoint("BOTTOMRIGHT", F[frame].customBuffFrames[i-3], "TOPRIGHT", 0, 0);
-		else
-			bf:SetPoint("TOPRIGHT", F[frame].customBuffFrames[1], "TOPRIGHT", -(s * (i - 3)), 0);
-		end
-		F[frame].customBuffFrames[i]:SetSize(s, s);
+	bf:ClearAllPoints();
+	if i == 1 then
+		bf:SetPoint("BOTTOMRIGHT", frame.healthBar, "BOTTOMRIGHT", 0, 0);
+	elseif i > 1 and i < 4 then
+		bf:SetPoint("BOTTOMRIGHT", F[frame].customBuffFrames[i-1], "BOTTOMLEFT", 0, 0);
+	elseif i > 3 and i < 7 then
+		bf:SetPoint("BOTTOMRIGHT", F[frame].customBuffFrames[i-3], "TOPRIGHT", 0, 0);
+	elseif i > 6 and i < 10 then
+		bf:SetPoint("TOPRIGHT", F[frame].customBuffFrames[1], "TOPRIGHT", (s * (i - 6) + 1), 0);
+	elseif i > 9 then
+		bf:SetPoint("BOTTOMRIGHT", F[frame].customBuffFrames[i-3], "TOPRIGHT", 0, 0);
+	else
+		bf:SetPoint("TOPRIGHT", F[frame].customBuffFrames[1], "TOPRIGHT", -(s * (i - 3)), 0);
 	end
+	F[frame].customBuffFrames[i]:SetSize(s, s);
+end
 end
 
 local function setUpThroughputFrames(frame)
@@ -1797,7 +1802,7 @@ function CustomBuffs:UpdateAuras(frame)
 					["auraData"] = {icon, count, expirationTime, duration, debuffType, isDebuff = true},
 					["type"] = "debuff"
 				});
-			--elseif isPrioDebuff(name, icon, count, debuffType, duration, expirationTime, unitCaster, nil, nil, spellID) then
+				--elseif isPrioDebuff(name, icon, count, debuffType, duration, expirationTime, unitCaster, nil, nil, spellID) then
 			elseif isPrioDebuff(spellID) then
 
 				--Add to debuffs
@@ -2111,40 +2116,40 @@ function CustomBuffs:loadFrames()
 	if not InCombatLockdown() then
 		--[[
 		if not CompactRaidFrame1 then --Don't spam create new raid frames; causes a huge mess
-			CompactRaidFrameManager_OnLoad(CompactRaidFrameManager);
-			CompactRaidFrameManagerDisplayFrameProfileSelector_Initialize();
-			CompactRaidFrameContainer_OnLoad(CompactRaidFrameContainer);
-			CompactRaidFrameContainer_SetGroupMode(CompactRaidFrameContainer, "flush");
-			CompactRaidFrameContainer_SetFlowSortFunction(CompactRaidFrameContainer, CRFSort_Role);
-			CompactRaidFrameContainer_AddUnitFrame(CompactRaidFrameContainer, "player", "raid");
-		end
-		CompactRaidFrameContainer_LayoutFrames(CompactRaidFrameContainer);
-		CompactRaidFrameContainer_UpdateDisplayedUnits(CompactRaidFrameContainer);
-		setUpExtraBuffFrames(CompactRaidFrame1);
-		setUpBossDebuffFrames(CompactRaidFrame1);
-		setUpThroughputFrames(CompactRaidFrame1);
-		setUpBossDebuffFrames(CompactRaidFrame1);
+		CompactRaidFrameManager_OnLoad(CompactRaidFrameManager);
+		CompactRaidFrameManagerDisplayFrameProfileSelector_Initialize();
+		CompactRaidFrameContainer_OnLoad(CompactRaidFrameContainer);
+		CompactRaidFrameContainer_SetGroupMode(CompactRaidFrameContainer, "flush");
+		CompactRaidFrameContainer_SetFlowSortFunction(CompactRaidFrameContainer, CRFSort_Role);
+		CompactRaidFrameContainer_AddUnitFrame(CompactRaidFrameContainer, "player", "raid");
+	end
+	CompactRaidFrameContainer_LayoutFrames(CompactRaidFrameContainer);
+	CompactRaidFrameContainer_UpdateDisplayedUnits(CompactRaidFrameContainer);
+	setUpExtraBuffFrames(CompactRaidFrame1);
+	setUpBossDebuffFrames(CompactRaidFrame1);
+	setUpThroughputFrames(CompactRaidFrame1);
+	setUpBossDebuffFrames(CompactRaidFrame1);
+	CompactRaidFrameManager:Show();
+	CompactRaidFrameContainer:Show();
+	handleRosterUpdate();
+	--]]
+	if IsAddOnLoaded("Blizzard_CompactRaidFrames") and IsAddOnLoaded("Blizzard_CUFProfiles") then
 		CompactRaidFrameManager:Show();
 		CompactRaidFrameContainer:Show();
 		handleRosterUpdate();
-		--]]
-		if IsAddOnLoaded("Blizzard_CompactRaidFrames") and IsAddOnLoaded("Blizzard_CUFProfiles") then
-				CompactRaidFrameManager:Show();
-				CompactRaidFrameContainer:Show();
-				handleRosterUpdate();
-				ForceUpdateFrames();
-				return true; --for BackoffRunIn
-		else
-			LoadAddOn("Blizzard_CompactRaidFrames");
-			LoadAddOn("Blizzard_CUFProfiles");
-			CustomBuffs:BackoffRunIn(5, CustomBuffs.loadFrames);
-			return false; --for BackoffRunIn
-		end
-	else
-		CustomBuffs:RunOnExitCombat(CustomBuffs.loadFrames);
+		ForceUpdateFrames();
 		return true; --for BackoffRunIn
+	else
+		LoadAddOn("Blizzard_CompactRaidFrames");
+		LoadAddOn("Blizzard_CUFProfiles");
+		CustomBuffs:BackoffRunIn(5, CustomBuffs.loadFrames);
+		return false; --for BackoffRunIn
 	end
-	--]]
+else
+	CustomBuffs:RunOnExitCombat(CustomBuffs.loadFrames);
+	return true; --for BackoffRunIn
+end
+--]]
 end
 
 function CustomBuffs:CleanName(unitGUID, backupFrame)
@@ -2182,11 +2187,11 @@ function CustomBuffs:SetHealthTexture(frame)
 	if ( not healthBar or healthBar:IsForbidden() ) then return; end
 
 	local absorbBar = frame.totalAbsorb;
-	if ( CustomBuffs.gameVersion ~= 1 and CustomBuffs.gameVersion ~= 2 and (not absorbBar or absorbBar:IsForbidden())  ) then return; end
+	if ( CustomBuffs.gameVersion == 0 and (not absorbBar or absorbBar:IsForbidden())  ) then return; end
 
 	if IsAddOnLoaded("WeakAuras") then
 		healthBar:GetStatusBarTexture():SetTexture("Interface\\AddOns\\WeakAuras\\Media\\Textures\\Statusbar_Clean", "BORDER");
-		if CustomBuffs.gameVersion ~= 1 and CustomBuffs.gameVersion ~= 2 then
+		if CustomBuffs.gameVersion == 0 then
 			absorbBar:SetTexture("Interface\\AddOns\\WeakAuras\\Media\\Textures\\Statusbar_Clean", "BORDER");
 		end
 	end
@@ -2227,7 +2232,7 @@ function CustomBuffs:SetName(frame)
 		frame.name:SetFont(self.SM:Fetch('font', self.db.profile.nameFont), self.db.profile.nameSize, "OUTLINE");
 		frame.name:ClearAllPoints();
 		frame.name:SetPoint("TOP", frame, "TOP", 0, -2);
-		if frame.roleIcon then
+		if CustomBuffs.gameVersion == 0 and frame.roleIcon then
 			frame.roleIcon:ClearAllPoints();
 			frame.roleIcon:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -1, -2);
 			frame.roleIcon:SetScale(1.2);
@@ -2240,7 +2245,7 @@ function CustomBuffs:SetName(frame)
 		frame.name:SetFont(self.SM:Fetch('font', self.db.profile.nameFont), self.db.profile.nameSize + 1);
 		frame.name:ClearAllPoints();
 		frame.name:SetPoint("TOP", frame, "TOP", 0, -2);
-		if frame.roleIcon then
+		if CustomBuffs.gameVersion == 0 and frame.roleIcon then
 			frame.roleIcon:ClearAllPoints();
 			frame.roleIcon:SetPoint("TOPRIGHT", frame, "TOPRIGHT", -1, -2);
 			frame.roleIcon:SetScale(1.2);
@@ -2254,6 +2259,7 @@ end--);
 --]]
 
 function CustomBuffs:OnUnitFrameUpdateAll(frame)
+	if (CustomBuffs.gameVersion ~= 0) then return; end
 	local absorbBar = frame.totalAbsorb;
 	if ( not absorbBar or absorbBar:IsForbidden()  ) then return end
 
@@ -2274,7 +2280,7 @@ function CustomBuffs:OnUnitFrameUpdateAll(frame)
 		if self.db.profile.reverseOverShield then
 			if overShield then
 				absorbOverlay:SetPoint("TOPRIGHT", healthBar, "TOPRIGHT", 0, 0);
-		    absorbOverlay:SetPoint("BOTTOMRIGHT", healthBar, "BOTTOMRIGHT", 0, 0);
+				absorbOverlay:SetPoint("BOTTOMRIGHT", healthBar, "BOTTOMRIGHT", 0, 0);
 				absorbGlow:SetPoint("TOPLEFT", overShield, "TOPRIGHT", 0, 0);
 				absorbGlow:SetPoint("BOTTOMLEFT", overShield, "BOTTOMRIGHT", 0, 0);
 			end
@@ -2288,24 +2294,24 @@ end
 
 function CustomBuffs:OnUnitFrameHealPredictionUpdate(frame)
 	CustomBuffs:UpdateOverShield(frame, self.db.profile.reverseOverShield);
---[[
+	--[[
 	if( totalAbsorb > 0 ) then	--show overlay when there's a positive absorb amount
-		if ( absorbBar:IsShown() ) then		--If absorb bar is shown, attach absorb overlay to it; otherwise, attach to health bar.
-		  	absorbOverlay:SetPoint("TOPRIGHT", absorbBar, "TOPRIGHT", 0, 0);
-		  	absorbOverlay:SetPoint("BOTTOMRIGHT", absorbBar, "BOTTOMRIGHT", 0, 0);
-		else
-			absorbOverlay:SetPoint("TOPRIGHT", healthBar, "TOPRIGHT", 0, 0);
-	    absorbOverlay:SetPoint("BOTTOMRIGHT", healthBar, "BOTTOMRIGHT", 0, 0);
-		end
+	if ( absorbBar:IsShown() ) then		--If absorb bar is shown, attach absorb overlay to it; otherwise, attach to health bar.
+	absorbOverlay:SetPoint("TOPRIGHT", absorbBar, "TOPRIGHT", 0, 0);
+	absorbOverlay:SetPoint("BOTTOMRIGHT", absorbBar, "BOTTOMRIGHT", 0, 0);
+else
+absorbOverlay:SetPoint("TOPRIGHT", healthBar, "TOPRIGHT", 0, 0);
+absorbOverlay:SetPoint("BOTTOMRIGHT", healthBar, "BOTTOMRIGHT", 0, 0);
+end
 
-		local totalWidth, totalHeight = healthBar:GetSize();
-		local barSize = (totalAbsorb / maxHealth * totalWidth);
+local totalWidth, totalHeight = healthBar:GetSize();
+local barSize = (totalAbsorb / maxHealth * totalWidth);
 
-		absorbOverlay:SetWidth( barSize );
-    absorbOverlay:SetTexCoord(0, barSize / absorbOverlay.tileSize, 0, totalHeight / absorbOverlay.tileSize);
-		absorbOverlay:Show();
-	end
-	--]]
+absorbOverlay:SetWidth( barSize );
+absorbOverlay:SetTexCoord(0, barSize / absorbOverlay.tileSize, 0, totalHeight / absorbOverlay.tileSize);
+absorbOverlay:Show();
+end
+--]]
 end
 
 function CustomBuffs:CreateOverShield(frame)
@@ -2368,7 +2374,7 @@ function CustomBuffs:CreateOverShield(frame)
 end
 
 function CustomBuffs:UpdateOverShield(frame, reverse)
-	if CustomBuffs.gameVersion == 1 or CustomBuffs.gameVersion == 2 then return; end
+	if (CustomBuffs.gameVersion ~= 0) then return; end
 	local absorbBar = frame.totalAbsorb;
 	if ( not absorbBar or absorbBar:IsForbidden()  ) then return end
 
@@ -2437,10 +2443,10 @@ function CustomBuffs:UpdateOverShield(frame, reverse)
 			local absorbGlow = frame.overAbsorbGlow;
 			if ( absorbGlow and not absorbGlow:IsForbidden() ) then
 				absorbGlow:ClearAllPoints();
-					if f then
-						absorbGlow:SetPoint("TOPLEFT", f, "TOPRIGHT", -3, 0);
-						absorbGlow:SetPoint("BOTTOMLEFT", f, "BOTTOMRIGHT", -3, 0);
-					end
+				if f then
+					absorbGlow:SetPoint("TOPLEFT", f, "TOPRIGHT", -3, 0);
+					absorbGlow:SetPoint("BOTTOMLEFT", f, "BOTTOMRIGHT", -3, 0);
+				end
 			end
 			--f:GetStatusBarTexture():SetTexCoord(0, 16, 0, 16);
 			f:Show();
@@ -2455,11 +2461,11 @@ function CustomBuffs:UpdateOverShield(frame, reverse)
 		end
 		if( totalAbsorb > 0 ) then	--show overlay when there's a positive absorb amount
 			if ( absorbBar:IsShown() ) then		--If absorb bar is shown, attach absorb overlay to it; otherwise, attach to health bar.
-			  	absorbOverlay:SetPoint("TOPRIGHT", absorbBar, "TOPRIGHT", 0, 0);
-			  	absorbOverlay:SetPoint("BOTTOMRIGHT", absorbBar, "BOTTOMRIGHT", 0, 0);
+				absorbOverlay:SetPoint("TOPRIGHT", absorbBar, "TOPRIGHT", 0, 0);
+				absorbOverlay:SetPoint("BOTTOMRIGHT", absorbBar, "BOTTOMRIGHT", 0, 0);
 			else
 				absorbOverlay:SetPoint("TOPRIGHT", healthBar, "TOPRIGHT", 0, 0);
-		    absorbOverlay:SetPoint("BOTTOMRIGHT", healthBar, "BOTTOMRIGHT", 0, 0);
+				absorbOverlay:SetPoint("BOTTOMRIGHT", healthBar, "BOTTOMRIGHT", 0, 0);
 			end
 
 
@@ -2467,7 +2473,7 @@ function CustomBuffs:UpdateOverShield(frame, reverse)
 			local barSize = (percent * totalWidth);
 
 			absorbOverlay:SetWidth( barSize );
-	    absorbOverlay:SetTexCoord(0, barSize / absorbOverlay.tileSize, 0, totalHeight / absorbOverlay.tileSize);
+			absorbOverlay:SetTexCoord(0, barSize / absorbOverlay.tileSize, 0, totalHeight / absorbOverlay.tileSize);
 			absorbOverlay:Show();
 		end
 	end
@@ -2565,13 +2571,13 @@ function CustomBuffs:UpdateRaidIcon(frame)
 	if index and index >= 1 and index <= 8 then
 		local texture;
 		local iconTable;
-		if CustomBuffs.gameVersion == 0 then
-				texture = UnitPopupRaidTarget1ButtonMixin:GetIcon();
-				iconTable = _G["UnitPopupRaidTarget"..index.."ButtonMixin"]:GetTextureCoords();
-		else
-				iconTable = UnitPopupButtons["RAID_TARGET_"..index];
-				texture = iconTable.icon;
-		end
+		--if CustomBuffs.gameVersion == 0 then
+			texture = UnitPopupRaidTarget1ButtonMixin:GetIcon();
+			iconTable = _G["UnitPopupRaidTarget"..index.."ButtonMixin"]:GetTextureCoords();
+		--[[else
+			iconTable = UnitPopupButtons["RAID_TARGET_"..index];
+			texture = iconTable.icon;
+		end]]
 		local leftTexCoord = iconTable.tCoordLeft;
 		local rightTexCoord = iconTable.tCoordRight;
 		local topTexCoord = iconTable.tCoordTop;
@@ -2591,11 +2597,17 @@ function CustomBuffs:UpdateRaidIcons()
 		return;
 	end
 
-	CompactRaidFrameContainer_ApplyToFrames(CompactRaidFrameContainer, "normal",
-	function(frame)
-		self:UpdateRaidIcon(frame);
-	end);
-
+	if not CustomBuffs.isBeta then
+		CompactRaidFrameContainer_ApplyToFrames(CompactRaidFrameContainer, "normal",
+		function(frame)
+			self:UpdateRaidIcon(frame);
+		end);
+	else
+		CompactRaidGroup_ApplyFunctionToAllFrames(CompactRaidFrameContainer, "normal",
+		function(frame)
+			self:UpdateRaidIcon(frame);
+		end);
+	end
 end
 
 --Hides but does not fully disable cast bars; used to hide cast bars in raid groups of
@@ -2606,7 +2618,11 @@ function CustomBuffs:HideCastBars()
 	if CustomBuffs.CastBars and CustomBuffs.CastBars[1] then
 		for _,bar in ipairs(CustomBuffs.CastBars) do
 			bar:ClearAllPoints();
-			CastingBarFrame_SetUnit(bar, nil, true, true);
+			if not CustomBuffs.isBeta then
+				CastingBarFrame_SetUnit(bar, nil, true, true);
+			else
+				bar:SetUnit(nil, true, true);
+			end
 		end
 	end
 end
@@ -2624,7 +2640,11 @@ function CustomBuffs:CreateCastBars()
 
 			local castBar = CreateFrame("StatusBar", unitName.."CastBar", UIParent, "SmallCastingBarFrameTemplate");
 			castBar:SetScale(0.83);
-			CastingBarFrame_SetUnit(castBar, unitName, true, true);
+			if not CustomBuffs.isBeta then
+				CastingBarFrame_SetUnit(castBar, unitName, true, true);
+			else
+				castBar:SetUnit(unitName, true, true);
+			end
 			CustomBuffs.CastBars[i] = castBar;
 		end
 	end
@@ -2665,7 +2685,11 @@ function CustomBuffs:UpdateCastBars()
 		if frame and frame.unitExists and UnitIsUnit(frame.unit, "player") then
 			pbar:SetParent(frame);
 			pbar:SetPoint(anchor, frame, anchorTo, xOff, yOff);
-			CastingBarFrame_SetUnit(pbar, frame.unit, true, true);
+			if not CustomBuffs.isBeta then
+				CastingBarFrame_SetUnit(pbar, frame.unit, true, true);
+			else
+				pbar:SetUnit(frame.unit, true, true);
+			end
 			pbar:SetWidth(frame:GetWidth());
 		end
 	end
@@ -2683,7 +2707,11 @@ function CustomBuffs:UpdateCastBars()
 			if frame and frame.unitExists and (UnitIsUnit(frame.unit, "party"..i) and not UnitIsUnit(frame.unit, "player")) then
 				bar:SetParent(frame);
 				bar:SetPoint(anchor, frame, anchorTo, xOff, yOff);
-				CastingBarFrame_SetUnit(bar, frame.unit, true, true);
+				if not CustomBuffs.isBeta then
+					CastingBarFrame_SetUnit(bar, frame.unit, true, true);
+				else
+					bar:SetUnit(frame.unit, true, true);
+				end
 				bar:SetWidth(frame:GetWidth());
 			end
 		end
@@ -2698,12 +2726,25 @@ function CustomBuffs:EnableCastBars()
 	self:CreateCastBars();
 
 	--Cannot show cast bars if we have keep groups together enabled, so force that setting off
-	CompactRaidFrameContainer_SetGroupMode(CompactRaidFrameContainer, "flush");
-	CompactRaidFrameContainer_SetFlowSortFunction(CompactRaidFrameContainer, CRFSort_Role);
-
+	if not CustomBuffs.isBeta then
+		CompactRaidFrameContainer_SetGroupMode(CompactRaidFrameContainer, "flush");
+		CompactRaidFrameContainer_SetFlowSortFunction(CompactRaidFrameContainer, CRFSort_Role);
+	else
+		CompactRaidFrameContainer:SetGroupMode("flush");
+		CompactRaidFrameContainer:SetFlowSortFunction(CRFSort_Role);
+	end
 	--Make sure we catch changing the sort function and update the bars accordingly
-	if not self:IsHooked("CompactRaidFrameContainer_SetFlowSortFunction", function(frame) self:UpdateCastBars(); end) then
-		self:SecureHook("CompactRaidFrameContainer_SetFlowSortFunction", function(frame) self:UpdateCastBars(); end);
+
+	if not CustomBuffs.isBeta then
+		if not self:IsHooked("CompactRaidFrameContainer_SetFlowSortFunction", function(frame) self:UpdateCastBars(); end) then
+			self:SecureHook("CompactRaidFrameContainer_SetFlowSortFunction", function(frame) self:UpdateCastBars(); end);
+		end
+	else
+		--[[TODO fix this
+		if not self:IsHooked("SetFlowSortFunction", function(frame) self:UpdateCastBars(); end) then
+			self:SecureHook("SetFlowSortFunction", function(frame) self:UpdateCastBars(); end);
+		end
+		--]]
 	end
 
 	CustomBuffs:UpdateCastBars();

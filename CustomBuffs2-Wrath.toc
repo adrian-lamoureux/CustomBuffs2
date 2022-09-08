@@ -1,0 +1,22 @@
+## Interface: 30400
+## Author: Hypocrit
+## Title: CustomBuffs
+## DefaultState: enabled
+## SavedVariables: CustomBuffsData
+
+Libs\embeds.xml
+XML\AuraTemplate.xml
+
+Util\Constants.lua
+Tables\Wrath-Tables.lua
+Util\Util.lua
+Options\OptionsPanel.lua
+
+Wrath-tmp.lua
+
+CustomBuffs.lua
+
+Util\UITweaks.lua
+
+Options\ConfigDefaults.lua
+Options\ConfigMain.lua

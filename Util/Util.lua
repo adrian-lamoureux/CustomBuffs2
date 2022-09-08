@@ -65,12 +65,14 @@ function CustomBuffs:InDungOrRaid()
 end
 
 function CustomBuffs:CheckAndHideNameplates()
-	if CustomBuffs:InDungOrRaid() then
-		SetCVar("nameplateShowFriends", 0);
-		SetCVar("nameplateShowFriendlyNPCs", 0);
-	else
-		SetCVar("nameplateShowFriends", 1);
-		--SetCVar("nameplateShowFriendlyNPCs", 1);
+	if CustomBuffs.gameVersion == 0 then
+		if CustomBuffs:InDungOrRaid() then
+			SetCVar("nameplateShowFriends", 0);
+			SetCVar("nameplateShowFriendlyNPCs", 0);
+		else
+			SetCVar("nameplateShowFriends", 1);
+			--SetCVar("nameplateShowFriendlyNPCs", 1);
+		end
 	end
 end
 

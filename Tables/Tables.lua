@@ -956,7 +956,7 @@ CustomBuffs.CC = {
   [294195] =                                  MagicStandard, --Arcing Zap
 
   --Grimrail
-  [162066] =                                  CCStandard, --Freezing Snare
+  ["Freezing Snare"] =                        CCStandard,
 
   --Iron Docks
   [172889] =                                  CCStandard, --Charging Slash
@@ -975,6 +975,7 @@ CustomBuffs.CC = {
   -- Castle Nathria --
   --------------------
   [324982] =                                  CCStandard,
+  [343320] =                                  CurseStandard,
   ["Predator's Howl"] =                       MagicStandard,
   ["Crushing Prism"] =                        MagicStandard,
 
