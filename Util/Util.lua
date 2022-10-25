@@ -20,6 +20,9 @@ local function backoffHelper(attempts, timer, func, ...)
 	end
 end
 
+function CustomBuffs:returnTrue(...)
+	return true;
+end
 
 --Function must return status of function on completion (success/failure);
 --Keeps attempting to execute the function until it returns true or it

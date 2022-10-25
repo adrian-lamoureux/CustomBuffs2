@@ -78,7 +78,7 @@ CustomBuffs.UPDATE_DELAY_TOLERANCE = CustomBuffs.UPDATE_DELAY_TOLERANCE or 0.01;
 CustomBuffs.debugMode = CustomBuffs.debugMode or false;
 
 --TODO TMP beta workaround
-if select(4, GetBuildInfo()) == 100000 then
+if select(4, GetBuildInfo()) >= 100000 then
 	CustomBuffs.isBeta = 1;
 end
 
@@ -405,7 +405,7 @@ function NamePlateBaseMixin:OnAdded(namePlateUnitToken, driverFrame) end
 
 local CompactUnitFrame_Util_IsPriorityDebuff = CompactUnitFrame_Util_IsPriorityDebuff;
 local function isPrioDebuff(spellID)
-	if CustomBuffs.gameVersion == 0 then
+	if CustomBuffs.gameVersion == 0 and not CustomBuffs.isBeta then
 		return CompactUnitFrame_Util_IsPriorityDebuff(spellID);
 	else
 		return false;
@@ -2134,6 +2134,15 @@ function CustomBuffs:loadFrames()
 	handleRosterUpdate();
 	--]]
 	if IsAddOnLoaded("Blizzard_CompactRaidFrames") and IsAddOnLoaded("Blizzard_CUFProfiles") then
+		--[[if CustomBuffs.isBeta then
+			CompactRaidFrameContainerMixin:SetFlowSortFunction(CRFSort_Role);
+			CompactRaidFrameContainerMixin:SetFlowFilterFunction(CustomBuffs.returnTrue);
+			betaLoadFrames();
+			if not CompactRaidFrameContainerMixin.units then
+				CompactRaidFrameContainerMixin.units = {"player"};
+			end
+			CompactRaidFrameContainerMixin:AddPlayers();
+		end]]
 		CompactRaidFrameManager:Show();
 		CompactRaidFrameContainer:Show();
 		handleRosterUpdate();
@@ -2992,6 +3001,7 @@ function CustomBuffs:Init()
 	self:RegisterEvent("ZONE_CHANGED_NEW_AREA", "CheckAndHideNameplates");
 
 	self:RegisterEvent("GROUP_JOINED", "sync");
+	if not CustomBuffs.isBeta then
 	self:SecureHook("CompactUnitFrameProfiles_CheckAutoActivation", function(frame) self:loadFrames(); end);
 	self:SecureHook("CompactUnitFrameProfilesNewProfileDialogBaseProfileSelectorButton_OnClick", function(frame) self:loadFrames(); end);
 	self:SecureHook("CompactUnitFrameProfiles_ActivateRaidProfile", function(frame) self:loadFrames(); end);
@@ -2999,6 +3009,7 @@ function CustomBuffs:Init()
 	self:SecureHook("CompactUnitFrameProfiles_UpdateCurrentPanel", function(frame) self:loadFrames(); end);
 	self:SecureHook("SetActiveRaidProfile", function(frame) self:loadFrames(); end);
 	self:SecureHook("CompactUnitFrameProfilesDropdownButton_OnClick", function(frame) self:loadFrames(); end);
+	end
 	--self:SecureHook("CompactRaidFrameContainer_LayoutFrames", function(frame) self:layoutFrames(CompactRaidFrameContainer); end);
 
 end

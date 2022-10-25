@@ -68,9 +68,7 @@ CustomBuffs.NONAURAS = {
     [1768] =  CDFlash, -- Kick (Rogue)
     [1769] =  CDFlash, -- Kick (Rogue)
     [38768] = CDFlash, -- Kick (Rogue)
-    [2139] =  CDFlash, -- Counterspell (Mage)
-    [6552] =  CDFlash, -- Pummel (Warrior)
-    [6554] =  CDFlash, -- Pummel (Warrior)
+    [2139] =  CDFlash, -- Counterspell (Mage).
     [19644] = CDFlash, -- Spell Lock (Warlock)
     [19647] = CDFlash, -- Spell Lock (Warlock)
     --[[
@@ -166,14 +164,30 @@ CustomBuffs.NONAURAS = {
     [19675] = { duration = 4 },
     [13281] = { duration = 2 },
     [33871] = { duration = 8 },
-
+    [58824] = { duration = 4 },
+    [10887] = { duration = 5 },
+    [46182] = { duration = 2 },
   };
 
   CustomBuffs.BUFFS = {
+    --Death Knight
+    ["Icebound Fortitude"] =        Def(1),
+    ["Anti-Magic Shell"] =          Def(6),
+    ["Vampiric Blood"] =            Def(1),
+    ["Corpse Shield"] =             Def(3),
+    ["Bone Shield"] =               Def(5),
+    ["Dancing Rune Weapon"] =       Def(7),
+    ["Hemostasis"] =                Def(5),
+    ["Rune Tap"] =                  Def(3),
+    ["Lichborne"] =                 Def(4),
+    ["Swarming Mist"] =             Def(7),
+    ["Voracious"] =                 Def(5),
+
     --Druid
     ["Barkskin"] =                   Def(2),
     ["Enrage"] =                  	 CDStandard,
     ["Frenzied Regeneration"] =      Def(2),
+    ["Dire Bear Form"] =             Def(4),
     ["Dash"] = 						           CDStandard,
     ["Prowl"] = 					           CDStandard,
 
@@ -214,6 +228,7 @@ CustomBuffs.NONAURAS = {
     ["Astral Shift"] =                CDStandard,
     ["Water Shield"] =                CDStandard,
     ["Shamanistic Rage"] =            Def(1),
+    ["Stoneclaw Totem"] =             Def(1),
     ["Harden Skin"] =                 CDStandard,
 
     --Warlock
@@ -243,6 +258,7 @@ CustomBuffs.NONAURAS = {
     ["Safeguard"] =                   EStandard,
     ["Vigilance"] =                   EStandard,
     ["Earth Shield"] =                EDef(3, true),
+    ["Divine Sacrifice"] =            EDef(3, true),
     ["Tiger's Lust"] =                EStandard,
     ["Beacon of Virtue"] =            EStandard,
     ["Beacon of Faith"] =             EStandard,
@@ -259,8 +275,10 @@ CustomBuffs.NONAURAS = {
     ["Stoneform"] =                   EStandard,
     ["Sacrifice"] =                   EStandard,
     ["Hand of Freedom"] =             EStandard,
-
-
+    ["Gift of the Naaru"] =           EStandard,
+    ["Illusionary Barrier"] =         EDef(1, false),
+    ["Frost Presence"] =              EDef(4, false),
+    ["Righteous Fury"] =              EDef(4, false),
     --Minor Externals worth tracking
     --["Enveloping Mist"] =           ELow,
 
@@ -287,9 +305,15 @@ CustomBuffs.NONAURAS = {
     ["Food"] =              		EStandard,
     ["Drink"] =           			EStandard,
 
+    ["Soulstone Resurrection"] =            CDStandard,
   };
 
   CustomBuffs.THROUGHPUT_BUFFS = {
+    --DK
+    ["Pillar of Frost"] =                   TCDStandard,
+    ["Unholy Frenzy"] =                     TCDStandard,
+    ["Empower Rune Weapon"] =               TCDStandard,
+
     --Druid
     ["Incarnation: Tree of Life"] =         TCDStandard,
     ["Incarnation: King of the Jungle"] =   TCDStandard,
@@ -357,6 +381,7 @@ CustomBuffs.NONAURAS = {
     ["Dark Soul: Instability"] =            TCDStandard,
     ["Dark Soul: Misery"] =                 TCDStandard,
     ["Nether Portal"] =                     TCDStandard,
+    ["Metamorphosis"] =                     TCDStandard,
 
     --Warrior
     ["Battle Cry"] =                        TCDStandard,
@@ -390,6 +415,7 @@ CustomBuffs.NONAURAS = {
 
     ["Polymorph"] =             MagicStandard,
     ["Freezing Trap"] =         MagicStandard,
+    ["Freezing Arrow Effect"] = MagicStandard,
     ["Deep Freeze"] =           MagicStandard,
     ["Fear"] =                  MagicStandard,
     ["Howl of Terror"] =        MagicStandard,
@@ -414,6 +440,7 @@ CustomBuffs.NONAURAS = {
     ["Dragon's Breath"] =       MagicStandard,
     ["Shadowfury"] =            MagicStandard,
     [22703] =                   MagicStandard, --Infernal Stun
+    ["Wyvern Sting"] =          PoisonStandard,
 
 
     --Roots
@@ -422,7 +449,8 @@ CustomBuffs.NONAURAS = {
     ["Nature's Grasp"] =      	MagicStandard,
     ["Entangling Roots"] =      MagicStandard,
     ["Freeze"] =                MagicStandard,
-    [12494] =      				MagicStandard, --Frostbite
+    [12494] =      				      MagicStandard, --Frostbite
+    ["Hex"] =                   CurseStandard,
 
 
     --poison/curse/disease/MD dispellable
@@ -492,6 +520,7 @@ CustomBuffs.NONAURAS = {
     ["Mana Spring"] = true,
     ["Tranquil Air"] = true,
     ["Flametongue Totem"] = true,
+    ["Heroic Presence"] = true,
   };
 
   CustomBuffs.testBuffs = {

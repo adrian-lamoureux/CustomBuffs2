@@ -80,6 +80,7 @@ CustomBuffs.INTERRUPTS = {
   [332693] =			 		{ duration = 2 },
   [355638] =			 		{ duration = 4 },
   [344776] =			 		{ duration = 4 },
+  [386363] =			 		{ duration = 4 },
 };
 
 
@@ -505,6 +506,7 @@ CustomBuffs.BUFFS = {
   ["Tricks of the Trade"] =       	EHighlightMine,
   ["Rallying Cry"] =              	EStandard,
   ["Power Word: Shield"] = 			    EDef(5, false),
+  ["Unbreakable Will"] =     	      EDef(2, false),
   --[356968] = 			                  EDef(2, false), --Fae wall buffed
   [327694] = 			                  EDef(2, false), --Fae wall baseline
 
