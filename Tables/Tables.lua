@@ -135,8 +135,8 @@ CustomBuffs.NONAURAS = {
   --[46585] = { duration = 60, tbPrio = 1, type = "summon" }, --Raise Ghoul
 
   --MONK
-  [325197] = { duration = 25, tbPrio = 1, type = "summon" }, --Invoke Chi-ji
-  [322118] = { duration = 25, tbPrio = 1, type = "summon" }, --Yu'lon
+  [325197] = { duration = 12, tbPrio = 1, type = "summon" }, --Invoke Chi-ji
+  [322118] = { duration = 12, tbPrio = 1, type = "summon" }, --Yu'lon
   [123904] = { duration = 24, tbPrio = 1, type = "summon" }, --Xuen
   [132578] = { duration = 25, tbPrio = 1, type = "summon" }, --Niuzao
   --[115313] = { duration = 900, tbPrio = 0, sbPrio = 20, type = "summon" }, --Serpent Statue
@@ -551,6 +551,7 @@ CustomBuffs.BUFFS = {
 
   ["Frostrime"] =                   EPStandard,
   ["Focused Growth"] =              EPStandard,
+  ["Earthliving Weapon"] =          EPStandard,
 
   --BFA procs
   ["Luminous Jellyweed"] =        	EPStandard,

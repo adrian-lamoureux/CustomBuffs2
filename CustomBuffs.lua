@@ -79,7 +79,7 @@ CustomBuffs.debugMode = CustomBuffs.debugMode or false;
 
 --TODO TMP beta workaround
 if select(4, GetBuildInfo()) >= 100000 then
-	CustomBuffs.isBeta = 1;
+	CustomBuffs.isDF = 1;
 end
 
 ----------------------
@@ -237,6 +237,44 @@ return frame;
 end
 
 --]]
+if CustomBuffs.isDF then
+	CompactRaidFrameContainerMixin.LayoutFrames = function(self) CustomBuffs:layoutFrames(self); end
+end
+
+local function LayoutFramesDF()
+	--First, mark everything we currently use as unused. We'll hide all the ones that are still unused at the end of this function. (On release)
+	for i=1, #CompactRaidFrameContainerMixin.flowFrames do
+		if type(CompactRaidFrameContainerMixin.flowFrames[i]) == "table" and CompactRaidFrameContainerMixin.flowFrames[i].unusedFunc then
+			CompactRaidFrameContainerMixin.flowFrames[i]:unusedFunc();
+		end
+	end
+	FlowContainer_RemoveAllObjects(CompactRaidFrameContainerMixin);
+
+	FlowContainer_PauseUpdates(CompactRaidFrameContainerMixin);	--We don't want to update it every time we add an item.
+
+	if CompactRaidFrameContainerMixin.displayFlaggedMembers then
+		CompactRaidFrameContainerMixin:AddFlaggedUnits();
+		FlowContainer_AddLineBreak(CompactRaidFrameContainerMixin);
+	end
+
+	if CompactRaidFrameContainerMixin:GetGroupMode() == "discrete" then
+		CompactRaidFrameContainerMixin:AddGroups();
+	else
+		CompactRaidFrameContainerMixin:AddPlayers();
+	end
+
+	if CompactRaidFrameContainerMixin.displayPets then
+		CompactRaidFrameContainerMixin:AddPets();
+	end
+
+	CompactRaidFrameContainerMixin:SetSize(3000, 3000);
+	FlowContainer_ResumeUpdates(CompactRaidFrameContainerMixin);
+	CompactRaidFrameContainerMixin:Layout();
+
+	CompactRaidFrameContainerMixin:UpdateBorder();
+	CompactRaidFrameContainerMixin:ReleaseAllReservedFrames();
+end
+
 CompactRaidFrameContainer_LayoutFrames = function(self) CustomBuffs:layoutFrames(self); end
 
 local function CompactRaidFrameContainer_LayoutFrames(self)
@@ -405,7 +443,7 @@ function NamePlateBaseMixin:OnAdded(namePlateUnitToken, driverFrame) end
 
 local CompactUnitFrame_Util_IsPriorityDebuff = CompactUnitFrame_Util_IsPriorityDebuff;
 local function isPrioDebuff(spellID)
-	if CustomBuffs.gameVersion == 0 and not CustomBuffs.isBeta then
+	if CustomBuffs.gameVersion == 0 and not CustomBuffs.isDF then
 		return CompactUnitFrame_Util_IsPriorityDebuff(spellID);
 	else
 		return false;
@@ -444,10 +482,31 @@ local function ForceUpdateFrame(fNum)
 		end
 		print("Forcing frame update for frame", fNum, "for unit", name);
 	end
-	CustomBuffs:UpdateAuras(_G["CompactRaidFrame"..fNum]);
+	if CustomBuffs.isDF then
+		CustomBuffs:UpdateAuras(_G["CompactPartyFrameMember"..fNum]);
+		CustomBuffs:UpdateAuras(_G["CompactRaidFrame"..fNum]);
+	else
+		CustomBuffs:UpdateAuras(_G["CompactRaidFrame"..fNum]);
+	end
 end
 
 local function ForceUpdateFrames()
+	if CustomBuffs.isDF then
+		for index = 1, 5 do
+			local frame = _G["CompactPartyFrameMember"..index];
+			if frame and frame.debuffFrames then
+				if CustomBuffs.verbose then print("Forcing frame update for frame", frame); end
+				if not F[frame] then
+					F[frame] = {};
+				end
+				F[frame].auraNeedResize = true;
+				CustomBuffs:UpdateAuras(frame);
+				--if CustomBuffs.db.profile.useClassColors then
+				--CompactUnitFrame_UpdateStatusText(frame);
+				CustomBuffs:SetStatusText(frame);
+			end
+		end
+	end
 	for index, frame in ipairs(_G.CompactRaidFrameContainer.flowFrames) do
 		if frame and frame.debuffFrames then
 			if CustomBuffs.verbose then print("Forcing frame update for frame", frame); end
@@ -462,6 +521,7 @@ local function ForceUpdateFrames()
 			--end
 		end
 	end
+
 end
 
 CustomBuffs.trackedSummons = CustomBuffs.trackedSummons or {};
@@ -546,6 +606,25 @@ local function UpdateUnits()
 				CustomBuffs.units[guid].invalid = nil;
 				CustomBuffs.units[guid].frameNum = i;
 				CustomBuffs.units[guid].unit = unit;
+			end
+		end
+	end
+	if CustomBuffs.isDF then
+		for i = 1, 5 do
+			local frame = _G["CompactPartyFrameMember"..i];
+			if frame and frame.unit then
+				local unit = _G["CompactPartyFrameMember"..i].unit;
+				local guid = UnitGUID(unit);
+				if guid then
+					if CustomBuffs.verbose then
+						local name = CustomBuffs:CleanName(UnitGUID(unit), frame);
+						print("Adding unit for frame number", i ,"", name);
+					end
+					CustomBuffs.units[guid] = CustomBuffs.units[guid] or {};
+					CustomBuffs.units[guid].invalid = nil;
+					CustomBuffs.units[guid].frameNum = i;
+					CustomBuffs.units[guid].unit = unit;
+				end
 			end
 		end
 	end
@@ -1117,6 +1196,7 @@ end
 function CustomBuffs:layoutFrames(self)
 	if InCombatLockdown() then
 		CustomBuffs.layoutNeedsUpdate = true;
+		CustomBuffs:RunOnExitCombat(CustomBuffs.layoutFrames, self);
 	else
 
 		--updating layout makes calls to update aura frame sizes at an unfortunate time, so we set flags on
@@ -1128,7 +1208,11 @@ function CustomBuffs:layoutFrames(self)
 			end
 		end
 
-		CompactRaidFrameContainer_LayoutFrames(self);
+		if not CustomBuffs.isDF then
+			CompactRaidFrameContainer_LayoutFrames(self);
+		else
+			LayoutFramesDF(self);
+		end
 		--Make sure we update the frame numbers for each of our tracked units
 		handleRosterUpdate();
 	end
@@ -2134,7 +2218,16 @@ function CustomBuffs:loadFrames()
 	handleRosterUpdate();
 	--]]
 	if IsAddOnLoaded("Blizzard_CompactRaidFrames") and IsAddOnLoaded("Blizzard_CUFProfiles") then
-		--[[if CustomBuffs.isBeta then
+		if CustomBuffs.isDF and not CustomBuffs.IsInRaid then
+			CompactPartyFrame_Generate();
+			CompactPartyFrame_OnLoad(CompactPartyFrame);
+			if not IsInRaid() then
+				CompactPartyFrame:Show();
+			end
+			CompactRaidFrameManager:Show();
+			--CompactRaidFrameContainer:Show();
+		end
+		--[[if CustomBuffs.isDF then
 			CompactRaidFrameContainerMixin:SetFlowSortFunction(CRFSort_Role);
 			CompactRaidFrameContainerMixin:SetFlowFilterFunction(CustomBuffs.returnTrue);
 			betaLoadFrames();
@@ -2143,8 +2236,10 @@ function CustomBuffs:loadFrames()
 			end
 			CompactRaidFrameContainerMixin:AddPlayers();
 		end]]
-		CompactRaidFrameManager:Show();
-		CompactRaidFrameContainer:Show();
+		if not CustomBuffs.isDF then
+			CompactRaidFrameManager:Show();
+			CompactRaidFrameContainer:Show();
+		end
 		handleRosterUpdate();
 		ForceUpdateFrames();
 		return true; --for BackoffRunIn
@@ -2214,6 +2309,8 @@ function CustomBuffs:SetName(frame)
 	end
 
 	if (not frame or frame:IsForbidden() or not frame:IsShown() or not frame.debuffFrames or not frame:GetName():match("^Compact")) then return; end
+	--FIXME extremely hacky workaround to make blizzard stop trying to change names back
+	frame.UpdateNameOverride = function() CustomBuffs:SetName(frame); end;
 	local name = "";
 	if (frame.optionTable and frame.optionTable.displayName) then
 		if F[frame].bossDebuffs and F[frame].bossDebuffs[1] and F[frame].bossDebuffs[1]:IsShown() then
@@ -2606,7 +2703,7 @@ function CustomBuffs:UpdateRaidIcons()
 		return;
 	end
 
-	if not CustomBuffs.isBeta then
+	if not CustomBuffs.isDF then
 		CompactRaidFrameContainer_ApplyToFrames(CompactRaidFrameContainer, "normal",
 		function(frame)
 			self:UpdateRaidIcon(frame);
@@ -2619,15 +2716,27 @@ function CustomBuffs:UpdateRaidIcons()
 	end
 end
 
+--Function to mimic flowsort spacing for party frames in DF
+function CustomBuffs:SpacePartyFrames(spacing)
+	local prev = _G["CompactPartyFrameMember1"];
+	for i = 2, 5 do
+		local cur = _G["CompactPartyFrameMember"..i];
+		cur:ClearAllPoints();
+		cur:SetPoint("TOP", prev, "BOTTOM", 0, -spacing);
+		prev = cur;
+	end
+end
+
 --Hides but does not fully disable cast bars; used to hide cast bars in raid groups of
 --over 5 people
 function CustomBuffs:HideCastBars()
+	if CustomBuffs.isDF then return; end
 	CompactRaidFrameContainer.flowVerticalSpacing = nil;
 
 	if CustomBuffs.CastBars and CustomBuffs.CastBars[1] then
 		for _,bar in ipairs(CustomBuffs.CastBars) do
 			bar:ClearAllPoints();
-			if not CustomBuffs.isBeta then
+			if not CustomBuffs.isDF then
 				CastingBarFrame_SetUnit(bar, nil, true, true);
 			else
 				bar:SetUnit(nil, true, true);
@@ -2649,7 +2758,7 @@ function CustomBuffs:CreateCastBars()
 
 			local castBar = CreateFrame("StatusBar", unitName.."CastBar", UIParent, "SmallCastingBarFrameTemplate");
 			castBar:SetScale(0.83);
-			if not CustomBuffs.isBeta then
+			if not CustomBuffs.isDF then
 				CastingBarFrame_SetUnit(castBar, unitName, true, true);
 			else
 				castBar:SetUnit(unitName, true, true);
@@ -2685,19 +2794,21 @@ function CustomBuffs:UpdateCastBars()
 	local anchor = CustomBuffs.castBarAnchorPoint;
 	local anchorTo = CustomBuffs.castBarAnchorTo;
 
-
+	local frameName = (CustomBuffs.isDF) and "CompactPartyFrameMember" or "CompactRaidFrame";
 
 	--Find the player's raid frame and attach the player cast bar to it
 	local pbar = CustomBuffs.CastBars[5];
 	for j=1, #CompactRaidFrameContainer.units do
-		local frame = _G["CompactRaidFrame"..j];
+		local frame = _G[frameName..j];
 		if frame and frame.unitExists and UnitIsUnit(frame.unit, "player") then
 			pbar:SetParent(frame);
 			pbar:SetPoint(anchor, frame, anchorTo, xOff, yOff);
-			if not CustomBuffs.isBeta then
+			if not CustomBuffs.isDF then
 				CastingBarFrame_SetUnit(pbar, frame.unit, true, true);
 			else
 				pbar:SetUnit(frame.unit, true, true);
+				pbar.Text:ClearAllPoints();
+				pbar.Text:SetPoint("BOTTOM", pbar.TextBorder, "BOTTOM", 0, -2);
 			end
 			pbar:SetWidth(frame:GetWidth());
 		end
@@ -2712,14 +2823,16 @@ function CustomBuffs:UpdateCastBars()
 		--bar:SetScale(1);
 		bar:ClearAllPoints();
 		for j=1, #CompactRaidFrameContainer.units do
-			local frame = _G["CompactRaidFrame"..j];
+			local frame = _G[frameName..j];
 			if frame and frame.unitExists and (UnitIsUnit(frame.unit, "party"..i) and not UnitIsUnit(frame.unit, "player")) then
 				bar:SetParent(frame);
 				bar:SetPoint(anchor, frame, anchorTo, xOff, yOff);
-				if not CustomBuffs.isBeta then
+				if not CustomBuffs.isDF then
 					CastingBarFrame_SetUnit(bar, frame.unit, true, true);
 				else
 					bar:SetUnit(frame.unit, true, true);
+					bar.Text:ClearAllPoints();
+					bar.Text:SetPoint("BOTTOM", bar.TextBorder, "BOTTOM", 0, -2);
 				end
 				bar:SetWidth(frame:GetWidth());
 			end
@@ -2727,24 +2840,29 @@ function CustomBuffs:UpdateCastBars()
 	end
 
 	--Increase the vertical spacing between the raid frames to make space for the new cast bars
-	CompactRaidFrameContainer.flowVerticalSpacing = 15;
-	FlowContainer_DoLayout(_G.CompactRaidFrameContainer);
+	if not CustomBuffs.isDF then
+		CompactRaidFrameContainer.flowVerticalSpacing = 30;
+		FlowContainer_DoLayout(_G.CompactRaidFrameContainer);
+	else
+		CustomBuffs:SpacePartyFrames(30);
+	end
 end
 
 function CustomBuffs:EnableCastBars()
 	self:CreateCastBars();
 
 	--Cannot show cast bars if we have keep groups together enabled, so force that setting off
-	if not CustomBuffs.isBeta then
+	if not CustomBuffs.isDF then
 		CompactRaidFrameContainer_SetGroupMode(CompactRaidFrameContainer, "flush");
 		CompactRaidFrameContainer_SetFlowSortFunction(CompactRaidFrameContainer, CRFSort_Role);
 	else
-		CompactRaidFrameContainer:SetGroupMode("flush");
-		CompactRaidFrameContainer:SetFlowSortFunction(CRFSort_Role);
+		--CompactRaidFrameContainer:SetGroupMode("flush");
+		--CompactRaidFrameContainer:SetFlowSortFunction(CRFSort_Role);
+		--CompactPartyFrame_SetFlowSortFunction(CRFSort_Role);
 	end
 	--Make sure we catch changing the sort function and update the bars accordingly
 
-	if not CustomBuffs.isBeta then
+	if not CustomBuffs.isDF then
 		if not self:IsHooked("CompactRaidFrameContainer_SetFlowSortFunction", function(frame) self:UpdateCastBars(); end) then
 			self:SecureHook("CompactRaidFrameContainer_SetFlowSortFunction", function(frame) self:UpdateCastBars(); end);
 		end
@@ -3001,7 +3119,7 @@ function CustomBuffs:Init()
 	self:RegisterEvent("ZONE_CHANGED_NEW_AREA", "CheckAndHideNameplates");
 
 	self:RegisterEvent("GROUP_JOINED", "sync");
-	if not CustomBuffs.isBeta then
+	if not CustomBuffs.isDF then
 	self:SecureHook("CompactUnitFrameProfiles_CheckAutoActivation", function(frame) self:loadFrames(); end);
 	self:SecureHook("CompactUnitFrameProfilesNewProfileDialogBaseProfileSelectorButton_OnClick", function(frame) self:loadFrames(); end);
 	self:SecureHook("CompactUnitFrameProfiles_ActivateRaidProfile", function(frame) self:loadFrames(); end);
@@ -3026,10 +3144,18 @@ function CustomBuffs:SetRaidFrameAlpha()
 end
 
 function CustomBuffs:UpdateConfig()
+	CompactPartyFrameTitle:SetAlpha(0);
+	CompactPartyFrameTitle:Hide();
 	if not InCombatLockdown() then
 		CompactRaidFrameContainer:SetScale(self.db.profile.frameScale);
+		if CustomBuffs.isDF then
+			CompactPartyFrame:SetScale(self.db.profile.frameScale);
+		end
 	else
 		CustomBuffs:RunOnExitCombat(CompactRaidFrameContainer.SetScale, self.db.profile.frameScale);
+		if CustomBuffs.isDF then
+			CustomBuffs:RunOnExitCombat(CompactPartyFrame.SetScale, self.db.profile.frameScale);
+		end
 	end
 	CustomBuffs:SetRaidFrameAlpha();
 
