@@ -2841,7 +2841,7 @@ function CustomBuffs:UpdateCastBars()
 
 	--Increase the vertical spacing between the raid frames to make space for the new cast bars
 	if not CustomBuffs.isDF then
-		CompactRaidFrameContainer.flowVerticalSpacing = 30;
+		CompactRaidFrameContainer.flowVerticalSpacing = 15;
 		FlowContainer_DoLayout(_G.CompactRaidFrameContainer);
 	else
 		CustomBuffs:SpacePartyFrames(30);
@@ -3144,8 +3144,10 @@ function CustomBuffs:SetRaidFrameAlpha()
 end
 
 function CustomBuffs:UpdateConfig()
-	CompactPartyFrameTitle:SetAlpha(0);
-	CompactPartyFrameTitle:Hide();
+	if CustomBuffs.isDF then
+		CompactPartyFrameTitle:SetAlpha(0);
+		CompactPartyFrameTitle:Hide();
+	end
 	if not InCombatLockdown() then
 		CompactRaidFrameContainer:SetScale(self.db.profile.frameScale);
 		if CustomBuffs.isDF then
