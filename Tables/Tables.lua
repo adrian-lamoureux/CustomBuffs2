@@ -32,6 +32,9 @@ end
 local function EDef(level, high)
   return {["sbPrio"] = 4, ["sdPrio"] = nil, ["bdPrio"] = nil, ["tbPrio"] = nil, isDefensive = true, highlightMine = high, defLevel = level};
 end
+local function FID(id)
+  return { duration = 1, tbPrio = -2, isFlash = true, iconID = id };
+end
 
 CustomBuffs.INTERRUPTS = {
   [1766] =   		{ duration = 5 }, -- Kick (Rogue)
@@ -352,8 +355,21 @@ CustomBuffs.NONAURAS = {
   [307497] = 	CDFlash, --Deathly Fixation Potion
   [307494] = 	CDFlash, --Empowered Exorcisms Potion
 
+
+  --DF Potions
+  [370511] = 	FID(191380),  --Health Potion 1 DF
+  [371039] = 	CDFlash,      --Toxic Health Potion 1 DF
+  [370607] = 	FID(191386),  --Mana Potion DF
+  [371033] = 	CDFlash,      --Sleeper Potion DF
+  [371152] = 	CDFlash,      --Toxic Innervate Potion DF
+  [371028] = 	CDFlash,      --Big Stat Potion DF
+  [371024] = 	CDFlash,      --Small Stat Potion DF
+  [372046] = 	CDFlash,      --AoE Damage Potion DF
+  [371167] = 	CDFlash,      --Gust Potion DF
+
+
   --Other
-  [16589] = { duration = 1, tbPrio = -2, isFlash = true, iconID = 8529 }, 	--Noggenfogger
+  [16589] = FID(8529), 	--Noggenfogger
 };
 
 CustomBuffs.BUFFS = {
