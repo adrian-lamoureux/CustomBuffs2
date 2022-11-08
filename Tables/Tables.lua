@@ -461,7 +461,7 @@ CustomBuffs.BUFFS = {
 
   --Priest
   ["Dispersion"] =                Def(1),
-  --["Fade"] =                      CDStandard,
+  ["Fade"] =                      Def(4),
   [337661] =                      Def(4), --Fade DR
   ["Greater Fade"] =              Def(0),
   ["Desperate Prayer"] =          Def(3),

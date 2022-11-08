@@ -1,4 +1,4 @@
-## Interface: 100000
+## Interface: 100020
 ## Author: Hypocrit
 ## Title: CustomBuffs
 ## DefaultState: enabled
