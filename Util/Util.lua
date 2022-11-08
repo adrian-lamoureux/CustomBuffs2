@@ -73,7 +73,7 @@ function CustomBuffs:CheckAndHideNameplates()
 			SetCVar("nameplateShowFriends", 0);
 			SetCVar("nameplateShowFriendlyNPCs", 0);
 		else
-			SetCVar("nameplateShowFriends", 1);
+			--SetCVar("nameplateShowFriends", 1);
 			--SetCVar("nameplateShowFriendlyNPCs", 1);
 		end
 	end

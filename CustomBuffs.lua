@@ -1710,6 +1710,17 @@ function CustomBuffs:UpdateAuras(frame)
 	end
 
 	--Check for interrupts
+	local guid;
+	local dUnit = frame.displayedUnit;
+	if dUnit then
+		guid = dUnit;
+		F[frame].dUnit = dUnit;
+	elseif F[frame].dUnit then
+		guid = F[frame].dUnit;
+	else
+		return;
+	end
+
 	local guid = UnitGUID(frame.displayedUnit);
 	if CustomBuffs.debugMode then
 		if CustomBuffs.verbose then print("Adding fake test auras; Max Buffs:", CustomBuffs.MAX_BUFFS, "Max Debuffs:", CustomBuffs.MAX_DEBUFFS); end

@@ -152,6 +152,8 @@ CustomBuffs.NONAURAS = {
 
   --ROGUE
 
+  --EVOKER
+
   --COOLDOWN FLASHES
   --Show short flash on frame when a player activates an ability or item
 
@@ -174,8 +176,26 @@ CustomBuffs.NONAURAS = {
   [183752] = 	CDFlash, -- Consume Magic (Demon Hunter)
   [187707] = 	CDFlash, -- Muzzle (Hunter)
   [212619] = 	CDFlash, -- Call Felhunter (Warlock)
+  [351338] = 	CDFlash, -- Quell (Evoker)
+
+  --EVOKER
+  [372048] = 	CDFlash, --Oppressing Roar
+  [370553] = 	CDFlash, --Tip the Scales
+  [360823] = 	CDFlash, --Evoker Dispel
+  [374251]  = CDFlash, --Cauterizing Flame
+  [357210] = 	CDFlash, --Deep Breath
+  [360995] = 	CDFlash, --Verdant Embrace
+  [368970] = 	CDFlash, --Tail Swipe
+  [357214] = 	CDFlash, --Wing Buffet
+  [358267] = 	CDFlash, --Hover
+  [355913]  = CDFlash, --Emerald Blossom
+  [359816] = 	CDFlash, --Dream Flight
+  [374968] = 	CDFlash, --Time Spiral
+  [370665] = 	CDFlash, --Rescue
+  [374227] = 	CDFlash, --Zephyr
 
   --SHAMAN
+  [192063] = 	CDFlash, --Gust of Wind
   [326059] = 	CDFlash, --Primordial Wave
   [328923] = 	CDFlash, --Fae Transfusion
   [328930] = 	CDFlash, --Fae Transfusion
@@ -373,6 +393,10 @@ CustomBuffs.NONAURAS = {
 };
 
 CustomBuffs.BUFFS = {
+  --Evoker
+  ["Renewing Blaze"] =            Def(3),
+  ["Obsidian Scales"] =           Def(2),
+
   --Death Knight
   ["Icebound Fortitude"] =        Def(1),
   ["Anti-Magic Shell"] =          Def(6),
@@ -484,6 +508,8 @@ CustomBuffs.BUFFS = {
   ["Enraged Regeneration"] =      Def(1),
   --[118038] =                      CDStandard, --Die by the Sword
   ["Defensive Stance"] =          Def(4),
+  ["Battle Stance"] =             CDStandard,
+  ["Berserker Stance"] =          CDStandard,
   ["Berserker Rage"] =          	CDStandard,
   ["Ignore Pain"] =          		  Def(5),
 
@@ -499,6 +525,7 @@ CustomBuffs.BUFFS = {
 
 
   --Major Externals
+  ["Time Dilation"] =               EDef(1, false),
   ["Ironbark"] =                  	EDef(3, false),
   ["Life Cocoon"] =               	EDef(3, false),
   ["Blessing of Protection"] =    	EDef(7, false),
@@ -507,6 +534,7 @@ CustomBuffs.BUFFS = {
   ["Pain Suppression"] =          	EDef(1, false),
   ["Guardian Spirit"] =           	EDef(1, false),
   ["Roar of Sacrifice"] =         	EDef(3, false),
+  ["Zephyr"] =                      EDef(3, false),
   ["Innervate"] =                 	EHighlightMine,
   ["Cenarion Ward"] =             	EHighlightMine,
   ["Safeguard"] =                 	Def(7),
@@ -601,10 +629,15 @@ CustomBuffs.BUFFS = {
 
 
 CustomBuffs.THROUGHPUT_BUFFS = {
+  --EVOKER
+  ["Stasis"] =                            TCDStandard,
+  ["Dragonrage"] =                        TCDStandard,
+
   --DK
   ["Pillar of Frost"] =                   TCDStandard,
   ["Unholy Frenzy"] =                     TCDStandard,
   ["Empower Rune Weapon"] =               TCDStandard,
+  ["Breath of Sindragosa"] =              TCDStandard,
 
   --Druid
   ["Incarnation: Tree of Life"] =         TCDStandard,
@@ -629,7 +662,7 @@ CustomBuffs.THROUGHPUT_BUFFS = {
   --Mage
   ["Icy Veins"] =                         TCDStandard,
   ["Combustion"] =                        TCDStandard,
-  ["Arcane Power"] =                      TCDStandard,
+  ["Arcane Surge"] =                      TCDStandard,
   ["Presence of Mind"] =         			    TCDStandard,
   [324220] =         			                TCDStandard, --Deathborne
 
@@ -691,6 +724,7 @@ CustomBuffs.THROUGHPUT_BUFFS = {
   ["Avatar"] =                            TCDStandard,
   ["Bladestorm"] =                        TCDStandard,
   ["Bloodbath"] =                         TCDStandard,
+  ["Recklessness"] =                      TCDStandard,
 
   --DH
   ["Metamorphosis"] =                     TCDStandard,

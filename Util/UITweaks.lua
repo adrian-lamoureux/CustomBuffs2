@@ -105,6 +105,8 @@ function CustomBuffs:UITweaksRetail()
         priestcov:SetAttribute("type", "macro");
         priestcov:SetAttribute("macrotext", "/cast Boon of the Ascended\n/cast Mindgames\n/cast Unholy Nova\n/cast Fae Guardians");
 
+        --PetActionBar:SetShownOverride(true);
+        --PetActionBar:Show();
         --[[ Cov Macros:
         sham:
         #showtooltip
@@ -120,7 +122,7 @@ function CustomBuffs:UITweaksRetail()
 
         --]]
 
-
+        --[[
         --Clean up pet frame
         PetName:SetAlpha(0);
         PetFrameHealthBarTextLeft:SetAlpha(0);
@@ -194,6 +196,7 @@ function CustomBuffs:UITweaksRetail()
         StoreMicroButton.SetParent = CBFVoid;
         TalentMicroButton.SetParent = CBFVoid;
         MainMenuMicroButton.SetParent = CBFVoid;
+        --]]
     else
         CustomBuffs:RunOnExitCombat(CustomBuffs.UITweaksRetail);
     end
