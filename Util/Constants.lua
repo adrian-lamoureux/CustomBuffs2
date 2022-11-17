@@ -26,15 +26,15 @@ CustomBuffs.GAME_VERSION[0] = "retail";
 
 CustomBuffs.DEF_COLORS = {
   --Major damage reduction or healing increase; applies to all damage types
-  {r = 1, g = 0.2, b = 0, a = 0.7}, --1
+  {r = 1, g = 0.2, b = 0, a = 0.9}, --1
   --Strong damage reduction or healing increase; potentially only physical or magic
-  {r = 1, g = 0.4, b = 0, a = 0.6}, --2
+  {r = 1, g = 0.4, b = 0, a = 0.8}, --2
   --Medium damage reduction or healing increase
-  {r = 1, g = 0.6, b = 0, a = 0.4}, --3
+  {r = 1, g = 0.6, b = 0, a = 0.7}, --3
   --Weak damage reduction or healing increase
-  {r = 1, g = 0.8, b = 0, a = 0.4}, --4
+  {r = 1, g = 0.8, b = 0, a = 0.6}, --4
   --Rotational defensive buff (mostly tanks and healers)
-  {r = 1, g = 1, b = 0, a = 0.2},  --5
+  {r = 1, g = 1, b = 0, a = 0.5},  --5
   --Special coloring for magic damage only defensives
   {r = 0.4, g = 0.2, b = 0.8, a = 0.8}, --6
   --Special coloring for physical damage only defensives

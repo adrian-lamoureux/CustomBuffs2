@@ -179,6 +179,7 @@ CustomBuffs.NONAURAS = {
   [351338] = 	CDFlash, -- Quell (Evoker)
 
   --EVOKER
+  [390386] = 	CDFlash, --Fury of the Aspects
   [372048] = 	CDFlash, --Oppressing Roar
   [370553] = 	CDFlash, --Tip the Scales
   [360823] = 	CDFlash, --Evoker Dispel
@@ -195,6 +196,8 @@ CustomBuffs.NONAURAS = {
   [374227] = 	CDFlash, --Zephyr
 
   --SHAMAN
+  [2825] = 	  CDFlash, --Lust
+  [32182] = 	CDFlash, --Alliance Lust
   [192063] = 	CDFlash, --Gust of Wind
   [326059] = 	CDFlash, --Primordial Wave
   [328923] = 	CDFlash, --Fae Transfusion
@@ -238,6 +241,7 @@ CustomBuffs.NONAURAS = {
   [99] =		CDFlash, --Incap Roar
 
   --MAGE
+  [80353] =	CDFlash, --Time Warp
   [314791] =	CDFlash, --Shifting Power
   [153626] =	CDFlash, --Arcane Orb
   [31661] =	CDFlash, --DB
@@ -268,6 +272,7 @@ CustomBuffs.NONAURAS = {
   [47788] =	CDFlash, --GS
 
   --HUNTER
+  [272678] =	CDFlash, --Ancient Hysteria
   [213691] =	CDFlash, --Scatter Shot
   [1513] =	CDFlash, --Scare Beast
   [187650] =	CDFlash, --Freezing Trap
@@ -422,6 +427,7 @@ CustomBuffs.BUFFS = {
   --Hunter
   ["Aspect of the Turtle"] =      Def(0),
   ["Survival of the Fittest"] =   Def(3),
+  ["Fortitude of the Bear"] =     Def(3),
   [339461] =                      Def(3), --FD conduit
   ["Double Tap"] =   				      CDStandard,
   ["Sniper Shot"] =   			      CDStandard,
@@ -445,6 +451,7 @@ CustomBuffs.BUFFS = {
   ["Dampen Harm"] =               Def(3),
   ["Touch of Karma"] =            Def(1),
   ["Fortifying Brew"] =           Def(1),
+  ["Pretense of Instability"] =   Def(3),
 
   --Paladin
   ["Divine Shield"] =             Def(0),
@@ -454,6 +461,7 @@ CustomBuffs.BUFFS = {
   ["Eye for an Eye"] =            Def(7),
   ["Shield of Vengeance"] =       Def(3),
   ["Guardian of Ancient Kings"] = Def(1),
+  ["Shining Light"] =             CDStandard,
   --["Seraphim"] =                  CDStandard, moved to throughput cds
   ["Guardian of the Fortress"] =  Def(1),
   ["Shield of the Righteous"] =   Def(5),
@@ -527,6 +535,7 @@ CustomBuffs.BUFFS = {
   --Major Externals
   ["Time Dilation"] =               EDef(1, false),
   ["Ironbark"] =                  	EDef(3, false),
+  ["Intervene"] =                  	EDef(7, false),
   ["Life Cocoon"] =               	EDef(3, false),
   ["Blessing of Protection"] =    	EDef(7, false),
   ["Blessing of Sacrifice"] =     	EDef(2, false),
@@ -557,7 +566,7 @@ CustomBuffs.BUFFS = {
   ["Stoneform"] =                 	Def(7),
   ["Fireblood"] =                 	EStandard,
   ["Soulstone"] =                 	EStandard,
-
+  [372014] =                 	      ELow, --non combat evoker regen
 
   ["Gladiator's Emblem"] =        	Def(3),
   ["Gladiator's Eternal Aegis"] =   Def(6),
@@ -675,6 +684,7 @@ CustomBuffs.THROUGHPUT_BUFFS = {
   --Paladin
   ["Avenging Wrath"] =                    TCDStandard,
   ["Avenging Crusader"] =                 TCDStandard,
+  ["Sentinel"] =                          TCDStandard,
   ["Holy Avenger"] =                      TCDStandard,
   ["Crusade"] =                           TCDStandard,
   ["Seraphim"] =                          TCDStandard,

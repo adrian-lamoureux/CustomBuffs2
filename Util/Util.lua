@@ -24,6 +24,15 @@ function CustomBuffs:returnTrue(...)
 	return true;
 end
 
+--Bandaid fixes for many addons on prepatch
+function GetContainerNumSlots(id)
+	return ContainerFrame_GetContainerNumSlots(id);
+end
+
+function GetContainerNumFreeSlots(id)
+	return C_Container.GetContainerNumFreeSlots(id);
+end
+
 --Function must return status of function on completion (success/failure);
 --Keeps attempting to execute the function until it returns true or it
 --fails 10 times
