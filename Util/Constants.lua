@@ -2,9 +2,9 @@ local addonName, addonTable = ...; --make use of the default addon namespace
 addonTable.CustomBuffs = LibStub("AceAddon-3.0"):NewAddon("CustomBuffs", "AceTimer-3.0", "AceHook-3.0", "AceEvent-3.0", "AceBucket-3.0", "AceConsole-3.0", "AceComm-3.0");
 local CustomBuffs = addonTable.CustomBuffs;
 
-CustomBuffs.major = 2;
-CustomBuffs.mid = 2;
-CustomBuffs.minor = 2;
+CustomBuffs.major = 3;
+CustomBuffs.mid = 0;
+CustomBuffs.minor = 0;
 CustomBuffs.version = CustomBuffs.minor + (100 * CustomBuffs.mid) + (10000 * CustomBuffs.major);
 
 CustomBuffs.gameVersion = 0; --Retail

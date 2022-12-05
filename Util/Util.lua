@@ -3,6 +3,11 @@ local CustomBuffs = addonTable.CustomBuffs;
 local LibAceSerializer = LibStub:GetLibrary("AceSerializer-3.0");
 --CustomBuffs.areWidgetsLoaded = LibStub:GetLibrary("AceGUISharedMediaWidgets-1.0", true);
 
+if select(4, GetBuildInfo()) >= 100000 then
+	CustomBuffs.isDF = 1;
+end
+
+
 local function backoffHelper(attempts, timer, func, ...)
 	if attempts < 10 then
 		--if the function returns true it succeeded and we're done
@@ -24,13 +29,31 @@ function CustomBuffs:returnTrue(...)
 	return true;
 end
 
+if CustomBuffs.isDF then
 --Bandaid fixes for many addons on prepatch
-function GetContainerNumSlots(id)
-	return ContainerFrame_GetContainerNumSlots(id);
-end
+	function GetContainerNumSlots(id)
+		return ContainerFrame_GetContainerNumSlots(id);
+	end
 
-function GetContainerNumFreeSlots(id)
-	return C_Container.GetContainerNumFreeSlots(id);
+	function GetContainerNumFreeSlots(id)
+		return C_Container.GetContainerNumFreeSlots(id);
+	end
+
+	function GetContainerItemInfo(id, slot)
+		return C_Container.GetContainerItemInfo(id, slot);
+	end
+
+	function ContainerIDToInventoryID(id)
+		return C_Container.ContainerIDToInventoryID(id);
+	end
+
+	function IsBattlePayItem(bag, slot)
+		return C_Container.IsBattlePayItem(bag, slot);
+	end
+
+	function GetContainerItemQuestInfo(bag, slot)
+		return C_Container.GetContainerItemQuestInfo(bag, slot);
+	end
 end
 
 --Function must return status of function on completion (success/failure);

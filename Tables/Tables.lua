@@ -84,6 +84,35 @@ CustomBuffs.INTERRUPTS = {
   [355638] =			 		{ duration = 4 },
   [344776] =			 		{ duration = 4 },
   [386363] =			 		{ duration = 4 },
+  [35178] =			 		  { duration = 6 },
+  [38897] =			 		  { duration = 4 },
+  [56730] =			 		  { duration = 8 },
+  [273185] =			 		{ duration = 1 },
+  [283423] =			 		{ duration = 4 },
+  [44644] =			 		  { duration = 6 },
+  [321240] =			 		{ duration = 1 },
+  [36033] =			 		  { duration = 6 },
+  [386363] =			 		{ duration = 4 },
+  [283490] =			 		{ duration = 3 },
+  [283774] =			 		{ duration = 4 },
+  [30849] =			 		  { duration = 4 },
+  [227363] =			 		{ duration = 4 },
+  [290439] =			 		{ duration = 3 },
+  [32691] =			 		  { duration = 6 },
+  [161089] =			 		{ duration = 3 },
+  [350922] =			 		{ duration = 6 },
+  [15501] =			 		  { duration = 2 },
+  [32846] =			 		  { duration = 4 },
+  [260344] =			 		{ duration = 3 },
+  [191527] =			 		{ duration = 4 },
+  [11978] =			 		  { duration = 6 },
+  [283616] =			 		{ duration = 4 },
+  [15615] =			 		  { duration = 4 },
+  [59180] =			 		  { duration = 3 },
+  [42708] =			 		  { duration = 6 },
+  [91807] =			 		  { duration = 2 },
+  [283681] =			 		{ duration = 5 },
+  [15614] =			 		  { duration = 6 },
 };
 
 
@@ -1033,6 +1062,31 @@ CustomBuffs.CC = {
   [227742] =                                  CCStandard, --Garrote
 
   [229693] =                                  PoisonStandard, --Poison Fang
+
+  --Halls of Infusion
+  [391610] =                                  MagicStandard, --Binding Winds
+  [374389] =                                  PoisonStandard, --Frog Toxin
+
+  --Brackenhide Hollow
+  [367521] =                                  CCStandard, --Bone Bolt
+  [367481] =                                  CCStandard, --Bloody Bite
+  [385039] =                                  PoisonStandard, --Withering Poison
+  ["Withering"] =                             DiseaseStandard,
+  ["Withering Contagion"] =                   DiseaseStandard,
+
+  --Nokhud Offensive
+  [381692] =                                  CCStandard, --Swift Stab
+  [384134] =                                  CCStandard, --Pierce
+
+  --Azure Vault
+  [387564] =                                  MagicStandard, --Mystic Vapors
+  ["Waking Bane"] =                           MagicStandard,
+  ["Forbidden Knowledge"] =                   MagicStandard,
+  ["Icy Bindings"] =                          MagicStandard,
+
+  --Academy
+
+  --]]
 
   --------------------
   -- Castle Nathria --
