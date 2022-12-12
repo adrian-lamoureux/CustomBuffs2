@@ -2248,8 +2248,11 @@ function CustomBuffs:loadFrames()
 			CompactRaidFrameContainerMixin:AddPlayers();
 		end]]
 		if not CustomBuffs.isDF then
+			--Workaround for frames scaled past 100% not displaying in the correct location
+			CompactRaidFrameContainer:SetScale(1);
 			CompactRaidFrameManager:Show();
 			CompactRaidFrameContainer:Show();
+			CompactRaidFrameContainer:SetScale(self.db.profile.frameScale);
 		end
 		handleRosterUpdate();
 		ForceUpdateFrames();
