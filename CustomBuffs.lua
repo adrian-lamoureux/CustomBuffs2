@@ -242,6 +242,7 @@ if CustomBuffs.isDF then
 end
 
 local function LayoutFramesDF()
+	print("Encountered LayoutFramesDF");
 	--First, mark everything we currently use as unused. We'll hide all the ones that are still unused at the end of this function. (On release)
 	for i=1, #CompactRaidFrameContainerMixin.flowFrames do
 		if type(CompactRaidFrameContainerMixin.flowFrames[i]) == "table" and CompactRaidFrameContainerMixin.flowFrames[i].unusedFunc then
@@ -3006,6 +3007,11 @@ function CustomBuffs:SlashCMDs(options)
 		for i = 2, #args do
 			local id = tonumber(args[i]);
 			CustomBuffs:PrintSpell(id);
+		end
+	elseif options == "itemlink" or options == "i" then
+		for i = 2, #args do
+			local id = tonumber(args[i]);
+			CustomBuffs:PrintItem(id);
 		end
 	elseif options == "ints" then
 		print("Printing all unknown interrupts...");

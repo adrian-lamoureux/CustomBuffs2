@@ -56,6 +56,7 @@ CustomBuffs.INTERRUPTS = {
   [212619] = 		{ duration = 6 }, -- Call Felhunter (Warlock)
   [231665] = 		{ duration = 3 }, -- Avengers Shield (Paladin)
   [347008] = 		{ duration = 4 }, -- Axe Toss (Warlock)
+  [351338] = 		{ duration = 4 }, -- Quell (Evoker)
   ["Solar Beam"] = { duration = 5 },
 
   --Non player interrupts BETA FEATURE
@@ -430,6 +431,7 @@ CustomBuffs.BUFFS = {
   --Evoker
   ["Renewing Blaze"] =            Def(3),
   ["Obsidian Scales"] =           Def(2),
+  ["Nullifying Shroud"] =         Def(6),
 
   --Death Knight
   ["Icebound Fortitude"] =        Def(1),
@@ -817,6 +819,7 @@ CustomBuffs.CC = {
   ["Holy Word: Chastise"] =   MagicStandard,
   ["Chaos Nova"] =            MagicStandard,
   ["Static Charge"] =         MagicStandard,
+  ["Sleep Walk"] =            MagicStandard,
   ["Mind Bomb"] =             MagicStandard,
   ["Silence"] =               MagicStandard,
   [196364] =                  MagicStandard, --UA Silence
@@ -1036,7 +1039,7 @@ CustomBuffs.CC = {
   ["Purification Protocol"] =                 MagicStandard,
 
   --Mechagon
-  [284219] =                                  MagicStandard, --Shrink
+  ["Shrink"] =                                MagicStandard, --Shrink
   [300764] =                                  PoisonStandard, --Slime Bolt
   [300650] =                                  DiseaseStandard, --Suffocating Smog
   [298259] =                                  DiseaseStandard, --Gooped
@@ -1077,15 +1080,60 @@ CustomBuffs.CC = {
   --Nokhud Offensive
   [381692] =                                  CCStandard, --Swift Stab
   [384134] =                                  CCStandard, --Pierce
+  [384492] =                                  CCStandard, --Hunter's Mark
+  ["Devour Spirit"] =                         CCStandard, --Devour Spirit
+  ["Grasp of the Dead"] =                     CCStandard,
 
   --Azure Vault
   [387564] =                                  MagicStandard, --Mystic Vapors
+  [384978] =                                  MagicStandard, --Dragon Strike
   ["Waking Bane"] =                           MagicStandard,
   ["Forbidden Knowledge"] =                   MagicStandard,
   ["Icy Bindings"] =                          MagicStandard,
 
   --Academy
+  ["Astral Bomb"] =                           CCStandard,
+  ["Lasher Toxin"] =                          PoisonStandard,
+  ["Energy Bomb"] =                           MagicStandard,
 
+  --Temple
+  ["Touch of Nothingness"] =                  MagicStandard,
+  [106736] =                                  MagicStandard, --Wither Will again cause something funky is up
+  ["Throw Torch"] =                           MagicStandard,
+  ["Tainted Ripple"] =                        MagicStandard,
+  [106823] =                                  MagicStandard, --Serpent Strike
+  [106841] =                                  CCStandard, --Jade Serpent Strike
+  [395872] =                                  MagicStandard, --Sleepy Soliloquy
+  [395859] =                                  MagicStandard, --Haunting Scream
+  ["Touch of Ruin"] =                         CurseStandard,
+  ["Corrupted Vortex"] =                      CCStandard,
+  ["Savage Leap"] =                           CCStandard,
+
+  --CoS
+  ["Fel Detonation"] =                        CCStandard,
+  ["Arcane Lockdown"] =                       MagicStandard,
+  ["Impending Doom"] =                        MagicStandard,
+  [209516] =                                  MagicStandard, --Mana Fang
+
+  --HoV
+  ["Ravenous Leap"] =                         CCStandard,
+  [199652] =                                  CCStandard, --Sever
+  ["Wicked Dagger"] =                         CCStandard,
+  ["Thunderstrike"] =                         MagicStandard, --Thunderstrike
+
+  --Ruby Life Pools
+  [373869] =                                  MagicStandard, --Burning Touch
+  [373693] =                                  CCStandard, --Living Bomb
+  ["Rolling Thunder"] =                       MagicStandard, --Burning Touch
+  ["Infernocore"] =                           CCStandard,
+  ["Unlucky Strike"] =                        CurseStandard,
+  ["Fire Maw"] =                              CCStandard,
+  ["Shock Blast"] =                           MagicStandard,
+
+  --Burial Grounds
+  [152819] =                                  MagicStandard, --Frailty
+  [156718] =                                  DiseaseStandard, --Necrotic Burst
+  [153524] =                                  DiseaseStandard, --Plague Spit
   --]]
 
   --------------------

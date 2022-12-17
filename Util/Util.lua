@@ -142,3 +142,24 @@ function CustomBuffs:PrintSpell(spellID, ret)
   end
   print(spellID, ": ", i, link);
 end
+
+function CustomBuffs:PrintItem(itemID, ret)
+  --Verify input
+  if type(itemID) == "string" then
+    spellID = tonumber(itemID);
+  end
+  if type(itemID) ~= "number" then
+    error(("Usage: CustomBuffs:PrintItem(itemID, ret): 'itemID' - number expected, got '%s'."):format(type(spellID)), 2);
+  end
+
+  local link = select(2, GetItemInfo((itemID)));
+  local icon = select(10, GetItemInfo(itemID));
+  local i = "";
+  if icon then
+    i = "|T"..icon..":0|t";
+  end
+  if ret then
+    return itemID.." :  "..i..link;
+  end
+  print(itemID, ": ", i, link);
+end
