@@ -1082,6 +1082,7 @@ CustomBuffs.CC = {
   [384134] =                                  CCStandard, --Pierce
   [384492] =                                  CCStandard, --Hunter's Mark
   ["Devour Spirit"] =                         CCStandard, --Devour Spirit
+  ["Shatter Soul"] =                          CCStandard,
   ["Grasp of the Dead"] =                     CCStandard,
 
   --Azure Vault
@@ -1095,6 +1096,7 @@ CustomBuffs.CC = {
   ["Astral Bomb"] =                           CCStandard,
   ["Lasher Toxin"] =                          PoisonStandard,
   ["Energy Bomb"] =                           MagicStandard,
+  ["Splinterbark"] =                          CCStandard,
 
   --Temple
   ["Touch of Nothingness"] =                  MagicStandard,
@@ -1112,7 +1114,12 @@ CustomBuffs.CC = {
   --CoS
   ["Fel Detonation"] =                        CCStandard,
   ["Arcane Lockdown"] =                       MagicStandard,
+  ["Withering Soul"] =                        MagicStandard,
+  ["Enveloping Winds"] =                      MagicStandard,
   ["Impending Doom"] =                        MagicStandard,
+  ["Seal Magic"] =                            MagicStandard,
+  ["Resonant Slash"] =                        MagicStandard,
+  ["Suppress"] =                              MagicStandard,
   [209516] =                                  MagicStandard, --Mana Fang
 
   --HoV

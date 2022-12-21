@@ -137,10 +137,14 @@ function CustomBuffs:PrintSpell(spellID, ret)
   if icon then
     i = "|T"..icon..":0|t";
   end
+	local r = spellID.." : "..i..link;
+	if icon then
+		r = r.." Icon: "..icon;
+	end
   if ret then
-    return spellID.." :  "..i..link;
+    return r;
   end
-  print(spellID, ": ", i, link);
+  print(r);
 end
 
 function CustomBuffs:PrintItem(itemID, ret)
