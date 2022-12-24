@@ -307,6 +307,8 @@ local function CompactRaidFrameContainer_LayoutFrames(self)
 		CompactRaidFrameContainer_AddPets(self);
 	end
 
+	CustomBuffs:UpdateConfig();
+
 	FlowContainer_ResumeUpdates(self);
 
 	CompactRaidFrameContainer_UpdateBorder(self);
@@ -1031,6 +1033,12 @@ local function handleExitCombat()
 			error("Invalid construct found for RunOnExitCombat");
 		end
 	end
+	twipe(CustomBuffs.runOnExitCombat)
+
+	--TODO replace this
+	CustomBuffs:layoutFrames();
+	
+	CustomBuffs.runOnExitCombat = {};
 end
 --Check combat log events for interrupts
 local function handleCLEU()
@@ -2208,68 +2216,43 @@ end
 
 
 function CustomBuffs:loadFrames()
-	----[[
 	if not InCombatLockdown() then
-		--[[
-		if not CompactRaidFrame1 then --Don't spam create new raid frames; causes a huge mess
-		CompactRaidFrameManager_OnLoad(CompactRaidFrameManager);
-		CompactRaidFrameManagerDisplayFrameProfileSelector_Initialize();
-		CompactRaidFrameContainer_OnLoad(CompactRaidFrameContainer);
-		CompactRaidFrameContainer_SetGroupMode(CompactRaidFrameContainer, "flush");
-		CompactRaidFrameContainer_SetFlowSortFunction(CompactRaidFrameContainer, CRFSort_Role);
-		CompactRaidFrameContainer_AddUnitFrame(CompactRaidFrameContainer, "player", "raid");
-	end
-	CompactRaidFrameContainer_LayoutFrames(CompactRaidFrameContainer);
-	CompactRaidFrameContainer_UpdateDisplayedUnits(CompactRaidFrameContainer);
-	setUpExtraBuffFrames(CompactRaidFrame1);
-	setUpBossDebuffFrames(CompactRaidFrame1);
-	setUpThroughputFrames(CompactRaidFrame1);
-	setUpBossDebuffFrames(CompactRaidFrame1);
-	CompactRaidFrameManager:Show();
-	CompactRaidFrameContainer:Show();
-	handleRosterUpdate();
-	--]]
-	if IsAddOnLoaded("Blizzard_CompactRaidFrames") and IsAddOnLoaded("Blizzard_CUFProfiles") then
-		if CustomBuffs.isDF and not CustomBuffs.IsInRaid then
-			CompactPartyFrame_Generate();
-			CompactPartyFrame_OnLoad(CompactPartyFrame);
-			if not IsInRaid() then
-				CompactPartyFrame:Show();
-			end
-			CompactRaidFrameManager:Show();
-			--CompactRaidFrameContainer:Show();
-		end
-		--[[if CustomBuffs.isDF then
-			CompactRaidFrameContainerMixin:SetFlowSortFunction(CRFSort_Role);
-			CompactRaidFrameContainerMixin:SetFlowFilterFunction(CustomBuffs.returnTrue);
-			betaLoadFrames();
-			if not CompactRaidFrameContainerMixin.units then
-				CompactRaidFrameContainerMixin.units = {"player"};
-			end
-			CompactRaidFrameContainerMixin:AddPlayers();
-		end]]
-		if not CustomBuffs.isDF then
-			--Workaround for frames scaled past 100% not displaying in the correct location
+		if IsAddOnLoaded("Blizzard_CompactRaidFrames") and IsAddOnLoaded("Blizzard_CUFProfiles") then
 			CompactRaidFrameContainer:SetScale(1);
-			CompactRaidFrameManager:Show();
-			CompactRaidFrameContainer:Show();
-			CompactRaidFrameContainer:SetScale(self.db.profile.frameScale);
+			if CustomBuffs.isDF and not CustomBuffs.IsInRaid then
+				CompactPartyFrame_Generate();
+				CompactPartyFrame_OnLoad(CompactPartyFrame);
+				if not IsInRaid() then
+					CompactPartyFrame:Show();
+				end
+				CompactRaidFrameManager:Show();
+				--CompactRaidFrameContainer:Show();
+				CompactRaidFrameContainer:SetScale(self.db.profile.frameScale);
+			end
+			if not CustomBuffs.isDF then
+				--Workaround for frames scaled past 100% not displaying in the correct location
+				CompactRaidFrameContainer:SetScale(1);
+				CompactRaidFrameManager:Show();
+				CompactRaidFrameContainer:Show();
+				CompactRaidFrameContainer:SetScale(self.db.profile.frameScale);
+			end
+			handleRosterUpdate();
+			ForceUpdateFrames();
+			return true; --for BackoffRunIn
+		else
+			LoadAddOn("Blizzard_CompactRaidFrames");
+			LoadAddOn("Blizzard_CUFProfiles");
+			CustomBuffs:BackoffRunIn(5, CustomBuffs.loadFrames);
+			return false; --for BackoffRunIn
 		end
-		handleRosterUpdate();
-		ForceUpdateFrames();
-		return true; --for BackoffRunIn
 	else
-		LoadAddOn("Blizzard_CompactRaidFrames");
-		LoadAddOn("Blizzard_CUFProfiles");
-		CustomBuffs:BackoffRunIn(5, CustomBuffs.loadFrames);
-		return false; --for BackoffRunIn
+		CustomBuffs:RunOnExitCombat(CustomBuffs.loadFrames);
+		return true; --for BackoffRunIn
 	end
-else
-	CustomBuffs:RunOnExitCombat(CustomBuffs.loadFrames);
-	return true; --for BackoffRunIn
+	--]]
 end
---]]
-end
+
+
 
 function CustomBuffs:CleanName(unitGUID, backupFrame)
 	local name = NameCache[unitGUID];
@@ -3052,6 +3035,7 @@ function CustomBuffs:SlashCMDs(options)
 		end
 		UpdateUnits();
 		ForceUpdateFrames();
+		CustomBuffs:UpdateConfig();
 	elseif options == "announce" and args[2] == "sums" then
 		CustomBuffs.announceSums = not CustomBuffs.announceSums;
 		print("CustomBuffs announce summons", CustomBuffs.announceSums and "enabled" or "disabled");
@@ -3156,8 +3140,7 @@ function CustomBuffs:SetRaidFrameAlpha()
 	CompactRaidFrameContainer:SetAlpha(self.db.profile.frameAlpha);
 
 	for index, frame in ipairs(_G.CompactRaidFrameContainer.flowFrames) do
-		--index 1 is a string for some reason so we skip it
-		if index ~= 1 and frame and frame.background then
+		if frame and frame.background then
 			frame.background:SetAlpha(self.db.profile.frameAlpha);
 		end
 	end

@@ -97,6 +97,11 @@ function CustomBuffs:UITweaksRetail()
         trinkets:SetAttribute("type", "macro");
         trinkets:SetAttribute("macrotext", "/use First Sigil\n/use Inscrutable Quantum Device\n/use Soulletting Ruby\n/use Sunblood Amethyst\n/use Cosmic Gladiator's Badge of Ferocity");
 
+        local fireworks = CreateFrame("Button", "fireworks", UIParent, "SecureActionButtonTemplate");
+        fireworks:SetAttribute("type", "macro");
+        fireworks:SetAttribute("macrotext", "/use Everlasting Horde Firework\n/use Everlasting Alliance Firework\n/use Everlasting Darkmoon Firework\n/use Perpetual Purple Firework");
+
+
         local shamcov = CreateFrame("Button", "shmc", UIParent, "SecureActionButtonTemplate");
         shamcov:SetAttribute("type", "macro");
         shamcov:SetAttribute("macrotext", "/cast [@cursor] Vesper Totem\n/cast Chain Harvest\n/cast Primordial Wave\n/cast [@cursor] Fae Transfusion");

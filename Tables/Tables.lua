@@ -609,6 +609,7 @@ CustomBuffs.BUFFS = {
   ["Hold Your Ground"] =        	  EStandard,
   ["Survivor's Rally"] =        	  EStandard,
 
+  ["Death's Advance"] =             EStandard,
 
   --Show party/raid member's stealth status in buffs
   ["Stealth"] =                   	EStandard,
